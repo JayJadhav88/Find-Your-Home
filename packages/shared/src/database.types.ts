@@ -193,14 +193,14 @@ isOneToOne: false
                   ]
                 },"enquiries": {
                   Row: {
-                    "assigned_to": string | null,"consent_text_version": string | null,"created_at": string,"email": string,"handled_at": string | null,"handled_by": string | null,"id": string,"ip_hash": string | null,"kind": Database["public"]['Enums']["enquiry_kind"],"listing_id": string,"message": string,"name": string,"phone": string | null,"requested_timezone": string | null,"requested_visit_at": string | null,"sender_user_id": string | null,"status": Database["public"]['Enums']["enquiry_status"],"updated_at": string,"visit_status": Database["public"]['Enums']["visit_status"] | null
+                    "assigned_to": string | null,"consent_text_version": string | null,"created_at": string,"email": string,"follow_up_at": string | null,"handled_at": string | null,"handled_by": string | null,"id": string,"ip_hash": string | null,"kind": Database["public"]['Enums']["enquiry_kind"],"listing_id": string,"message": string,"name": string,"phone": string | null,"requested_timezone": string | null,"requested_visit_at": string | null,"sender_user_id": string | null,"status": Database["public"]['Enums']["enquiry_status"],"team_assignee": string | null,"updated_at": string,"visit_status": Database["public"]['Enums']["visit_status"] | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "assigned_to"?: string | null,"consent_text_version"?: string | null,"created_at"?: string,"email": string,"handled_at"?: string | null,"handled_by"?: string | null,"id"?: string,"ip_hash"?: string | null,"kind"?: Database["public"]['Enums']["enquiry_kind"],"listing_id": string,"message": string,"name": string,"phone"?: string | null,"requested_timezone"?: string | null,"requested_visit_at"?: string | null,"sender_user_id"?: string | null,"status"?: Database["public"]['Enums']["enquiry_status"],"updated_at"?: string,"visit_status"?: Database["public"]['Enums']["visit_status"] | null
+                    "assigned_to"?: string | null,"consent_text_version"?: string | null,"created_at"?: string,"email": string,"follow_up_at"?: string | null,"handled_at"?: string | null,"handled_by"?: string | null,"id"?: string,"ip_hash"?: string | null,"kind"?: Database["public"]['Enums']["enquiry_kind"],"listing_id": string,"message": string,"name": string,"phone"?: string | null,"requested_timezone"?: string | null,"requested_visit_at"?: string | null,"sender_user_id"?: string | null,"status"?: Database["public"]['Enums']["enquiry_status"],"team_assignee"?: string | null,"updated_at"?: string,"visit_status"?: Database["public"]['Enums']["visit_status"] | null
                   }
                   Update: {
-                    "assigned_to"?: string | null,"consent_text_version"?: string | null,"created_at"?: string,"email"?: string,"handled_at"?: string | null,"handled_by"?: string | null,"id"?: string,"ip_hash"?: string | null,"kind"?: Database["public"]['Enums']["enquiry_kind"],"listing_id"?: string,"message"?: string,"name"?: string,"phone"?: string | null,"requested_timezone"?: string | null,"requested_visit_at"?: string | null,"sender_user_id"?: string | null,"status"?: Database["public"]['Enums']["enquiry_status"],"updated_at"?: string,"visit_status"?: Database["public"]['Enums']["visit_status"] | null
+                    "assigned_to"?: string | null,"consent_text_version"?: string | null,"created_at"?: string,"email"?: string,"follow_up_at"?: string | null,"handled_at"?: string | null,"handled_by"?: string | null,"id"?: string,"ip_hash"?: string | null,"kind"?: Database["public"]['Enums']["enquiry_kind"],"listing_id"?: string,"message"?: string,"name"?: string,"phone"?: string | null,"requested_timezone"?: string | null,"requested_visit_at"?: string | null,"sender_user_id"?: string | null,"status"?: Database["public"]['Enums']["enquiry_status"],"team_assignee"?: string | null,"updated_at"?: string,"visit_status"?: Database["public"]['Enums']["visit_status"] | null
                   }
                   Relationships: [
                     {
@@ -226,6 +226,38 @@ isOneToOne: false
       columns: ["sender_user_id"]
 isOneToOne: false
       referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "enquiries_team_assignee_fkey"
+      columns: ["team_assignee"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"enquiry_notes": {
+                  Row: {
+                    "author_id": string | null,"body": string,"created_at": string,"enquiry_id": string,"id": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "author_id"?: string | null,"body": string,"created_at"?: string,"enquiry_id": string,"id"?: never
+                  }
+                  Update: {
+                    "author_id"?: string | null,"body"?: string,"created_at"?: string,"enquiry_id"?: string,"id"?: never
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "enquiry_notes_author_id_fkey"
+      columns: ["author_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "enquiry_notes_enquiry_id_fkey"
+      columns: ["enquiry_id"]
+isOneToOne: false
+      referencedRelation: "enquiries"
       referencedColumns: ["id"]
     }
                   ]
@@ -595,14 +627,14 @@ isOneToOne: false
                   ]
                 },"notification_preferences": {
                   Row: {
-                    "alerts_enabled": boolean,"email_enabled": boolean,"push_enabled": boolean,"quiet_hours_enabled": boolean,"timezone": string | null,"updated_at": string,"user_id": string,"whatsapp_enabled": boolean,"whatsapp_number": string | null,"whatsapp_opt_in_at": string | null
+                    "alerts_enabled": boolean,"email_enabled": boolean,"enquiry_alerts": (string)[],"push_enabled": boolean,"quiet_hours_enabled": boolean,"review_alerts": (string)[],"timezone": string | null,"updated_at": string,"user_id": string,"whatsapp_enabled": boolean,"whatsapp_number": string | null,"whatsapp_opt_in_at": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "alerts_enabled"?: boolean,"email_enabled"?: boolean,"push_enabled"?: boolean,"quiet_hours_enabled"?: boolean,"timezone"?: string | null,"updated_at"?: string,"user_id": string,"whatsapp_enabled"?: boolean,"whatsapp_number"?: string | null,"whatsapp_opt_in_at"?: string | null
+                    "alerts_enabled"?: boolean,"email_enabled"?: boolean,"enquiry_alerts"?: (string)[],"push_enabled"?: boolean,"quiet_hours_enabled"?: boolean,"review_alerts"?: (string)[],"timezone"?: string | null,"updated_at"?: string,"user_id": string,"whatsapp_enabled"?: boolean,"whatsapp_number"?: string | null,"whatsapp_opt_in_at"?: string | null
                   }
                   Update: {
-                    "alerts_enabled"?: boolean,"email_enabled"?: boolean,"push_enabled"?: boolean,"quiet_hours_enabled"?: boolean,"timezone"?: string | null,"updated_at"?: string,"user_id"?: string,"whatsapp_enabled"?: boolean,"whatsapp_number"?: string | null,"whatsapp_opt_in_at"?: string | null
+                    "alerts_enabled"?: boolean,"email_enabled"?: boolean,"enquiry_alerts"?: (string)[],"push_enabled"?: boolean,"quiet_hours_enabled"?: boolean,"review_alerts"?: (string)[],"timezone"?: string | null,"updated_at"?: string,"user_id"?: string,"whatsapp_enabled"?: boolean,"whatsapp_number"?: string | null,"whatsapp_opt_in_at"?: string | null
                   }
                   Relationships: [
                     {
@@ -765,7 +797,10 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "admin_broadcast_audience_size":
+            "add_enquiry_note":
+{ Args: { "p_body": string,"p_enquiry_id": string }; Returns: number
+                           },
+"admin_broadcast_audience_size":
 { Args: { "p_audience": string,"p_city"?: string }; Returns: {
               "accepts_news": number,"total": number
             }[]
@@ -794,6 +829,9 @@ isOneToOne: false
               "created_at": string,"display_name": string,"email": string,"email_confirmed": boolean,"id": string,"listings_count": number,"roles": (Database["public"]['Enums']["app_role"])[],"status": Database["public"]['Enums']["account_status"]
             }[]
                            },
+"admin_new_sheets_secret":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
 "admin_record_export":
 { Args: { "p_kind": string,"p_rows": number }; Returns: undefined
                            },
@@ -809,8 +847,14 @@ isOneToOne: false
 "admin_set_role":
 { Args: { "p_granted": boolean,"p_role": Database["public"]['Enums']["app_role"],"p_user_id": string }; Returns: undefined
                            },
+"admin_sync_all_enquiries_to_sheet":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
 "admin_update_data_request":
 { Args: { "p_id": string,"p_notes"?: string,"p_status": Database["public"]['Enums']["data_request_status"] }; Returns: undefined
+                           },
+"admin_update_enquiry":
+{ Args: { "p_enquiry_id": string,"p_follow_up_at": string,"p_status": Database["public"]['Enums']["enquiry_status"],"p_team_assignee": string }; Returns: undefined
                            },
 "assign_listing_agent":
 { Args: { "p_agent_id": string,"p_listing_id": string }; Returns: undefined
