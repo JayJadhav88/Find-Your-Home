@@ -13,6 +13,7 @@
     "test": "turbo run test"
   },
   "devDependencies": {
+    "supabase": "^2.121.0",
     "turbo": "^2.11.9",
     "typescript": "^7.0.2"
   }
