@@ -50,7 +50,7 @@ async function DataRequests() {
                   <input type="hidden" name="id" value={request.id} />
                   <label className="flex flex-col gap-1 text-sm font-medium">
                     Status
-                    <Select name="status" defaultValue={request.status}>
+                    <Select bare name="status" defaultValue={request.status}>
                       <option value="pending">Pending</option>
                       <option value="in_progress">In progress</option>
                       <option value="completed">Completed</option>
@@ -59,7 +59,7 @@ async function DataRequests() {
                   </label>
                   <label className="flex flex-col gap-1 text-sm font-medium">
                     Notes
-                    <TextInput name="notes" />
+                    <TextInput bare name="notes" />
                   </label>
                 </ActionForm>
               </Card>

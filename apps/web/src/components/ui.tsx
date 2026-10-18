@@ -74,19 +74,23 @@ export function describedBy(name: string, error?: string, hint?: string) {
   return error ? `${name}-error` : hint ? `${name}-hint` : undefined;
 }
 
+// Inputs get id = name so <Field> labels can point at them. Pass `bare` when the input sits
+// inside its own <label> (inline admin forms repeat on a page and must not share ids).
+
 export function TextInput({
   name,
   error,
   hint,
+  bare = false,
   className,
   ...props
-}: ComponentProps<"input"> & { name: string; error?: string; hint?: string }) {
+}: ComponentProps<"input"> & { name: string; error?: string; hint?: string; bare?: boolean }) {
   return (
     <input
-      id={props.id ?? name}
+      id={bare ? props.id : (props.id ?? name)}
       name={name}
       aria-invalid={error ? true : undefined}
-      aria-describedby={describedBy(name, error, hint)}
+      aria-describedby={bare ? undefined : describedBy(name, error, hint)}
       className={cx(inputClass, className)}
       {...props}
     />
@@ -97,15 +101,16 @@ export function TextArea({
   name,
   error,
   hint,
+  bare = false,
   className,
   ...props
-}: ComponentProps<"textarea"> & { name: string; error?: string; hint?: string }) {
+}: ComponentProps<"textarea"> & { name: string; error?: string; hint?: string; bare?: boolean }) {
   return (
     <textarea
-      id={props.id ?? name}
+      id={bare ? props.id : (props.id ?? name)}
       name={name}
       aria-invalid={error ? true : undefined}
-      aria-describedby={describedBy(name, error, hint)}
+      aria-describedby={bare ? undefined : describedBy(name, error, hint)}
       className={cx(inputClass, "min-h-32", className)}
       {...props}
     />
@@ -116,16 +121,17 @@ export function Select({
   name,
   error,
   hint,
+  bare = false,
   className,
   children,
   ...props
-}: ComponentProps<"select"> & { name: string; error?: string; hint?: string }) {
+}: ComponentProps<"select"> & { name: string; error?: string; hint?: string; bare?: boolean }) {
   return (
     <select
-      id={props.id ?? name}
+      id={bare ? props.id : (props.id ?? name)}
       name={name}
       aria-invalid={error ? true : undefined}
-      aria-describedby={describedBy(name, error, hint)}
+      aria-describedby={bare ? undefined : describedBy(name, error, hint)}
       className={cx(inputClass, className)}
       {...props}
     >

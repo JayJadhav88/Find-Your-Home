@@ -44,7 +44,7 @@ async function Enquiries({ status }: { status: string }) {
       <form className="flex flex-wrap items-end gap-2" action="/admin/enquiries">
         <label className="flex flex-col gap-1 text-sm font-medium">
           Status
-          <Select name="status" defaultValue={status}>
+          <Select bare name="status" defaultValue={status}>
             <option value="">All</option>
             {ENQUIRY_STATUSES.map((value) => (
               <option key={value} value={value}>{value.replace("_", " ")}</option>

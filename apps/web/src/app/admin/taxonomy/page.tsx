@@ -40,7 +40,7 @@ async function Taxonomy() {
               <ActionForm action={saveTaxonomyItem} submitLabel="Save" submitAriaLabel={`Save ${type.name}`} variant="secondary" inline>
                 <input type="hidden" name="table" value="property_types" />
                 <input type="hidden" name="id" value={type.id} />
-                <label className={label}>Name<TextInput name="name" defaultValue={type.name} /></label>
+                <label className={label}>Name<TextInput bare name="name" defaultValue={type.name} /></label>
                 <Checkbox name="isResidential" label="Residential" defaultChecked={type.is_residential} />
                 <Checkbox name="isActive" label="Active" defaultChecked={type.is_active} />
               </ActionForm>
@@ -49,10 +49,10 @@ async function Taxonomy() {
         </ul>
         <ActionForm action={saveTaxonomyItem} submitLabel="Add type" inline>
           <input type="hidden" name="table" value="property_types" />
-          <label className={label}>New type<TextInput name="name" placeholder="e.g. Duplex" /></label>
+          <label className={label}>New type<TextInput bare name="name" placeholder="e.g. Duplex" /></label>
           <label className={label}>
             Kind
-            <Select name="isResidential" defaultValue="1">
+            <Select bare name="isResidential" defaultValue="1">
               <option value="1">Residential</option>
               <option value="0">Commercial / land</option>
             </Select>
@@ -68,8 +68,8 @@ async function Taxonomy() {
               <ActionForm action={saveTaxonomyItem} submitLabel="Save" submitAriaLabel={`Save ${amenity.name}`} variant="secondary" inline>
                 <input type="hidden" name="table" value="amenities" />
                 <input type="hidden" name="id" value={amenity.id} />
-                <label className={label}>Name<TextInput name="name" defaultValue={amenity.name} /></label>
-                <label className={label}>Group<TextInput name="category" defaultValue={amenity.category ?? ""} /></label>
+                <label className={label}>Name<TextInput bare name="name" defaultValue={amenity.name} /></label>
+                <label className={label}>Group<TextInput bare name="category" defaultValue={amenity.category ?? ""} /></label>
                 <Checkbox name="isActive" label="Active" defaultChecked={amenity.is_active} />
               </ActionForm>
             </li>
@@ -77,8 +77,8 @@ async function Taxonomy() {
         </ul>
         <ActionForm action={saveTaxonomyItem} submitLabel="Add amenity" inline>
           <input type="hidden" name="table" value="amenities" />
-          <label className={label}>New amenity<TextInput name="name" /></label>
-          <label className={label}>Group<TextInput name="category" placeholder="e.g. Building" /></label>
+          <label className={label}>New amenity<TextInput bare name="name" /></label>
+          <label className={label}>Group<TextInput bare name="category" placeholder="e.g. Building" /></label>
         </ActionForm>
       </Card>
 
@@ -95,7 +95,7 @@ async function Taxonomy() {
                 <input type="hidden" name="id" value={location.id} />
                 <input type="hidden" name="level" value={location.level} />
                 <span className="w-24 text-sm text-text-muted">{location.level}</span>
-                <label className={label}>Name<TextInput name="name" defaultValue={location.name} /></label>
+                <label className={label}>Name<TextInput bare name="name" defaultValue={location.name} /></label>
                 <span className="text-sm text-text-muted">{location.parent_id ? `in ${nameOf(location.parent_id)}` : location.country_code}</span>
                 <Checkbox name="isActive" label="Active" defaultChecked={location.is_active} />
               </ActionForm>
@@ -104,10 +104,10 @@ async function Taxonomy() {
         </ul>
         <ActionForm action={saveTaxonomyItem} submitLabel="Add place" inline>
           <input type="hidden" name="table" value="locations" />
-          <label className={label}>Name<TextInput name="name" /></label>
+          <label className={label}>Name<TextInput bare name="name" /></label>
           <label className={label}>
             Level
-            <Select name="level" defaultValue="city">
+            <Select bare name="level" defaultValue="city">
               <option value="country">Country</option>
               <option value="region">Region / state</option>
               <option value="city">City</option>
@@ -116,7 +116,7 @@ async function Taxonomy() {
           </label>
           <label className={label}>
             Inside
-            <Select name="parentId" defaultValue="">
+            <Select bare name="parentId" defaultValue="">
               <option value="">— (countries only)</option>
               {allLocations
                 .filter((location) => location.level !== "locality")
@@ -125,7 +125,7 @@ async function Taxonomy() {
                 ))}
             </Select>
           </label>
-          <label className={label}>Country code<TextInput name="countryCode" maxLength={2} className="w-20 uppercase" /></label>
+          <label className={label}>Country code<TextInput bare name="countryCode" maxLength={2} className="w-20 uppercase" /></label>
         </ActionForm>
       </Card>
     </div>

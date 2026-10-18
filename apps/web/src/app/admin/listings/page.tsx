@@ -56,7 +56,7 @@ async function Listings({ status, q, page }: { status: string; q: string; page: 
       <form className="flex flex-wrap items-end gap-2" action="/admin/listings">
         <label className="flex flex-col gap-1 text-sm font-medium">
           Status
-          <Select name="status" defaultValue={status}>
+          <Select bare name="status" defaultValue={status}>
             <option value="">All</option>
             {LISTING_STATUSES.map((value) => (
               <option key={value} value={value}>{STATUS_LABEL[value]}</option>
@@ -65,7 +65,7 @@ async function Listings({ status, q, page }: { status: string; q: string; page: 
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium">
           Title or reference
-          <TextInput name="q" defaultValue={q} />
+          <TextInput bare name="q" defaultValue={q} />
         </label>
         <Button type="submit" variant="secondary">Filter</Button>
       </form>

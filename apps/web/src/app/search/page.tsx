@@ -135,11 +135,11 @@ function FilterForm({ filters, taxonomy, currency }: { filters: SearchFilters; t
     <form action="/search" className="flex flex-col gap-4 self-start rounded-xl border border-border bg-surface p-4" aria-label="Filters">
       <label className={field}>
         Keyword
-        <TextInput name="q" defaultValue={filters.q} placeholder="e.g. garden" />
+        <TextInput bare name="q" defaultValue={filters.q} placeholder="e.g. garden" />
       </label>
       <label className={field}>
         Buy or rent
-        <Select name="purpose" defaultValue={filters.purpose ?? ""}>
+        <Select bare name="purpose" defaultValue={filters.purpose ?? ""}>
           <option value="">Either</option>
           <option value="sale">Buy</option>
           <option value="rent">Rent</option>
@@ -147,7 +147,7 @@ function FilterForm({ filters, taxonomy, currency }: { filters: SearchFilters; t
       </label>
       <label className={field}>
         Area
-        <Select name="location" defaultValue={filters.location ?? ""}>
+        <Select bare name="location" defaultValue={filters.location ?? ""}>
           <option value="">Anywhere</option>
           {places.map((place) => (
             <option key={place.id} value={place.id}>
@@ -158,7 +158,7 @@ function FilterForm({ filters, taxonomy, currency }: { filters: SearchFilters; t
       </label>
       <label className={field}>
         Property type
-        <Select name="type" defaultValue={filters.type?.[0] ?? ""}>
+        <Select bare name="type" defaultValue={filters.type?.[0] ?? ""}>
           <option value="">Any type</option>
           {taxonomy.propertyTypes.map((type) => (
             <option key={type.id} value={type.id}>
@@ -186,7 +186,7 @@ function FilterForm({ filters, taxonomy, currency }: { filters: SearchFilters; t
       <div className="grid grid-cols-2 gap-2">
         <label className={field}>
           Bedrooms
-          <Select name="beds" defaultValue={filters.beds?.toString() ?? ""}>
+          <Select bare name="beds" defaultValue={filters.beds?.toString() ?? ""}>
             <option value="">Any</option>
             {[1, 2, 3, 4, 5].map((count) => (
               <option key={count} value={count}>
@@ -197,7 +197,7 @@ function FilterForm({ filters, taxonomy, currency }: { filters: SearchFilters; t
         </label>
         <label className={field}>
           Bathrooms
-          <Select name="baths" defaultValue={filters.baths?.toString() ?? ""}>
+          <Select bare name="baths" defaultValue={filters.baths?.toString() ?? ""}>
             <option value="">Any</option>
             {[1, 2, 3, 4].map((count) => (
               <option key={count} value={count}>
@@ -223,7 +223,7 @@ function FilterForm({ filters, taxonomy, currency }: { filters: SearchFilters; t
       </fieldset>
       <label className={field}>
         Furnishing
-        <Select name="furnishing" defaultValue={filters.furnishing ?? ""}>
+        <Select bare name="furnishing" defaultValue={filters.furnishing ?? ""}>
           <option value="">Any</option>
           {Object.entries(FURNISHING_LABEL).map(([value, label]) => (
             <option key={value} value={value}>

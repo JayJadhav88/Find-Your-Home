@@ -29,7 +29,7 @@ async function Users({ q }: { q: string }) {
       <form className="flex flex-wrap items-end gap-2" action="/admin/users">
         <label className="flex flex-col gap-1 text-sm font-medium">
           Name or email
-          <TextInput name="q" defaultValue={q} />
+          <TextInput bare name="q" defaultValue={q} />
         </label>
         <Button type="submit" variant="secondary">Search</Button>
       </form>
@@ -64,7 +64,7 @@ async function Users({ q }: { q: string }) {
                       <input type="hidden" name="userId" value={user.id} />
                       <label className="flex flex-col gap-1 text-sm font-medium">
                         Role
-                        <Select name="role" defaultValue="owner">
+                        <Select bare name="role" defaultValue="owner">
                           {APP_ROLES.filter((role) => role !== "buyer").map((role) => (
                             <option key={role} value={role}>{role}</option>
                           ))}
@@ -72,7 +72,7 @@ async function Users({ q }: { q: string }) {
                       </label>
                       <label className="flex flex-col gap-1 text-sm font-medium">
                         Change
-                        <Select name="grant" defaultValue="1">
+                        <Select bare name="grant" defaultValue="1">
                           <option value="1">Grant</option>
                           <option value="0">Remove</option>
                         </Select>
@@ -89,7 +89,7 @@ async function Users({ q }: { q: string }) {
                         <input type="hidden" name="status" value="suspended" />
                         <label className="flex flex-col gap-1 text-sm font-medium">
                           Reason (internal)
-                          <TextInput name="reason" />
+                          <TextInput bare name="reason" />
                         </label>
                       </ActionForm>
                     )}

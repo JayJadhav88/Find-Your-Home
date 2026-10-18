@@ -137,7 +137,7 @@ async function Review({ id }: { id: string }) {
             {!listing.is_featured ? (
               <label className="flex flex-col gap-1 text-sm font-medium">
                 Until (optional)
-                <TextInput name="until" type="date" />
+                <TextInput bare name="until" type="date" />
               </label>
             ) : null}
           </ActionForm>
@@ -147,7 +147,7 @@ async function Review({ id }: { id: string }) {
             <input type="hidden" name="listingId" value={listing.id} />
             <label className="flex flex-col gap-1 text-sm font-medium">
               Assigned agent
-              <Select name="agentId" defaultValue={listing.agent_id ?? ""}>
+              <Select bare name="agentId" defaultValue={listing.agent_id ?? ""}>
                 <option value="">None</option>
                 {(agents.data ?? []).map((agent) => (
                   <option key={agent.user_id} value={agent.user_id}>{agent.profile?.display_name ?? agent.user_id}</option>
