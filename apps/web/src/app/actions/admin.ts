@@ -1,6 +1,6 @@
 "use server";
 
-import { APP_ROLES } from "@fyh/shared";
+import { APP_ROLES, ROLE_LABEL } from "@fyh/shared";
 import { refresh, updateTag } from "next/cache";
 import { z } from "zod";
 import { getViewer, isAdmin, isStaff } from "@/lib/auth";
@@ -113,7 +113,8 @@ export async function setUserRole(_previous: FormState, formData: FormData): Pro
     p_granted: input.data.grant === "1",
   });
   if (error) return { error: friendlyDbError(error) };
-  return done(input.data.grant === "1" ? `Granted ${input.data.role}.` : `Removed ${input.data.role}.`);
+  const label = ROLE_LABEL[input.data.role];
+  return done(input.data.grant === "1" ? `Granted ${label}.` : `Removed ${label}.`);
 }
 
 export async function setUserStatus(_previous: FormState, formData: FormData): Promise<FormState> {
@@ -160,6 +161,10 @@ export async function updateSettings(_previous: FormState, formData: FormData): 
       comparison_max: number("comparisonMax"),
       enquiry_limit_per_hour: number("enquiryLimit"),
       submission_limit_per_day: number("submissionLimit"),
+      review_hours_target: number("reviewHours"),
+      quiet_start_hour: number("quietStart"),
+      quiet_end_hour: number("quietEnd"),
+      broadcast_weekly_cap: number("broadcastCap"),
       seo_default_title: optional("seoTitle"),
       seo_default_description: optional("seoDescription"),
     })

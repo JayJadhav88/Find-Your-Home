@@ -89,6 +89,22 @@ async function Settings() {
             <Field label="Submissions per lister per day" name="submissionLimit"><TextInput name="submissionLimit" inputMode="numeric" defaultValue={settings.submission_limit_per_day} /></Field>
           </div>
 
+          <h2 className="mt-4 text-lg font-semibold">Notifications</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Usual review time (hours)" name="reviewHours" hint="Told to owners after they submit: “usually reviewed within …”.">
+              <TextInput name="reviewHours" inputMode="numeric" defaultValue={settings.review_hours_target} />
+            </Field>
+            <Field label="Messages per member per week" name="broadcastCap" hint="Most broadcasts one person gets outside the app in 7 days.">
+              <TextInput name="broadcastCap" inputMode="numeric" defaultValue={settings.broadcast_weekly_cap} />
+            </Field>
+            <Field label="Quiet hours start (0–23)" name="quietStart" hint="News and alerts wait until quiet hours end, in each member's time zone.">
+              <TextInput name="quietStart" inputMode="numeric" defaultValue={settings.quiet_start_hour} />
+            </Field>
+            <Field label="Quiet hours end (0–23)" name="quietEnd" hint="Same start and end switches quiet hours off.">
+              <TextInput name="quietEnd" inputMode="numeric" defaultValue={settings.quiet_end_hour} />
+            </Field>
+          </div>
+
           <h2 className="mt-4 text-lg font-semibold">Search engines</h2>
           <Field label="Default page title" name="seoTitle" hint="Up to 70 characters."><TextInput name="seoTitle" maxLength={70} defaultValue={settings.seo_default_title ?? ""} /></Field>
           <Field label="Default description" name="seoDescription" hint="Up to 170 characters."><TextArea name="seoDescription" maxLength={170} rows={2} defaultValue={settings.seo_default_description ?? ""} /></Field>

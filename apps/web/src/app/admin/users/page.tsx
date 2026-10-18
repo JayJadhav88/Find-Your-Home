@@ -1,4 +1,4 @@
-import { APP_ROLES } from "@fyh/shared";
+import { APP_ROLES, ROLE_LABEL } from "@fyh/shared";
 import { Suspense } from "react";
 import { setUserRole, setUserStatus } from "@/app/actions/admin";
 import { ActionForm } from "@/components/action-form";
@@ -54,7 +54,7 @@ async function Users({ q }: { q: string }) {
                   <div className="flex flex-wrap gap-1">
                     {user.status !== "active" ? <Badge tone="suspended">{user.status.replace("_", " ")}</Badge> : null}
                     {user.roles.map((role) => (
-                      <Badge key={role}>{role}</Badge>
+                      <Badge key={role}>{ROLE_LABEL[role].split(" (")[0]}</Badge>
                     ))}
                   </div>
                 </div>
@@ -66,7 +66,7 @@ async function Users({ q }: { q: string }) {
                         Role
                         <Select bare name="role" defaultValue="owner">
                           {APP_ROLES.filter((role) => role !== "buyer").map((role) => (
-                            <option key={role} value={role}>{role}</option>
+                            <option key={role} value={role}>{ROLE_LABEL[role]}</option>
                           ))}
                         </Select>
                       </label>

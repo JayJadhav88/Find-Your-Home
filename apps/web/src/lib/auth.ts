@@ -75,6 +75,12 @@ export async function requireEnquiryTeam(next: string): Promise<Viewer> {
   return viewer;
 }
 
+export async function requireBroadcastTeam(next: string): Promise<Viewer> {
+  const viewer = await requireViewer(next);
+  if (!canSendBroadcasts(viewer)) redirect(isTeam(viewer) ? "/admin?denied=permission" : "/account?denied=admin");
+  return viewer;
+}
+
 export async function requireAdmin(next: string): Promise<Viewer> {
   const viewer = await requireViewer(next);
   if (!isAdmin(viewer)) redirect("/admin?denied=admin-only");
