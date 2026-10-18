@@ -2,6 +2,7 @@
 // bucket on publish, and removes them on unpublish. Invoked by the scheduler.
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { extensionFor, ImageRejectedError, sanitizeImage } from "../_shared/image-sanitize.ts";
+import { safeFetch } from "../_shared/safe-fetch.ts";
 import { errorMessage, json, rejectUnlessWorker, serviceClient } from "../_shared/worker.ts";
 
 const PRIVATE_BUCKET = "listing-uploads";
@@ -9,10 +10,13 @@ const PUBLIC_BUCKET = "listing-public";
 
 interface Job {
   id: number;
-  kind: "publish_listing_media" | "unpublish_listing_media";
+  kind: "publish_listing_media" | "unpublish_listing_media" | "import_listing_images";
   listing_id: string;
   attempts: number;
+  payload: { urls?: string[]; publish?: boolean };
 }
+
+const MAX_IMPORT_IMAGE_BYTES = 10 * 1024 * 1024;
 
 Deno.serve(async (request) => {
   const denied = rejectUnlessWorker(request);
@@ -26,7 +30,11 @@ Deno.serve(async (request) => {
   for (const job of (jobs ?? []) as Job[]) {
     try {
       const outcome =
-        job.kind === "publish_listing_media" ? await publish(db, job.listing_id) : await unpublish(db, job.listing_id);
+        job.kind === "publish_listing_media"
+          ? await publish(db, job.listing_id)
+          : job.kind === "import_listing_images"
+            ? await importImages(db, job)
+            : await unpublish(db, job.listing_id);
       await finish(db, job.id, true);
       results.push({ id: job.id, kind: job.kind, ok: true, ...outcome });
     } catch (failure) {
@@ -134,6 +142,70 @@ async function unpublish(db: SupabaseClient, listingId: string) {
   const { error } = await db.from("listing_media").update({ public_key: null }).eq("listing_id", listingId);
   if (error) throw error;
   return { removed: keys.length };
+}
+
+/**
+ * Downloads spreadsheet image links into the private bucket (checked and cleaned like any
+ * upload), then publishes the listing or sends it to review. Links that fail are reported,
+ * not retried: a broken link will not fix itself.
+ */
+async function importImages(db: SupabaseClient, job: Job) {
+  const urls = (job.payload.urls ?? []).slice(0, 30);
+  const allowHttp = Deno.env.get("ALLOW_HTTP_IMAGE_IMPORT") === "true";
+  const allowedPrivateHosts = (Deno.env.get("IMPORT_ALLOWED_PRIVATE_HOSTS") ?? "")
+    .split(",")
+    .map((host) => host.trim().toLowerCase())
+    .filter(Boolean);
+
+  const { count: existing } = await db
+    .from("listing_media")
+    .select("id", { count: "exact", head: true })
+    .eq("listing_id", job.listing_id);
+  let hasCover = Boolean(existing);
+  const failed: Array<{ url: string; error: string }> = [];
+  let imported = 0;
+
+  for (const [index, url] of urls.entries()) {
+    try {
+      const download = await safeFetch(url, { maxBytes: MAX_IMPORT_IMAGE_BYTES, allowHttp, allowedPrivateHosts });
+      const clean = sanitizeImage(download.bytes, null);
+      const key = `${job.listing_id}/${crypto.randomUUID()}.${extensionFor(clean.type)}`;
+      const { error: uploadError } = await db.storage
+        .from(PRIVATE_BUCKET)
+        .upload(key, clean.bytes, { contentType: clean.type, upsert: false });
+      if (uploadError) throw new Error(`Storage upload failed: ${uploadError.message}`);
+      const { error: insertError } = await db.from("listing_media").insert({
+        listing_id: job.listing_id,
+        upload_key: key,
+        kind: "image",
+        mime_type: clean.type,
+        bytes: clean.bytes.length,
+        is_cover: !hasCover,
+        sort_order: index,
+      });
+      if (insertError) {
+        await db.storage.from(PRIVATE_BUCKET).remove([key]);
+        throw new Error(insertError.message);
+      }
+      hasCover = true;
+      imported++;
+    } catch (failure) {
+      failed.push({ url: url.slice(0, 300), error: errorMessage(failure).slice(0, 200) });
+    }
+  }
+
+  const { data: status, error } = await db.rpc("worker_finalize_import", {
+    p_listing_id: job.listing_id,
+    p_publish: job.payload.publish === true,
+  });
+  if (error) throw error;
+
+  await db
+    .from("job_queue")
+    .update({ payload: { ...job.payload, result: { imported, failed, status } } })
+    .eq("id", job.id);
+  if (failed.length) console.warn(`[process-jobs] listing ${job.listing_id}: ${failed.length} image link(s) failed`);
+  return { imported, failed: failed.length, status };
 }
 
 async function listPublicObjects(db: SupabaseClient, listingId: string): Promise<string[]> {
