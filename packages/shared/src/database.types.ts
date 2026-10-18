@@ -701,6 +701,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"web_push_subscriptions": {
+                  Row: {
+                    "auth": string,"created_at": string,"endpoint": string,"last_seen_at": string,"p256dh": string,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "auth": string,"created_at"?: string,"endpoint": string,"last_seen_at"?: string,"p256dh": string,"user_id": string
+                  }
+                  Update: {
+                    "auth"?: string,"created_at"?: string,"endpoint"?: string,"last_seen_at"?: string,"p256dh"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "web_push_subscriptions_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 }
           }
           Views: {
@@ -766,6 +786,9 @@ isOneToOne: false
 "register_push_token":
 { Args: { "p_platform": string,"p_token": string }; Returns: undefined
                            },
+"register_web_push":
+{ Args: { "p_auth": string,"p_endpoint": string,"p_p256dh": string }; Returns: undefined
+                           },
 "request_account_deletion":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
@@ -798,6 +821,9 @@ isOneToOne: false
 "unregister_push_token":
 { Args: { "p_token": string }; Returns: undefined
                            },
+"unregister_web_push":
+{ Args: { "p_endpoint": string }; Returns: undefined
+                           },
 "update_enquiry_status":
 { Args: { "p_enquiry_id": string,"p_status": Database["public"]['Enums']["enquiry_status"] }; Returns: undefined
                            },
@@ -825,7 +851,7 @@ isOneToOne: false
       } },
 "worker_claim_notifications":
 { Args: { "p_channels"?: (Database["public"]['Enums']["notification_channel"])[],"p_limit"?: number }; Returns: {
-              "attempts": number,"channel": Database["public"]['Enums']["notification_channel"],"id": number,"notification_id": number,"push_tokens": (string)[],"recipient_email": string,"recipient_locale": string,"recipient_name": string,"recipient_phone": string,"template": string,"template_data": Json
+              "attempts": number,"channel": Database["public"]['Enums']["notification_channel"],"id": number,"notification_id": number,"push_tokens": (string)[],"recipient_email": string,"recipient_locale": string,"recipient_name": string,"recipient_phone": string,"template": string,"template_data": Json,"web_push": Json
             }[]
                            },
 "worker_finalize_import":
@@ -842,6 +868,9 @@ isOneToOne: false
                            },
 "worker_remove_push_token":
 { Args: { "p_token": string }; Returns: undefined
+                           },
+"worker_remove_web_push":
+{ Args: { "p_endpoint": string }; Returns: undefined
                            }
           }
           Enums: {

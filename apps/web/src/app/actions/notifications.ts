@@ -62,3 +62,33 @@ export async function saveNotificationPreferences(_previous: FormState, formData
   refresh();
   return { ok: true, message: "Notification settings saved." };
 }
+
+const webPushInput = z.object({
+  endpoint: z.url().max(1000),
+  p256dh: z.string().regex(/^[A-Za-z0-9_-]{80,100}$/),
+  auth: z.string().regex(/^[A-Za-z0-9_-]{16,32}$/),
+});
+
+/** Saves this browser's push subscription for the signed-in account. */
+export async function saveWebPushSubscription(input: z.input<typeof webPushInput>): Promise<{ error?: string }> {
+  const viewer = await getViewer();
+  if (!viewer) return { error: "Sign in first." };
+  const parsed = webPushInput.safeParse(input);
+  if (!parsed.success) return { error: "This browser returned an unexpected subscription." };
+  const supabase = await createUserClient();
+  const { error } = await supabase.rpc("register_web_push", {
+    p_endpoint: parsed.data.endpoint,
+    p_p256dh: parsed.data.p256dh,
+    p_auth: parsed.data.auth,
+  });
+  return error
+    ? { error: error.code === "23514" ? "This browser's notification service isn't supported. Try Chrome, Edge, Firefox or Safari." : friendlyDbError(error) }
+    : {};
+}
+
+export async function removeWebPushSubscription(endpoint: string): Promise<void> {
+  const viewer = await getViewer();
+  if (!viewer || typeof endpoint !== "string") return;
+  const supabase = await createUserClient();
+  await supabase.rpc("unregister_web_push", { p_endpoint: endpoint });
+}

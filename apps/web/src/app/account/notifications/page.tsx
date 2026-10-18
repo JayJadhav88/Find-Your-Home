@@ -4,6 +4,7 @@ import { markAllNotificationsRead, openNotification, saveNotificationPreferences
 import { ActionForm } from "@/components/action-form";
 import { Loading } from "@/components/loading";
 import { Button, Card, Checkbox, cx, EmptyState, Field, PageHeader, TextInput } from "@/components/ui";
+import { WebPushToggle } from "@/components/web-push-toggle";
 import { requireViewer } from "@/lib/auth";
 import { getSiteSettings } from "@/lib/public-data";
 import { createUserClient } from "@/lib/supabase";
@@ -27,6 +28,7 @@ async function Notifications() {
   const fmt = { locale: settings.default_locale, timeZone: prefs?.timezone ?? settings.default_timezone };
   const unread = (items ?? []).filter((item) => !item.read_at).length;
   const timeZones = Intl.supportedValuesOf("timeZone");
+  const webPushKey = process.env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY;
 
   return (
     <div className="flex flex-col gap-6">
@@ -89,9 +91,14 @@ async function Notifications() {
         <p className="mb-4 mt-1 text-sm text-text-muted">
           Notifications always appear here. Choose where else you want them.
         </p>
+        {webPushKey ? (
+          <div className="mb-4 border-b border-border pb-4">
+            <WebPushToggle publicKey={webPushKey} />
+          </div>
+        ) : null}
         <ActionForm action={saveNotificationPreferences} submitLabel="Save notification settings">
           <Checkbox name="emailEnabled" label={`Email (${viewer.email})`} defaultChecked={prefs?.email_enabled ?? true} />
-          <Checkbox name="pushEnabled" label="Phone notifications (in the Find Your Home app)" defaultChecked={prefs?.push_enabled ?? true} />
+          <Checkbox name="pushEnabled" label="Phone and browser notifications" defaultChecked={prefs?.push_enabled ?? true} />
           <Checkbox name="whatsappEnabled" label={WHATSAPP_CONSENT_TEXT} defaultChecked={prefs?.whatsapp_enabled ?? false} />
           <Field label="WhatsApp number" name="whatsappNumber" hint="With country code, e.g. +91 98765 43210.">
             <TextInput name="whatsappNumber" type="tel" autoComplete="tel" defaultValue={prefs?.whatsapp_number ?? ""} />
