@@ -2,12 +2,14 @@ import { tokens } from "@fyh/shared";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { InboxProvider } from "@/lib/notifications";
 import { SessionProvider } from "@/lib/session";
 
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <SessionProvider>
+        <InboxProvider>
         <StatusBar style="dark" />
         <Stack
           screenOptions={{
@@ -25,7 +27,10 @@ export default function RootLayout() {
           <Stack.Screen name="editor/[id]" options={{ title: "Listing" }} />
           <Stack.Screen name="enquiries/index" options={{ title: "Enquiries" }} />
           <Stack.Screen name="enquiries/[id]" options={{ title: "Enquiry" }} />
+          <Stack.Screen name="notifications" options={{ title: "Notifications" }} />
+          <Stack.Screen name="notification-settings" options={{ title: "Notification settings" }} />
         </Stack>
+        </InboxProvider>
       </SessionProvider>
     </SafeAreaProvider>
   );

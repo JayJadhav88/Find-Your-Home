@@ -1,6 +1,7 @@
 import {
   createListing,
   fieldErrors,
+  formatReviewTime,
   getListingHistory,
   getOwnListing,
   getSettings,
@@ -51,6 +52,7 @@ export default function EditorScreen() {
     const [settings, taxonomy] = await Promise.all([getSettings(supabase), getTaxonomy(supabase)]);
     return { settings, taxonomy };
   }, []);
+  const reviewHours = reference.data?.settings.review_hours_target ?? 12;
   const existing = useResource(async () => {
     if (!listingId) return null;
     const [listing, history] = await Promise.all([getOwnListing(supabase, listingId), getListingHistory(supabase, listingId)]);
@@ -173,7 +175,7 @@ export default function EditorScreen() {
   }
 
   const actions: Array<{ action: Parameters<typeof listingWorkflow>[2]; label: string; success: string; variant?: "primary" | "secondary" | "danger"; confirm?: string }> = [];
-  if (status === "draft" || status === "rejected") actions.push({ action: "submit", label: "Submit for review", success: "Submitted. You'll get an email with the decision.", variant: "primary" });
+  if (status === "draft" || status === "rejected") actions.push({ action: "submit", label: "Submit for review", success: `Submitted. Listings are usually reviewed within ${formatReviewTime(reviewHours)}; we'll notify you.`, variant: "primary" });
   if (status === "pending_review") actions.push({ action: "withdraw", label: "Withdraw to edit", success: "Withdrawn. The listing is a draft again." });
   if (status === "published") {
     const sale = listing?.purpose === "sale";
@@ -200,7 +202,11 @@ export default function EditorScreen() {
               <Text style={text.muted}>Status</Text>
               <Badge label={STATUS_LABEL[status] ?? status} tone={STATUS_TONE[status] ?? "muted"} />
             </View>
-            <Text style={text.body}>{HELP[status]}</Text>
+            <Text style={text.body}>
+              {status === "pending_review"
+                ? `A moderator is reviewing this listing. Listings are usually reviewed within ${formatReviewTime(reviewHours)}; we'll notify you. Withdraw it if you need to make changes.`
+                : HELP[status]}
+            </Text>
             {lastReason && (status === "rejected" || status === "suspended") ? <Notice tone="warning" title="Note from our moderators">{lastReason}</Notice> : null}
             {actions.map((item) => (
               <Button

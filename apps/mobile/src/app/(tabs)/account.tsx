@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 import { SignInPrompt } from "@/components/sign-in-prompt";
 import { Badge, Button, Card, Field, Loading, Notice, text } from "@/components/ui";
+import { useInbox } from "@/lib/notifications";
 import { useSession } from "@/lib/session";
 import { env, supabase } from "@/lib/supabase";
 
@@ -13,6 +14,7 @@ const { spacing } = tokens;
 export default function AccountScreen() {
   const router = useRouter();
   const { viewer, loading, refresh, signOut } = useSession();
+  const { unread } = useInbox();
   const [displayName, setDisplayName] = useState(viewer?.displayName ?? "");
   const [phone, setPhone] = useState(viewer?.phone ?? "");
   // Refill the form when the signed-in profile changes (React's "adjust state on prop change").
@@ -76,6 +78,11 @@ export default function AccountScreen() {
         <Field label="Phone" value={phone} onChangeText={setPhone} error={errors.phone} keyboardType="phone-pad" hint="Only shown on listings where you choose to show it." />
         <Button label="Save profile" loading={saving} onPress={save} />
       </Card>
+      <Button
+        label={unread ? `Notifications (${unread} unread)` : "Notifications"}
+        variant={unread ? "primary" : "secondary"}
+        onPress={() => router.push("/notifications")}
+      />
       <Button label="Enquiries" variant="secondary" onPress={() => router.push("/enquiries")} />
       <Card style={{ gap: spacing.sm }}>
         <Text style={text.h2}>Privacy</Text>
