@@ -57,6 +57,18 @@ export async function signIn(_previous: FormState, formData: FormData): Promise<
   redirect(safeNext(formData.get("next")));
 }
 
+/** Starts Google sign-in; Google sends the person back to /auth/callback. */
+export async function signInWithGoogle(formData: FormData): Promise<void> {
+  const next = safeNext(formData.get("next"));
+  const supabase = await createUserClient();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: absoluteUrl(`/auth/callback?next=${encodeURIComponent(next)}`) },
+  });
+  if (error || !data.url) redirect(`/sign-in?error=google&next=${encodeURIComponent(next)}`);
+  redirect(data.url);
+}
+
 export async function signOut(): Promise<void> {
   const supabase = await createUserClient();
   await supabase.auth.signOut();

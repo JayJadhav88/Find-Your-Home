@@ -3,8 +3,8 @@ import { type NextRequest, NextResponse } from "next/server";
 import { safeNext } from "@/lib/auth";
 import { createUserClient } from "@/lib/supabase";
 
-// Landing point for links in Supabase Auth emails (sign-up confirmation, password reset).
-// Supports the PKCE `code` flow and the `token_hash` flow.
+// Landing point for links in Supabase Auth emails (sign-up confirmation, password reset) and
+// for Google sign-in. Supports the PKCE `code` flow and the `token_hash` flow.
 export async function GET(request: NextRequest) {
   const url = request.nextUrl;
   const next = safeNext(url.searchParams.get("next"));
@@ -20,6 +20,8 @@ export async function GET(request: NextRequest) {
     ok = !(await supabase.auth.verifyOtp({ token_hash: tokenHash, type })).error;
   }
 
-  const target = new URL(ok ? next : "/sign-in?error=link-expired", url.origin);
+  // Google sends ?error=… when the person cancels or the provider is not set up.
+  const failure = url.searchParams.has("error") ? "/sign-in?error=google" : "/sign-in?error=link-expired";
+  const target = new URL(ok ? next : failure, url.origin);
   return NextResponse.redirect(target);
 }

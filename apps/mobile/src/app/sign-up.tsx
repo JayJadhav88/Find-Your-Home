@@ -1,13 +1,17 @@
 import { fieldErrors, signUpSchema, tokens } from "@fyh/shared";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text } from "react-native";
+import { GoogleButton } from "@/components/google-button";
 import { Button, Field, Notice, text } from "@/components/ui";
+import { useSession } from "@/lib/session";
 import { env, supabase } from "@/lib/supabase";
 
 const { spacing } = tokens;
 
 export default function SignUpScreen() {
+  const router = useRouter();
+  const { refresh } = useSession();
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -60,6 +64,13 @@ export default function SignUpScreen() {
           Create an account
         </Text>
         {result && !result.ok ? <Notice tone="danger">{result.text}</Notice> : null}
+        <GoogleButton
+          onSignedIn={async () => {
+            await refresh();
+            if (router.canGoBack()) router.back();
+            else router.replace("/");
+          }}
+        />
         <Field label="Your name" required autoComplete="name" value={displayName} onChangeText={setDisplayName} error={errors.displayName} />
         <Field label="Email" required autoComplete="email" keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} error={errors.email} />
         <Field

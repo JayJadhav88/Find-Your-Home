@@ -2,6 +2,7 @@ import { fieldErrors, signInSchema, tokens } from "@fyh/shared";
 import { Link, useRouter } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, View } from "react-native";
+import { GoogleButton } from "@/components/google-button";
 import { Button, Field, Notice, text } from "@/components/ui";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
@@ -40,6 +41,10 @@ export default function SignInScreen() {
       );
       return;
     }
+    await finish();
+  }
+
+  async function finish() {
     await refresh();
     if (router.canGoBack()) router.back();
     else router.replace("/");
@@ -53,6 +58,7 @@ export default function SignInScreen() {
         </Text>
         <Text style={text.muted}>Save homes, send enquiries and manage your listings.</Text>
         {message ? <Notice tone="danger">{message}</Notice> : null}
+        <GoogleButton onSignedIn={finish} />
         <Field label="Email" required autoComplete="email" keyboardType="email-address" autoCapitalize="none" textContentType="emailAddress" value={email} onChangeText={setEmail} error={errors.email} />
         <Field label="Password" required secureTextEntry autoComplete="current-password" textContentType="password" value={password} onChangeText={setPassword} error={errors.password} onSubmitEditing={submit} />
         <Button label="Sign in" loading={busy} onPress={submit} />
