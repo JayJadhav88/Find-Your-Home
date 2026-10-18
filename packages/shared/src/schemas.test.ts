@@ -110,6 +110,6 @@ describe("search params", () => {
   it("uses the default currency when filtering by price", () => {
     const args = searchFiltersToRpcArgs(parseSearchParams({ minPrice: "100" }), { currency: "EUR" });
     expect(args.p_currency).toBe("EUR");
-    expect(searchFiltersToRpcArgs(parseSearchParams({}), { currency: "EUR" }).p_currency).toBeNull();
+    expect(searchFiltersToRpcArgs(parseSearchParams({}), { currency: "EUR" }).p_currency).toBeUndefined();
   });
 });
