@@ -1,5 +1,6 @@
 import { getViewer, type Viewer } from "@fyh/shared";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { forgetThisPhone } from "./push";
 import { supabase } from "./supabase";
 
 interface SessionValue {
@@ -42,6 +43,8 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   const signOut = useCallback(async () => {
+    // Stop this phone's notifications for the account while still signed in.
+    await forgetThisPhone();
     await supabase.auth.signOut();
     setViewer(null);
   }, []);

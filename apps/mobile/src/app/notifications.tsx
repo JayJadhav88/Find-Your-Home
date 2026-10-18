@@ -8,13 +8,13 @@ import {
   type NotificationTarget,
 } from "@fyh/shared";
 import { Stack, useRouter } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SignInPrompt } from "@/components/sign-in-prompt";
 import { Button, EmptyState, ErrorState, Loading, text } from "@/components/ui";
+import { openNotificationTarget } from "@/lib/notification-targets";
 import { useInbox } from "@/lib/notifications";
 import { useSession } from "@/lib/session";
-import { env, supabase } from "@/lib/supabase";
+import { supabase } from "@/lib/supabase";
 import { useResource } from "@/lib/use-resource";
 
 const { colors, spacing, radius } = tokens;
@@ -26,29 +26,12 @@ export default function NotificationsScreen() {
   const { refreshUnread } = useInbox();
   const inbox = useResource(() => (viewer ? listNotifications(supabase) : Promise.resolve([] as InboxItem[])), [viewer?.id]);
 
-  function open(target: NotificationTarget) {
-    switch (target.kind) {
-      case "my_listing":
-        router.push({ pathname: "/editor/[id]", params: { id: target.id } });
-        break;
-      case "enquiry":
-        router.push({ pathname: "/enquiries/[id]", params: { id: target.id } });
-        break;
-      case "admin_listing":
-        void WebBrowser.openBrowserAsync(`${env.siteUrl}/admin/listings/${target.id}`);
-        break;
-      case "url":
-        void WebBrowser.openBrowserAsync(target.url.startsWith("/") ? `${env.siteUrl}${target.url}` : target.url);
-        break;
-    }
-  }
-
   async function press(item: InboxItem, target: NotificationTarget) {
     if (!item.read_at) {
       inbox.setData((items) => items?.map((row) => (row.id === item.id ? { ...row, read_at: new Date().toISOString() } : row)) ?? items);
       markNotificationsRead(supabase, [item.id]).then(refreshUnread, () => {});
     }
-    open(target);
+    openNotificationTarget(router, target);
   }
 
   async function markAll() {

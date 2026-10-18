@@ -2,6 +2,7 @@ import { tokens } from "@fyh/shared";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { PushBridge } from "@/components/push-bridge";
 import { InboxProvider } from "@/lib/notifications";
 import { SessionProvider } from "@/lib/session";
 
@@ -11,6 +12,7 @@ export default function RootLayout() {
       <SessionProvider>
         <InboxProvider>
         <StatusBar style="dark" />
+        <PushBridge />
         <Stack
           screenOptions={{
             headerTintColor: tokens.colors.brand,

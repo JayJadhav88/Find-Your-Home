@@ -23,6 +23,7 @@ import { Badge, Button, Card, ErrorState, Field, Loading, Notice, Segmented, tex
 import { STATUS_LABEL, STATUS_TONE } from "@/lib/format";
 import { pickPhotos, uploadPhoto, type PhotoSource } from "@/lib/photos";
 import { useSession } from "@/lib/session";
+import { setUpPush } from "@/lib/push";
 import { supabase } from "@/lib/supabase";
 import { useResource } from "@/lib/use-resource";
 
@@ -145,6 +146,8 @@ export default function EditorScreen() {
       await listingWorkflow(supabase, listingId, action);
       await existing.reload();
       setNotice({ tone: "success", text: success });
+      // Good moment to offer notifications: the owner is waiting for a decision.
+      if (action === "submit") void setUpPush({ ask: true });
     } catch (failure) {
       setNotice({ tone: "danger", text: failure instanceof Error ? failure.message : "That didn't work." });
     } finally {

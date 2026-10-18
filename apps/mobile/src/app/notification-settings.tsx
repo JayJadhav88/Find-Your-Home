@@ -11,6 +11,7 @@ import { useState } from "react";
 import { ScrollView, StyleSheet, Switch, Text, View } from "react-native";
 import { SignInPrompt } from "@/components/sign-in-prompt";
 import { Button, Card, ErrorState, Field, Loading, Notice, text } from "@/components/ui";
+import { pushSupported, setUpPush } from "@/lib/push";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { useResource } from "@/lib/use-resource";
@@ -42,6 +43,15 @@ export default function NotificationSettingsScreen() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
   const [notice, setNotice] = useState<{ tone: "success" | "danger"; text: string } | null>(null);
+  const [phoneNotice, setPhoneNotice] = useState<{ tone: "success" | "warning"; text: string } | null>(null);
+  const [connecting, setConnecting] = useState(false);
+
+  async function connectPhone() {
+    setConnecting(true);
+    const result = await setUpPush({ ask: true });
+    setPhoneNotice(result.ok ? { tone: "success", text: "This phone will get notifications." } : { tone: "warning", text: result.message });
+    setConnecting(false);
+  }
 
   // Fill the form once per loaded record (adjusting state during render, not in an effect).
   const prefs = data.data?.prefs;
@@ -91,6 +101,14 @@ export default function NotificationSettingsScreen() {
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: spacing.md, gap: spacing.md }}>
       <Text style={text.muted}>Notifications always appear in the app. Choose where else you want them.</Text>
+      {pushSupported ? (
+        <Card style={{ gap: spacing.sm }}>
+          <Text style={text.h2}>This phone</Text>
+          <Text style={text.muted}>Show notifications on this phone even when the app is closed.</Text>
+          <Button label="Turn on phone notifications" variant="secondary" loading={connecting} onPress={connectPhone} />
+          {phoneNotice ? <Notice tone={phoneNotice.tone}>{phoneNotice.text}</Notice> : null}
+        </Card>
+      ) : null}
       <Card style={{ gap: spacing.sm }}>
         <Toggle label={`Email (${viewer.email})`} value={form.emailEnabled} onChange={set("emailEnabled")} />
         <Toggle label="Phone notifications" hint="Shown on this phone even when the app is closed." value={form.pushEnabled} onChange={set("pushEnabled")} />

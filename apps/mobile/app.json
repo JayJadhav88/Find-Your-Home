@@ -30,6 +30,7 @@
       ["expo-secure-store", { "configureAndroidBackup": true }],
       "expo-image",
       "expo-web-browser",
+      ["expo-notifications", { "color": "#1F5F57" }],
       [
         "expo-image-picker",
         {
