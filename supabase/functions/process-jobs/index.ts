@@ -37,8 +37,22 @@ Deno.serve(async (request) => {
     }
   }
 
+  if (results.some((result) => result.ok)) await refreshWebsiteCache();
   return json({ processed: results.length, results });
 });
+
+/** Asks the website to drop cached listing pages so new or removed photos show at once. */
+async function refreshWebsiteCache() {
+  const url = Deno.env.get("REVALIDATE_URL");
+  const secret = Deno.env.get("REVALIDATE_SECRET");
+  if (!url || !secret) return; // Optional: pages then refresh on their normal cache schedule.
+  try {
+    const response = await fetch(url, { method: "POST", headers: { "x-revalidate-secret": secret } });
+    if (!response.ok) console.warn(`[process-jobs] website cache refresh returned HTTP ${response.status}`);
+  } catch (failure) {
+    console.warn(`[process-jobs] website cache refresh failed: ${errorMessage(failure)}`);
+  }
+}
 
 async function finish(db: SupabaseClient, id: number, ok: boolean, error?: string) {
   const { error: finishError } = await db.rpc("worker_finish_job", { p_id: id, p_ok: ok, p_error: error ?? null });

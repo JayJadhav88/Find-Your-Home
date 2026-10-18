@@ -32,8 +32,9 @@ const nextConfig: NextConfig = {
         pathname: "/storage/v1/object/public/listing-public/**",
       },
     ],
-    // Only the local development stack runs on a loopback address.
-    dangerouslyAllowLocalIP: isLocalSupabase && process.env.NODE_ENV !== "production",
+    // Only allowed when the configured Supabase itself is on this machine (local stack,
+    // including `next start` previews). A deployed site points at a public Supabase URL.
+    dangerouslyAllowLocalIP: isLocalSupabase,
   },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
