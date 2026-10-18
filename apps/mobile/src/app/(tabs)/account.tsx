@@ -1,4 +1,4 @@
-import { profileSchema, fieldErrors, tokens, updateProfile } from "@fyh/shared";
+import { profileSchema, fieldErrors, TEAM_ROLES, tokens, updateProfile } from "@fyh/shared";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
@@ -15,6 +15,7 @@ export default function AccountScreen() {
   const router = useRouter();
   const { viewer, loading, refresh, signOut } = useSession();
   const { unread } = useInbox();
+  const isTeam = Boolean(viewer?.roles.some((role) => (TEAM_ROLES as readonly string[]).includes(role)));
   const [displayName, setDisplayName] = useState(viewer?.displayName ?? "");
   const [phone, setPhone] = useState(viewer?.phone ?? "");
   // Refill the form when the signed-in profile changes (React's "adjust state on prop change").
@@ -84,6 +85,14 @@ export default function AccountScreen() {
         onPress={() => router.push("/notifications")}
       />
       <Button label="Enquiries" variant="secondary" onPress={() => router.push("/enquiries")} />
+      {isTeam ? (
+        <Button
+          label="Admin panel"
+          variant="secondary"
+          onPress={() => WebBrowser.openBrowserAsync(`${env.siteUrl}/admin`)}
+          accessibilityHint="Opens the admin pages in a browser window"
+        />
+      ) : null}
       <Card style={{ gap: spacing.sm }}>
         <Text style={text.h2}>Privacy</Text>
         <Button label="Request a copy of my data" variant="secondary" onPress={requestExport} />
