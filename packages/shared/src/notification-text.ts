@@ -105,6 +105,12 @@ export function describeNotification(kind: string, data: Record<string, unknown>
         body: `"${title}" will be hidden ${str(d.expires_on) ? `on ${str(d.expires_on)}` : "soon"} unless you renew it.`,
         target: myListing,
       };
+    case "integration_test":
+      return {
+        title: "Test message",
+        body: `Your ${str(d.channel) || "notification"} setup works. You can ignore this message.`,
+        target: { kind: "none" },
+      };
     case "listing_expired":
       return { title: "Your listing has expired", body: `"${title}" is hidden. Renew it to show it again.`, target: myListing };
     default:

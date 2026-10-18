@@ -59,6 +59,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"broadcasts": {
+                  Row: {
+                    "audience": string,"body": string,"channels": (Database["public"]['Enums']["notification_channel"])[],"city_id": string | null,"created_at": string,"created_by": string | null,"id": number,"recipients": number | null,"scheduled_at": string,"sent_at": string | null,"status": Database["public"]['Enums']["broadcast_status"],"title": string,"url": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "audience": string,"body": string,"channels"?: (Database["public"]['Enums']["notification_channel"])[],"city_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"id"?: never,"recipients"?: number | null,"scheduled_at"?: string,"sent_at"?: string | null,"status"?: Database["public"]['Enums']["broadcast_status"],"title": string,"url"?: string | null
+                  }
+                  Update: {
+                    "audience"?: string,"body"?: string,"channels"?: (Database["public"]['Enums']["notification_channel"])[],"city_id"?: string | null,"created_at"?: string,"created_by"?: string | null,"id"?: never,"recipients"?: number | null,"scheduled_at"?: string,"sent_at"?: string | null,"status"?: Database["public"]['Enums']["broadcast_status"],"title"?: string,"url"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "broadcasts_city_id_fkey"
+      columns: ["city_id"]
+isOneToOne: false
+      referencedRelation: "locations"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "broadcasts_created_by_fkey"
+      columns: ["created_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"builder_profiles": {
                   Row: {
                     "company_name": string,"created_at": string,"description": string | null,"is_public": boolean,"registration_number": string | null,"updated_at": string,"user_id": string,"website": string | null
@@ -548,6 +574,12 @@ isOneToOne: false
                   }
                   Relationships: [
                     {
+      foreignKeyName: "notification_outbox_broadcast_fk"
+      columns: ["broadcast_id"]
+isOneToOne: false
+      referencedRelation: "broadcasts"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "notification_outbox_notification_id_fkey"
       columns: ["notification_id"]
 isOneToOne: false
@@ -594,6 +626,12 @@ isOneToOne: true
                   }
                   Relationships: [
                     {
+      foreignKeyName: "notifications_broadcast_fk"
+      columns: ["broadcast_id"]
+isOneToOne: false
+      referencedRelation: "broadcasts"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "notifications_user_id_fkey"
       columns: ["user_id"]
 isOneToOne: false
@@ -727,7 +765,23 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "admin_import_listings":
+            "admin_broadcast_audience_size":
+{ Args: { "p_audience": string,"p_city"?: string }; Returns: {
+              "accepts_news": number,"total": number
+            }[]
+                           },
+"admin_broadcast_report":
+{ Args: { "p_id": number }; Returns: {
+              "channel": string,"status": string,"total": number
+            }[]
+                           },
+"admin_cancel_broadcast":
+{ Args: { "p_id": number }; Returns: undefined
+                           },
+"admin_create_broadcast":
+{ Args: { "p_audience": string,"p_body": string,"p_channels": (Database["public"]['Enums']["notification_channel"])[],"p_city": string,"p_scheduled_at"?: string,"p_title": string,"p_url": string }; Returns: number
+                           },
+"admin_import_listings":
 { Args: { "p_file_name": string,"p_owner_id": string,"p_publish": boolean,"p_rows": Json }; Returns: Json
                            },
 "admin_integration_secrets":
@@ -742,6 +796,9 @@ isOneToOne: false
                            },
 "admin_record_export":
 { Args: { "p_kind": string,"p_rows": number }; Returns: undefined
+                           },
+"admin_send_test_notification":
+{ Args: { "p_channel": Database["public"]['Enums']["notification_channel"] }; Returns: undefined
                            },
 "admin_set_account_status":
 { Args: { "p_reason"?: string,"p_status": Database["public"]['Enums']["account_status"],"p_user_id": string }; Returns: undefined
@@ -871,10 +928,13 @@ isOneToOne: false
                            },
 "worker_remove_web_push":
 { Args: { "p_endpoint": string }; Returns: undefined
+                           },
+"worker_send_due_broadcasts":
+{ Args: Record<PropertyKey, never>; Returns: number
                            }
           }
           Enums: {
-            "account_status": "active"|"suspended"|"deletion_requested","address_visibility": "exact"|"approximate"|"hidden","app_role": "buyer"|"owner"|"agent"|"moderator"|"administrator"|"builder"|"support"|"marketing","area_unit": "sq_m"|"sq_ft"|"acre"|"hectare","data_request_kind": "export"|"deletion","data_request_status": "pending"|"in_progress"|"completed"|"rejected","enquiry_kind": "enquiry"|"visit_request","enquiry_status": "new"|"in_progress"|"visit_scheduled"|"responded"|"closed"|"spam","furnishing": "unfurnished"|"semi_furnished"|"furnished","listing_category": "rental"|"resale"|"new_project","listing_purpose": "sale"|"rent","listing_status": "draft"|"pending_review"|"published"|"rejected"|"suspended"|"archived"|"sold"|"rented","location_level": "country"|"region"|"city"|"locality","media_kind": "image"|"document","notification_channel": "email"|"whatsapp"|"push","outbox_status": "pending"|"sent"|"failed"|"skipped_not_configured"|"skipped_preference","possession_status": "ready"|"under_construction"|"available_from_date","price_display": "show"|"on_request","price_period": "total"|"per_month"|"per_year"|"per_week"|"per_day","video_provider": "youtube"|"instagram","visit_status": "requested"|"confirmed"|"declined"|"cancelled"
+            "account_status": "active"|"suspended"|"deletion_requested","address_visibility": "exact"|"approximate"|"hidden","app_role": "buyer"|"owner"|"agent"|"moderator"|"administrator"|"builder"|"support"|"marketing","area_unit": "sq_m"|"sq_ft"|"acre"|"hectare","broadcast_status": "scheduled"|"sending"|"sent"|"cancelled","data_request_kind": "export"|"deletion","data_request_status": "pending"|"in_progress"|"completed"|"rejected","enquiry_kind": "enquiry"|"visit_request","enquiry_status": "new"|"in_progress"|"visit_scheduled"|"responded"|"closed"|"spam","furnishing": "unfurnished"|"semi_furnished"|"furnished","listing_category": "rental"|"resale"|"new_project","listing_purpose": "sale"|"rent","listing_status": "draft"|"pending_review"|"published"|"rejected"|"suspended"|"archived"|"sold"|"rented","location_level": "country"|"region"|"city"|"locality","media_kind": "image"|"document","notification_channel": "email"|"whatsapp"|"push","outbox_status": "pending"|"sent"|"failed"|"skipped_not_configured"|"skipped_preference","possession_status": "ready"|"under_construction"|"available_from_date","price_display": "show"|"on_request","price_period": "total"|"per_month"|"per_year"|"per_week"|"per_day","video_provider": "youtube"|"instagram","visit_status": "requested"|"confirmed"|"declined"|"cancelled"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -990,7 +1050,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "account_status": ["active", "suspended", "deletion_requested"],"address_visibility": ["exact", "approximate", "hidden"],"app_role": ["buyer", "owner", "agent", "moderator", "administrator", "builder", "support", "marketing"],"area_unit": ["sq_m", "sq_ft", "acre", "hectare"],"data_request_kind": ["export", "deletion"],"data_request_status": ["pending", "in_progress", "completed", "rejected"],"enquiry_kind": ["enquiry", "visit_request"],"enquiry_status": ["new", "in_progress", "visit_scheduled", "responded", "closed", "spam"],"furnishing": ["unfurnished", "semi_furnished", "furnished"],"listing_category": ["rental", "resale", "new_project"],"listing_purpose": ["sale", "rent"],"listing_status": ["draft", "pending_review", "published", "rejected", "suspended", "archived", "sold", "rented"],"location_level": ["country", "region", "city", "locality"],"media_kind": ["image", "document"],"notification_channel": ["email", "whatsapp", "push"],"outbox_status": ["pending", "sent", "failed", "skipped_not_configured", "skipped_preference"],"possession_status": ["ready", "under_construction", "available_from_date"],"price_display": ["show", "on_request"],"price_period": ["total", "per_month", "per_year", "per_week", "per_day"],"video_provider": ["youtube", "instagram"],"visit_status": ["requested", "confirmed", "declined", "cancelled"]
+            "account_status": ["active", "suspended", "deletion_requested"],"address_visibility": ["exact", "approximate", "hidden"],"app_role": ["buyer", "owner", "agent", "moderator", "administrator", "builder", "support", "marketing"],"area_unit": ["sq_m", "sq_ft", "acre", "hectare"],"broadcast_status": ["scheduled", "sending", "sent", "cancelled"],"data_request_kind": ["export", "deletion"],"data_request_status": ["pending", "in_progress", "completed", "rejected"],"enquiry_kind": ["enquiry", "visit_request"],"enquiry_status": ["new", "in_progress", "visit_scheduled", "responded", "closed", "spam"],"furnishing": ["unfurnished", "semi_furnished", "furnished"],"listing_category": ["rental", "resale", "new_project"],"listing_purpose": ["sale", "rent"],"listing_status": ["draft", "pending_review", "published", "rejected", "suspended", "archived", "sold", "rented"],"location_level": ["country", "region", "city", "locality"],"media_kind": ["image", "document"],"notification_channel": ["email", "whatsapp", "push"],"outbox_status": ["pending", "sent", "failed", "skipped_not_configured", "skipped_preference"],"possession_status": ["ready", "under_construction", "available_from_date"],"price_display": ["show", "on_request"],"price_period": ["total", "per_month", "per_year", "per_week", "per_day"],"video_provider": ["youtube", "instagram"],"visit_status": ["requested", "confirmed", "declined", "cancelled"]
           }
         }
 } as const

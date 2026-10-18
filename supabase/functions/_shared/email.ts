@@ -193,9 +193,13 @@ function fromNotificationText(template: string, data: Data): Rendered {
   const text = describeNotification(template, data);
   if (text.title === "Notification" && !text.body) throw new UnknownTemplateError(`Unknown email template: ${template}`);
   const path = notificationWebHref(text.target);
+  const paragraphs = text.body ? text.body.split(/\n{2,}/) : [];
+  if (template === "broadcast") {
+    paragraphs.push("You get this because you agreed to news from us. To stop, untick news in Profile & privacy, or switch email off in Notifications.");
+  }
   return {
     subject: text.title,
-    paragraphs: text.body ? text.body.split(/\n{2,}/) : [],
+    paragraphs,
     action: path ? { label: "Open", path } : undefined,
   };
 }
