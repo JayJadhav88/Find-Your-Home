@@ -39,9 +39,19 @@ export function friendlyError(error: { code?: string; message?: string; details?
   }
 }
 
-function check<T>(result: { data: T; error: { code?: string; message?: string; details?: string | null } | null }): T {
+type DbError = { code?: string; message?: string; details?: string | null };
+type DbResult = { data: unknown; error: DbError | null };
+
+/** For queries that always return data when they succeed (lists, single(), RPCs). */
+function check<R extends DbResult>(result: R): NonNullable<R["data"]> {
   if (result.error) throw new ApiError(friendlyError(result.error), result.error.code);
-  return result.data;
+  return result.data as NonNullable<R["data"]>;
+}
+
+/** For maybeSingle(): no row is a normal outcome. */
+function checkMaybe<R extends DbResult>(result: R): NonNullable<R["data"]> | null {
+  if (result.error) throw new ApiError(friendlyError(result.error), result.error.code);
+  return (result.data ?? null) as NonNullable<R["data"]> | null;
 }
 
 export function publicImageUrl(supabaseUrl: string, key: string): string {
@@ -78,7 +88,7 @@ export async function searchListings(
   options: { currency?: string | null; pageSize?: number } = {},
 ): Promise<{ items: SearchResultItem[]; nextCursor: string | null }> {
   const pageSize = options.pageSize ?? 20;
-  const rows = check(await client.rpc("search_listings", searchFiltersToRpcArgs(filters, { currency: options.currency, pageSize }))) ?? [];
+  const rows = check(await client.rpc("search_listings", searchFiltersToRpcArgs(filters, { currency: options.currency, pageSize })));
   const items = rows.slice(0, pageSize);
   return { items, nextCursor: rows.length > pageSize ? (items.at(-1)?.cursor ?? null) : null };
 }
@@ -91,7 +101,7 @@ const LISTING_DETAIL = `*, property_type:property_types(name),
   locality:locations!listings_locality_id_fkey(name)`;
 
 export async function getPublicListing(client: Client, reference: string) {
-  const listing = check(
+  const listing = checkMaybe(
     await client.from("listings").select(LISTING_DETAIL).eq("reference_code", reference.toUpperCase()).eq("status", "published").maybeSingle(),
   );
   if (!listing) return null;
@@ -213,7 +223,7 @@ export async function listEnquiries(client: Client) {
 }
 
 export async function getEnquiry(client: Client, id: string) {
-  return check(await client.from("enquiries").select("*, listing:listings(title, reference_code, status)").eq("id", id).maybeSingle());
+  return checkMaybe(await client.from("enquiries").select("*, listing:listings(title, reference_code, status)").eq("id", id).maybeSingle());
 }
 
 export async function enquiryAction(
@@ -244,7 +254,7 @@ export async function myListings(client: Client, userId: string) {
 }
 
 export async function getOwnListing(client: Client, id: string) {
-  return check(
+  return checkMaybe(
     await client
       .from("listings")
       .select(
@@ -263,7 +273,7 @@ export async function getListingHistory(client: Client, id: string) {
 
 /** Amenities, private address and videos. Call before updating a live listing's main row. */
 async function saveListingExtras(client: Client, listingId: string, values: ListingFormValues) {
-  const current = check(await client.from("listing_amenities").select("amenity_id").eq("listing_id", listingId)) ?? [];
+  const current = check(await client.from("listing_amenities").select("amenity_id").eq("listing_id", listingId));
   const existing = new Set(current.map((row) => row.amenity_id));
   const wanted = new Set(values.amenityIds);
   const toRemove = [...existing].filter((id) => !wanted.has(id));
@@ -292,7 +302,7 @@ export async function createListing(client: Client, userId: string, values: List
 
 export async function updateListing(client: Client, id: string, values: ListingFormValues): Promise<ListingStatus> {
   await saveListingExtras(client, id, values);
-  const updated = check(await client.from("listings").update(listingFormToRow(values)).eq("id", id).select("status").maybeSingle());
+  const updated = checkMaybe(await client.from("listings").update(listingFormToRow(values)).eq("id", id).select("status").maybeSingle());
   if (!updated) throw new ApiError("This listing can't be edited right now (for example while it is awaiting review).");
   return updated.status;
 }

@@ -1,10 +1,10 @@
 import { tokens } from "@fyh/shared";
 import { Tabs } from "expo-router";
-import { Text } from "react-native";
+import { Text, type ColorValue } from "react-native";
 
 // Simple text glyphs keep the app free of icon-font dependencies.
 const icon = (glyph: string) =>
-  function TabIcon({ color }: { color: string }) {
+  function TabIcon({ color }: { color: ColorValue }) {
     return (
       <Text style={{ color, fontSize: 18 }} accessibilityElementsHidden importantForAccessibility="no">
         {glyph}
