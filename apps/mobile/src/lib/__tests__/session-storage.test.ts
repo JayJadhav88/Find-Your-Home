@@ -15,8 +15,10 @@ jest.mock("@react-native-async-storage/async-storage", () => ({
     removeItem: async (key: string) => void mockPlain.delete(key),
   },
 }));
+// eslint-disable-next-line @typescript-eslint/no-require-imports -- jest.mock factories cannot use imports
 jest.mock("expo-crypto", () => ({ getRandomBytes: (size: number) => new Uint8Array(require("node:crypto").randomBytes(size)) }));
 
+// eslint-disable-next-line import/first -- must load after the mocks above
 import { sessionStorage } from "../session-storage";
 
 const SESSION = JSON.stringify({ access_token: "secret-access-token", refresh_token: "secret-refresh-token", user: { email: "a@example.test" } });
