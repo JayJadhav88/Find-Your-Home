@@ -4,7 +4,7 @@ Real estate listing platform: public website, web app with admin panel, and iOS/
 
 **Primary features: Rental / Resale / New project (verified builders) categories, admin bulk import from Excel with image links, and YouTube/Instagram videos on listings.**
 
-**Current status: Phase 2 (web MVP) built and checked locally — public site, search, listing pages, sign-in, account area, owner listing form with photos, and the admin panel, on top of the Phase 1 backend. Not yet built: the mobile app (Phase 3), comparison view, curated SEO landing pages. Nothing is deployed.** See [docs/04-delivery-plan.md](docs/04-delivery-plan.md) for exactly what was and wasn't tested.
+**Current status: Phase 3 (mobile app) built — the iOS/Android app with the three categories, builder projects, videos, search, saved homes, enquiries and the owner listing editor with camera/gallery photos, on top of the Phase 2 website and admin panel. The app has passed type, lint, unit and bundle checks but has not yet been run on a phone or simulator. Not yet built: comparison view, curated SEO landing pages. Nothing is deployed.** See [docs/04-delivery-plan.md](docs/04-delivery-plan.md) for exactly what was and wasn't tested.
 
 | Document | Contents |
 | --- | --- |
@@ -16,6 +16,7 @@ Real estate listing platform: public website, web app with admin panel, and iOS/
 | [docs/06-open-questions.md](docs/06-open-questions.md) | Assumptions, defaults, and open questions |
 | [docs/07-operations.md](docs/07-operations.md) | Photo-publishing, image-import and email workers, Resend setup, hosted scheduling |
 | [docs/08-excel-import-guide.md](docs/08-excel-import-guide.md) | For administrators: adding many properties from Excel, image and video links |
+| [docs/09-mobile-app.md](docs/09-mobile-app.md) | The mobile app: what it does, trying it on your phone, store builds and what you need to provide |
 
 ## Requirements
 

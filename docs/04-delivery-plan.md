@@ -49,7 +49,20 @@ See [08-excel-import-guide.md](08-excel-import-guide.md) for the administrator g
 
 ## Phase 3 — Mobile MVP
 
-Expo Router app on the same backend: onboarding/sign-in, search + filters, detail with gallery, favorites, enquiry/visit request, profile, owner submission with camera/library upload, my listings, role-appropriate dashboard. Encrypted session storage, offline/error states, deep links to listing URLs. EAS build profiles (development, preview, production); store submission documentation.
+**Status: built; checked without a device.** One Expo (SDK 58, Expo Router) app for iOS and Android on the same backend and shared code. Details and phone-testing steps: [09-mobile-app.md](09-mobile-app.md).
+
+| Feature | Built | Checked by |
+| --- | --- | --- |
+| Explore | Category tabs All / Rent / Resale / New projects, keyword search, city / bedrooms / max price / sort filters, endless scroll, pull to refresh | Typecheck, bundle build |
+| Listing detail | Photo pager, New-project section with verified builder, facts, amenities, YouTube/Instagram videos (nothing loads until tapped; other links open in the browser), call / WhatsApp / email, save, share, enquiry or visit request | Typecheck, bundle build |
+| Accounts | Sign in, sign up (email confirmation), forgot password, profile, data copy and deletion requests, sign out; session stored encrypted (key in Keychain/Keystore) | Unit tests (5: encrypted storage round-trip, no plaintext, new key per save, missing key, removal) |
+| Saved homes, enquiries | Saved list; received/sent enquiries with confirm/decline visit | Typecheck, bundle build |
+| Owner listing editor | Become a lister, my listings, full editor (New project only for builders), video links, photos from gallery or camera converted to JPEG (max 1600 px), submit / withdraw / sold / rented / archive / restore, moderator notes | Typecheck, bundle build; permissions are the same database rules already covered by pgTAP |
+| Build setup | `eas.json` (preview APK / internal, production), identifiers from environment with placeholders | Not run (needs your Expo/Apple/Google accounts) |
+
+Checks run: `typecheck` clean, `lint` 0 findings, Jest 8/8 passing (also 3 display-helper tests), `expo export` built Android and iOS bundles (1351 / 1358 modules, ~4.1 MB each).
+
+**Not verified:** running on a phone, simulator or emulator (no Android SDK or Mac on this computer), camera/photo upload and HEIC conversion on real devices, the in-app video player on devices, EAS cloud builds and store submission. Next step: try it with Expo Go on your phone (see 09).
 
 ## Phase 4 — Hardening and launch readiness
 
