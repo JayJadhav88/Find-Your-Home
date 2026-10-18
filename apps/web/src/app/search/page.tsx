@@ -1,6 +1,7 @@
 import { parseSearchParams, searchFiltersToQuery, searchFiltersToRpcArgs, type SearchFilters } from "@fyh/shared";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 import { Suspense } from "react";
 import { ListingCard, ListingGrid } from "@/components/listing-card";
 import { Alert, Button, ButtonLink, EmptyState, Select, TextInput } from "@/components/ui";
@@ -30,6 +31,8 @@ export default function SearchPage({ searchParams }: PageProps<"/search">) {
 }
 
 async function SearchContent({ filters }: { filters: SearchFilters }) {
+  // Results and "New" badges depend on the current time: always render per request.
+  await connection();
   const [settings, taxonomy] = await Promise.all([getSiteSettings(), getTaxonomy()]);
   const currency = filters.currency ?? settings.default_currency ?? taxonomy.currencies[0]?.code ?? null;
   const { data, error } = await createPublicClient().rpc(

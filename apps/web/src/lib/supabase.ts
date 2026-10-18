@@ -3,6 +3,7 @@ import type { Database } from "@fyh/shared";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import { connection } from "next/server";
 import { env } from "./env";
 
 /**
@@ -10,6 +11,9 @@ import { env } from "./env";
  * must only be used inside a <Suspense> boundary, a Server Action or a Route Handler.
  */
 export async function createUserClient() {
+  // Per-user data is always request-time. supabase-js reads the clock while loading the
+  // session, which Next.js forbids during (runtime) prerendering of the shell.
+  await connection();
   const cookieStore = await cookies();
   return createServerClient<Database>(env.supabaseUrl, env.supabasePublishableKey, {
     cookies: {
