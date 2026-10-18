@@ -422,3 +422,6 @@ verify_jwt = false
 
 [functions.send-emails]
 verify_jwt = false
+
+[functions.deliver-notifications]
+verify_jwt = false

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Runs the background workers once (photo publishing + email sending), or repeatedly
+// Runs the background workers once (photo publishing, email, push and WhatsApp delivery), or repeatedly
 // with --watch. For local development; hosted environments use the pg_cron schedule in
 // docs/07-operations.md.
 //
@@ -44,7 +44,7 @@ async function call(name) {
 }
 
 async function runOnce() {
-  const results = [await call("process-jobs"), await call("send-emails")];
+  const results = [await call("process-jobs"), await call("send-emails"), await call("deliver-notifications")];
   return results.every(Boolean);
 }
 

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import {
+  emailProviderFromConfig,
   emailProviderFromEnv,
   LogEmailProvider,
   renderEmail,
@@ -125,5 +126,36 @@ describe("ResendEmailProvider", () => {
   it("treats network failures as retryable", async () => {
     const { provider: resend } = provider(new Error("ECONNRESET"));
     expect(await resend.send(message)).toMatchObject({ ok: false, retryable: true });
+  });
+});
+
+describe("kinds without a dedicated email", () => {
+  it("use the shared notification wording", () => {
+    const email = renderEmail("broadcast", { title: "New projects in Pune", body: "Ten new homes this week.", url: "/search?category=new_project" }, ctx);
+    expect(email.subject).toBe("New projects in Pune · Find Your Home");
+    expect(email.text).toContain("Ten new homes this week.");
+    expect(email.text).toContain("http://localhost:3000/search?category=new_project");
+  });
+
+  it("still refuse unknown kinds", () => {
+    expect(() => renderEmail("no_such_kind", {}, ctx)).toThrow(UnknownTemplateError);
+  });
+});
+
+describe("emailProviderFromConfig", () => {
+  const env = (values: Record<string, string>) => (name: string) => values[name];
+
+  it("prefers the key saved by an administrator", () => {
+    const config = emailProviderFromConfig(env({ EMAIL_PROVIDER: "log" }), { resendApiKey: "re_saved", emailFrom: "Find Your Home <hi@example.test>" });
+    expect(config.provider?.name).toBe("resend");
+  });
+
+  it("needs a sender address with a saved key", () => {
+    expect(emailProviderFromConfig(env({}), { resendApiKey: "re_saved" }).provider).toBeNull();
+    expect(emailProviderFromConfig(env({ EMAIL_FROM: "a@example.test" }), { resendApiKey: "re_saved" }).provider?.name).toBe("resend");
+  });
+
+  it("falls back to environment variables", () => {
+    expect(emailProviderFromConfig(env({ EMAIL_PROVIDER: "log" }), {}).provider?.name).toBe("log");
   });
 });

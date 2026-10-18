@@ -1,6 +1,8 @@
 // Transactional email: provider adapter (log | resend) and templates.
 // Pure TypeScript (uses only fetch), so it runs in Deno Edge Functions and in Vitest.
 
+import { describeNotification, notificationWebHref } from "./notification-text.ts";
+
 export interface EmailMessage {
   to: string;
   subject: string;
@@ -84,6 +86,22 @@ export function emailProviderFromEnv(env: (name: string) => string | undefined):
     return { provider: new ResendEmailProvider(apiKey, from) };
   }
   return { provider: null, reason: "EMAIL_PROVIDER is not set" };
+}
+
+/**
+ * Keys entered by an administrator (stored in Vault) take priority; environment variables
+ * remain the fallback, e.g. EMAIL_PROVIDER=log for local development.
+ */
+export function emailProviderFromConfig(
+  env: (name: string) => string | undefined,
+  stored: { resendApiKey?: string | null; emailFrom?: string | null },
+): ProviderConfig {
+  const from = stored.emailFrom || env("EMAIL_FROM");
+  if (stored.resendApiKey) {
+    if (!from) return { provider: null, reason: "A Resend key is saved but no sender address (Integrations → Email from)" };
+    return { provider: new ResendEmailProvider(stored.resendApiKey, from) };
+  }
+  return emailProviderFromEnv(env);
 }
 
 // ---------------------------------------------------------------------------
@@ -170,14 +188,24 @@ const TEMPLATES: Record<string, (data: Data, ctx: TemplateContext) => Rendered> 
 
 export class UnknownTemplateError extends Error {}
 
+/** Kinds without a dedicated email (broadcasts, alerts) use the in-app wording. */
+function fromNotificationText(template: string, data: Data): Rendered {
+  const text = describeNotification(template, data);
+  if (text.title === "Notification" && !text.body) throw new UnknownTemplateError(`Unknown email template: ${template}`);
+  const path = notificationWebHref(text.target);
+  return {
+    subject: text.title,
+    paragraphs: text.body ? text.body.split(/\n{2,}/) : [],
+    action: path ? { label: "Open", path } : undefined,
+  };
+}
+
 export function renderEmail(
   template: string,
   data: Data,
   ctx: TemplateContext,
 ): Pick<EmailMessage, "subject" | "text" | "html"> {
-  const build = TEMPLATES[template];
-  if (!build) throw new UnknownTemplateError(`Unknown email template: ${template}`);
-  const rendered = build(data, ctx);
+  const rendered = TEMPLATES[template]?.(data, ctx) ?? fromNotificationText(template, data);
   const greeting = ctx.recipientName ? `Hello ${ctx.recipientName},` : "Hello,";
   const actionUrl = rendered.action ? new URL(rendered.action.path, ctx.siteUrl).toString() : null;
   const footer = `— ${ctx.brandName}`;

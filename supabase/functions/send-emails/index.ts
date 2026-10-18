@@ -1,6 +1,8 @@
 // Delivers notification_outbox emails through the configured provider (log | resend).
 // Invoked by the scheduler. When no provider is configured, emails stay queued.
-import { emailProviderFromEnv, renderEmail, UnknownTemplateError } from "../_shared/email.ts";
+// The Resend key saved in Admin → Integrations wins over the RESEND_API_KEY variable.
+import { emailProviderFromConfig, renderEmail, UnknownTemplateError } from "../_shared/email.ts";
+import { loadIntegrationConfig } from "../_shared/integrations.ts";
 import { errorMessage, json, rejectUnlessWorker, serviceClient } from "../_shared/worker.ts";
 
 interface QueuedEmail {
@@ -16,7 +18,17 @@ Deno.serve(async (request) => {
   const denied = rejectUnlessWorker(request);
   if (denied) return denied;
 
-  const config = emailProviderFromEnv((name) => Deno.env.get(name));
+  const db = serviceClient();
+  let stored;
+  try {
+    stored = await loadIntegrationConfig(db);
+  } catch (error) {
+    return json({ error: errorMessage(error) }, 500);
+  }
+  const config = emailProviderFromConfig((name) => Deno.env.get(name), {
+    resendApiKey: stored.secrets.resend_api_key,
+    emailFrom: stored.email_from,
+  });
   if (!config.provider) {
     // Do not claim anything: messages stay pending until email is configured.
     return json({ configured: false, reason: config.reason });
@@ -25,7 +37,6 @@ Deno.serve(async (request) => {
   const siteUrl = Deno.env.get("SITE_URL");
   if (!siteUrl) return json({ error: "SITE_URL is not configured" }, 500);
 
-  const db = serviceClient();
   const { data: settings } = await db.from("site_settings").select("brand_name").maybeSingle();
   const brandName = settings?.brand_name ?? "Find Your Home";
 
