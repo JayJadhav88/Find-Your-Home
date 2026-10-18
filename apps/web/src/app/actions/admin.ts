@@ -217,8 +217,15 @@ export async function saveTaxonomyItem(_previous: FormState, formData: FormData)
   if (table.data === "locations") {
     const level = z.enum(["country", "region", "city", "locality"]).safeParse(formData.get("level"));
     const parentId = text(formData, "parentId") || null;
-    const countryCode = text(formData, "countryCode").toUpperCase();
     if (!level.success) return { fieldErrors: { level: "Choose a level" } };
+    let countryCode = text(formData, "countryCode").toUpperCase();
+    if (!id && parentId) {
+      // Child places inherit the parent's country code.
+      const { data: parent } = await ctx.supabase.from("locations").select("country_code").eq("id", parentId).maybeSingle();
+      countryCode = parent?.country_code ?? countryCode;
+    }
+    if (!id && !/^[A-Z]{2}$/.test(countryCode)) return { fieldErrors: { countryCode: "Enter a two-letter country code" } };
+    if (!id && level.data !== "country" && !parentId) return { fieldErrors: { parentId: "Choose where this place is" } };
     const row = { name, slug, level: level.data, parent_id: parentId, country_code: countryCode, is_active: isActive };
     result = id
       ? await ctx.supabase.from("locations").update({ name, is_active: isActive }).eq("id", id)
