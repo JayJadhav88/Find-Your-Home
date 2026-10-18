@@ -8,15 +8,15 @@ Docs `01`–`06`. No code. Exit: owner answers the blocking questions in [06-ope
 
 ## Phase 1 — Secure platform foundation
 
-| Milestone | Content | Verified by |
-| --- | --- | --- |
-| 1.1 Repo scaffold | pnpm + Turborepo workspaces, `packages/config`, empty Next.js and Expo apps that build, `.env.example`, env validation (zod) for each app, README skeleton | `pnpm build`, `pnpm lint`, `pnpm typecheck` |
-| 1.2 Schema | Migrations for all tables in `02-data-model.md`, enums, constraints, indexes, `updated_at` triggers, reference-code sequence | `supabase db reset` applies cleanly |
-| 1.3 RLS + workflow | RLS for every table, helper role functions, protected-column triggers, listing transition functions, rate-limit function, audit log | pgTAP suite covering every cell of `03-permissions.md` |
-| 1.4 Auth + roles | Sign-up profile/role triggers, suspension hook, email verification, `scripts/admin-bootstrap` | pgTAP + manual bootstrap run against local stack |
-| 1.5 Storage | Buckets, storage policies, MIME/size limits, publish/unpublish Edge Function skeleton | pgTAP storage policy tests; function unit tests |
-| 1.6 Shared package | zod schemas, generated DB types, API client (`listings`, `search`, `favorites`, `enquiries`), `Intl` formatters, design tokens | Vitest |
-| 1.7 Seed + docs | Clearly labelled DEMO seed (types, amenities, sample locations, sample listings with placeholder images), README setup/troubleshooting | Fresh-clone setup run end to end |
+| Milestone | Content | Verified by | Status (2026-10-18) |
+| --- | --- | --- | --- |
+| 1.1 Repo scaffold | pnpm + Turborepo workspaces, `packages/config`, Next.js and Expo apps that build, `.env.example`, env validation (zod), README skeleton | `pnpm build`, `pnpm lint`, `pnpm typecheck`, Android bundle export | ✅ Done |
+| 1.2 Schema | Migrations for all tables in `02-data-model.md`, enums, constraints, indexes, `updated_at` triggers, reference-code sequence | `supabase db reset` applies cleanly | ✅ Done |
+| 1.3 RLS + workflow | RLS for every table, helper role functions, protected-column triggers, listing transition functions, rate-limit function, audit log | pgTAP suite against `03-permissions.md` | ✅ Done — 78 pgTAP checks pass. Not yet covered by tests: agent-assigned listings, admin taxonomy/settings writes, data-request RPCs, moderator access to settings |
+| 1.4 Auth + roles | Sign-up profile/role trigger, suspension (ban + session revoke), email verification required, `scripts/admin-bootstrap.mjs` | pgTAP + bootstrap run against the local API | ✅ Done |
+| 1.5 Storage | Buckets, storage policies, MIME/size limits, publish/unpublish worker | pgTAP storage policy tests; worker tests | 🟡 Buckets and policies done and tested. **Publish/unpublish Edge Function and email sender not built yet** (jobs and emails queue up in `job_queue` / `notification_outbox`) |
+| 1.6 Shared package | zod schemas, generated DB types, API client, `Intl` formatters, design tokens | Vitest | 🟡 Generated types, enum-sync test, formatters, env validation, tokens done (22 tests). Form schemas and API client move to Phase 2, where the first screens use them |
+| 1.7 Seed + docs | Clearly labelled DEMO seed, README setup/troubleshooting | Fresh setup run end to end | ✅ Done (demo listings have no photos yet) |
 
 ## Phase 2 — Web MVP
 

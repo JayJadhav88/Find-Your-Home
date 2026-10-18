@@ -3,6 +3,19 @@
 
 create sequence public.listing_reference_seq start 1001;
 
+-- Reference numbers come from a sequence clients cannot touch directly.
+create function app.next_listing_reference()
+returns text
+language sql
+volatile
+security definer
+set search_path = ''
+as $$
+  select 'FYH-' || lpad(nextval('public.listing_reference_seq')::text, 6, '0');
+$$;
+
+grant execute on function app.next_listing_reference() to authenticated, service_role;
+
 create function app.slugify(value text)
 returns text
 language sql
@@ -18,7 +31,7 @@ $$;
 create table public.listings (
   id uuid primary key default gen_random_uuid(),
   reference_code text not null unique
-    default 'FYH-' || lpad(nextval('public.listing_reference_seq')::text, 6, '0'),
+    default app.next_listing_reference(),
   slug text not null,
   owner_id uuid not null references public.profiles (id) on delete restrict,
   agent_id uuid references public.profiles (id) on delete set null,
@@ -314,7 +327,7 @@ begin
     new.reviewed_by := null;
     new.reviewed_at := null;
     new.archived_at := null;
-    new.reference_code := 'FYH-' || lpad(nextval('public.listing_reference_seq')::text, 6, '0');
+    new.reference_code := app.next_listing_reference();
     new.created_at := now();
     return new;
   end if;
