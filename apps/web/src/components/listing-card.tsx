@@ -1,8 +1,30 @@
 import Image from "next/image";
 import Link from "next/link";
 import { displayArea, displayPrice, listingPath, PURPOSE_LABEL, publicImageUrl } from "@/lib/listing-format";
-import type { ListingCardData } from "@/lib/public-data";
+import type { AreaUnit, ListingPurpose, PriceDisplay, PricePeriod } from "@fyh/shared";
 import { Badge } from "./ui";
+
+/** Fields a listing card needs; matches search_listings rows (which can contain nulls). */
+export interface ListingCardData {
+  id: string;
+  reference_code: string;
+  slug: string;
+  title: string;
+  purpose: ListingPurpose;
+  price_amount: number | null;
+  currency: string | null;
+  price_period: PricePeriod;
+  price_display: PriceDisplay;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  area_value: number | null;
+  area_unit: AreaUnit | null;
+  city_name: string | null;
+  locality_name: string | null;
+  cover_key: string | null;
+  cover_alt: string | null;
+  is_featured: boolean;
+}
 
 export function ListingCard({ listing, locale, isNew = false }: { listing: ListingCardData; locale: string; isNew?: boolean }) {
   const area = displayArea(listing.area_value, listing.area_unit, locale);

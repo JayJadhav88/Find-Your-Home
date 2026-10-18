@@ -74,8 +74,6 @@ export async function getHomeListings() {
   return { featured: (featured.data ?? []).slice(0, 6), recent: (recent.data ?? []).slice(0, 6) };
 }
 
-export type ListingCardData = Awaited<ReturnType<typeof getHomeListings>>["recent"][number];
-
 /** Full public listing by reference code (published only, enforced by RLS). */
 export async function getPublicListing(reference: string) {
   "use cache";
