@@ -5,6 +5,7 @@ Two Edge Functions do the work that needs secrets. Business events only write ro
 | Function | Reads | Does |
 | --- | --- | --- |
 | `process-jobs` | `job_queue` | On publish: downloads each listing photo from the private bucket, verifies its real file type, strips metadata (GPS, camera serials, XMP, comments, PNG text, WebP EXIF/XMP) while keeping orientation, and writes a copy under a random name to the public `listing-public` bucket. On unpublish (rejected, suspended, sold, rented, archived, material edit): deletes the public copies. Skips jobs that are stale (e.g. re-approved meanwhile). |
+| `process-jobs` (image import) | `job_queue` kind `import_listing_images` | Downloads spreadsheet image links with SSRF protection (https only, private/local addresses blocked after DNS lookup and on every redirect, 15 s timeout, 10 MB cap), checks the real file type, strips metadata, stores the copy, then publishes the listing or sends it to review. Per-link results are saved in the job's `payload.result`. Remaining risk: DNS rebinding between the check and the request; acceptable for admin-only input. |
 | `send-emails` | `notification_outbox` | Renders the template and sends through the configured provider. Emails only say *what happened* and link to the dashboard; enquirer contact details and messages are never put in email. |
 
 Both functions require the header `x-worker-secret: <WORKER_SECRET>`; they are deployed with `verify_jwt = false` because they are not called by users.
@@ -12,6 +13,8 @@ Both functions require the header `x-worker-secret: <WORKER_SECRET>`; they are d
 Photos are not re-encoded (the Edge Runtime's CPU limits make that unreliable for large images). Metadata stripping is done on the bytes, and file types are checked by content. HEIC uploads are refused; the mobile app converts photos to JPEG on the device before upload (Phase 3).
 
 ## Local development
+
+For the e2e import test only, `supabase/functions/.env` sets `ALLOW_HTTP_IMAGE_IMPORT=true` and `IMPORT_ALLOWED_PRIVATE_HOSTS=host.docker.internal` so the worker can fetch test images from this machine. **Never set these in production.** Restart with `pnpm db:stop && pnpm db:start` after changing function env (a container restart keeps the old values).
 
 `supabase/functions/.env` (git-ignored) holds `WORKER_SECRET`, `EMAIL_PROVIDER=log` and `SITE_URL`. Copy [supabase/functions/.env.example](../supabase/functions/.env.example) if it is missing and generate a secret:
 

@@ -2,6 +2,8 @@
 
 Real estate listing platform: public website, web app with admin panel, and iOS/Android apps on one shared Supabase backend.
 
+**Primary features: Rental / Resale / New project (verified builders) categories, admin bulk import from Excel with image links, and YouTube/Instagram videos on listings.**
+
 **Current status: Phase 2 (web MVP) built and checked locally — public site, search, listing pages, sign-in, account area, owner listing form with photos, and the admin panel, on top of the Phase 1 backend. Not yet built: the mobile app (Phase 3), comparison view, curated SEO landing pages. Nothing is deployed.** See [docs/04-delivery-plan.md](docs/04-delivery-plan.md) for exactly what was and wasn't tested.
 
 | Document | Contents |
@@ -12,7 +14,8 @@ Real estate listing platform: public website, web app with admin panel, and iOS/
 | [docs/04-delivery-plan.md](docs/04-delivery-plan.md) | Phases 1–5 broken into verifiable milestones, with progress |
 | [docs/05-environments-and-costs.md](docs/05-environments-and-costs.md) | Environments and cost assumptions |
 | [docs/06-open-questions.md](docs/06-open-questions.md) | Assumptions, defaults, and open questions |
-| [docs/07-operations.md](docs/07-operations.md) | Photo-publishing and email workers, Resend setup, hosted scheduling |
+| [docs/07-operations.md](docs/07-operations.md) | Photo-publishing, image-import and email workers, Resend setup, hosted scheduling |
+| [docs/08-excel-import-guide.md](docs/08-excel-import-guide.md) | For administrators: adding many properties from Excel, image and video links |
 
 ## Requirements
 
@@ -50,7 +53,7 @@ Local auth emails (confirmation, password reset) are caught by Mailpit at http:/
 
 ### Demo data (local only)
 
-`supabase/seed.sql` creates fictional, clearly labelled `[DEMO]` listings in "Demo Country" and four demo accounts — `demo.admin@`, `demo.moderator@`, `demo.owner@` and `demo.buyer@example.test` — whose shared password is written at the top of that file. The seed never runs against a hosted project unless you run it there yourself; don't.
+`supabase/seed.sql` creates fictional, clearly labelled `[DEMO]` listings in "Demo Country" and four demo accounts — `demo.admin@`, `demo.moderator@`, `demo.owner@`, `demo.buyer@` and `demo.builder@example.test` — whose shared password is written at the top of that file. The seed never runs against a hosted project unless you run it there yourself; don't.
 
 ## Admin bootstrap
 

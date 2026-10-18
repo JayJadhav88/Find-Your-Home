@@ -148,7 +148,9 @@ select is((select count(*)::int from public.listing_videos v join public.listing
            where l.title = 'Imported resale with photo'), 1, 'videos are imported');
 select is((select street_address from public.listing_private_details d join public.listings l on l.id = d.listing_id
            where l.title = 'Imported resale with photo'), '9 Import Lane', 'private address is imported');
-select is((select count(*)::int from public.audit_log where action = 'import.listings'), 1, 'the import is audited');
+select is((select count(*)::int from public.audit_log
+           where action = 'import.listings' and entity_id = (select result ->> 'batch_id' from import_result)),
+  1, 'the import is audited');
 
 select tests.as_user('cat.admin@example.test');
 select throws_ok(

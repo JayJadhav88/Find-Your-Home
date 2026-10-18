@@ -36,6 +36,17 @@ Known behaviour: a missing or unpublished listing renders “Page not found” w
 | Photos & email | Worker publishes metadata-free copies and asks the website to refresh its cache | Browser: approved listing showed its published photo on the home page after the worker ran |
 | Deferred | Comparison view, curated location/type landing pages (table exists), full Lighthouse/axe audit (only label/id/tap-target checks are automated) | — |
 
+## Phase 2b — Primary business features (2026-10-18)
+
+| Feature | Built | Checked by |
+| --- | --- | --- |
+| Categories: Rental, Resale, New project | `listing_category` on every listing (kept in sync with sale/rent), category filter in search, navigation, home "New projects" section, badges, breadcrumbs | pgTAP (category rules, search), e2e |
+| Builders | `builder` role granted by admins, public company profile shown as "Verified builder", project name and registration number; only builders can list New project (database rule) | pgTAP, e2e |
+| YouTube / Instagram videos | Up to 10 per listing from links (only the video id is stored), click-to-load player on the listing page and the admin review page | Unit tests (link parsing), pgTAP (validation, visibility), e2e (no third-party load before play) |
+| Excel bulk import | Admin page with template download (live lists sheet), check-then-import with per-row problems, owner and publish/review choice, recent imports; image links downloaded safely by the worker, broken links reported | Unit tests (parsing, SSRF guards), pgTAP (permissions, per-row isolation, audit), e2e (end to end with a real image download) |
+
+See [08-excel-import-guide.md](08-excel-import-guide.md) for the administrator guide.
+
 ## Phase 3 — Mobile MVP
 
 Expo Router app on the same backend: onboarding/sign-in, search + filters, detail with gallery, favorites, enquiry/visit request, profile, owner submission with camera/library upload, my listings, role-appropriate dashboard. Encrypted session storage, offline/error states, deep links to listing URLs. EAS build profiles (development, preview, production); store submission documentation.

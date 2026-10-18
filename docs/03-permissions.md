@@ -4,6 +4,8 @@ Status: **Phase 0 proposal.** This matrix becomes the spec for RLS policies and 
 
 Legend: ✅ allowed · 🔸 own records only · 📋 only via workflow function · ❌ denied
 
+Builders (role `builder`, granted only by an administrator) have the same rights as owners, plus listing in the **New project** category and a public company profile. Owners and agents can list Rental and Resale only.
+
 | Capability | visitor | buyer | owner | agent | moderator | administrator |
 | --- | --- | --- | --- | --- | --- | --- |
 | Read published listings, public media, taxonomy | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
@@ -28,6 +30,8 @@ Legend: ✅ allowed · 🔸 own records only · 📋 only via workflow function 
 | Manage site settings (branding, limits, moderation rules) | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ |
 | Read audit log | ❌ | ❌ | ❌ | ❌ | own actions | ✅ |
 | Export operational data | ❌ | ❌ | ❌ | ❌ | ❌ | 📋 audited |
+| Bulk import listings from Excel | ❌ | ❌ | ❌ | ❌ | ❌ | 📋 audited |
+| Add / remove listing videos | ❌ | ❌ | 🔸 while editable | 🔸 assigned | ❌ | ✅ |
 | Access `/admin` | ❌ | ❌ | ❌ | ❌ | moderation pages | ✅ |
 
 \* Editing material fields of a published listing triggers the material-change policy (see data model).
