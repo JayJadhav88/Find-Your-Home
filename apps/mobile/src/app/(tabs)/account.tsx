@@ -1,7 +1,7 @@
 import { profileSchema, fieldErrors, tokens, updateProfile } from "@fyh/shared";
 import { useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Alert, ScrollView, Text, View } from "react-native";
 import { SignInPrompt } from "@/components/sign-in-prompt";
 import { Badge, Button, Card, Field, Loading, Notice, text } from "@/components/ui";
@@ -13,16 +13,19 @@ const { spacing } = tokens;
 export default function AccountScreen() {
   const router = useRouter();
   const { viewer, loading, refresh, signOut } = useSession();
-  const [displayName, setDisplayName] = useState("");
-  const [phone, setPhone] = useState("");
+  const [displayName, setDisplayName] = useState(viewer?.displayName ?? "");
+  const [phone, setPhone] = useState(viewer?.phone ?? "");
+  // Refill the form when the signed-in profile changes (React's "adjust state on prop change").
+  const profileKey = viewer ? `${viewer.id}:${viewer.displayName}:${viewer.phone ?? ""}` : "";
+  const [loadedKey, setLoadedKey] = useState(profileKey);
+  if (profileKey !== loadedKey) {
+    setLoadedKey(profileKey);
+    setDisplayName(viewer?.displayName ?? "");
+    setPhone(viewer?.phone ?? "");
+  }
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [notice, setNotice] = useState<{ tone: "success" | "danger"; text: string } | null>(null);
   const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    setDisplayName(viewer?.displayName ?? "");
-    setPhone(viewer?.phone ?? "");
-  }, [viewer]);
 
   if (loading) return <Loading />;
   if (!viewer) return <SignInPrompt title="Your account" message="Sign in to manage your profile, enquiries and listings." />;

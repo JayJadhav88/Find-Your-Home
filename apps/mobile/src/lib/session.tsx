@@ -27,11 +27,18 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    void refresh();
+    let active = true;
+    getViewer(supabase)
+      .then((current) => active && setViewer(current))
+      .catch(() => active && setViewer(null))
+      .finally(() => active && setLoading(false));
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "USER_UPDATED") void refresh();
     });
-    return () => data.subscription.unsubscribe();
+    return () => {
+      active = false;
+      data.subscription.unsubscribe();
+    };
   }, [refresh]);
 
   const signOut = useCallback(async () => {

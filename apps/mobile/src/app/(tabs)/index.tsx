@@ -98,9 +98,23 @@ export default function ExploreScreen() {
     }
   }, [filters, currency]);
 
+  // Run the search whenever the filters change (state is set only when results arrive).
   useEffect(() => {
-    if (!reference.loading) void load();
-  }, [load, reference.loading]);
+    if (reference.loading) return;
+    let active = true;
+    searchListings(supabase, filters(), { currency })
+      .then((page) => {
+        if (!active) return;
+        setItems(page.items);
+        setCursor(page.nextCursor);
+        setError(null);
+      })
+      .catch((failure: unknown) => active && setError(failure instanceof Error ? failure.message : "Search failed."))
+      .finally(() => active && setLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [filters, currency, reference.loading]);
 
   async function loadMore() {
     if (!cursor || loadingMore) return;

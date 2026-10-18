@@ -66,50 +66,15 @@ export default function EditorScreen() {
   const canNewProject = viewerIsBuilder(viewer);
   const listing = existing.data?.listing ?? null;
 
-  // Load an existing listing into the form once.
-  useEffect(() => {
-    if (!listing) {
-      if (!listingId && canNewProject) setValues((current) => ({ ...current, category: "new_project" }));
-      return;
-    }
-    const str = (value: unknown) => (value === null || value === undefined ? "" : String(value));
-    setValues({
-      category: listing.category,
-      title: listing.title,
-      description: listing.description,
-      projectName: str(listing.project_name),
-      projectRegistrationNumber: str(listing.project_registration_number),
-      propertyTypeId: str(listing.property_type_id),
-      priceAmount: str(listing.price_amount),
-      currency: str(listing.currency),
-      pricePeriod: listing.price_period,
-      priceDisplay: listing.price_display,
-      priceNegotiable: listing.price_negotiable,
-      countryId: str(listing.country_id),
-      regionId: str(listing.region_id),
-      cityId: str(listing.city_id),
-      localityId: str(listing.locality_id),
-      postalCode: str(listing.postal_code),
-      streetAddress: str(listing.private?.street_address),
-      addressVisibility: listing.address_visibility,
-      areaUnit: str(listing.area_unit),
-      areaValue: str(listing.area_value),
-      bedrooms: str(listing.bedrooms),
-      bathrooms: str(listing.bathrooms),
-      parkingSpaces: str(listing.parking_spaces),
-      floorNumber: str(listing.floor_number),
-      totalFloors: str(listing.total_floors),
-      furnishing: str(listing.furnishing),
-      possessionStatus: str(listing.possession_status),
-      availableFrom: str(listing.available_from),
-      contactViaForm: listing.contact_via_form,
-      showPhone: listing.show_phone,
-      showWhatsapp: listing.show_whatsapp,
-      showEmail: listing.show_email,
-      amenityIds: listing.amenities.map((row) => row.amenity_id),
-      videoUrls: [...listing.videos].sort((a, b) => a.sort_order - b.sort_order).map(videoWatchUrl).join("\n"),
-    });
-  }, [listing, listingId, canNewProject]);
+  // Fill the form from the server copy whenever it changes (React's "adjust state when a
+  // prop changes" pattern, during render instead of in an effect).
+  const sourceKey = listing ? `${listing.id}:${listing.updated_at}` : `new:${canNewProject}`;
+  const [loadedKey, setLoadedKey] = useState<string | null>(null);
+  if (sourceKey !== loadedKey) {
+    setLoadedKey(sourceKey);
+    if (listing) setValues(valuesFromListing(listing));
+    else if (!listingId && canNewProject) setValues((current) => ({ ...current, category: "new_project" }));
+  }
 
   const taxonomy = reference.data?.taxonomy;
   const set = (key: string) => (value: string | boolean | string[]) => setValues((current) => ({ ...current, [key]: value }));
@@ -416,6 +381,47 @@ export default function EditorScreen() {
       </ScrollView>
     </KeyboardAvoidingView>
   );
+}
+
+/** Form values (field names of listingFormSchema) from a listing loaded from the database. */
+function valuesFromListing(listing: NonNullable<Awaited<ReturnType<typeof getOwnListing>>>): Values {
+  const str = (value: unknown) => (value === null || value === undefined ? "" : String(value));
+  return {
+    category: listing.category,
+    title: listing.title,
+    description: listing.description,
+    projectName: str(listing.project_name),
+    projectRegistrationNumber: str(listing.project_registration_number),
+    propertyTypeId: str(listing.property_type_id),
+    priceAmount: str(listing.price_amount),
+    currency: str(listing.currency),
+    pricePeriod: listing.price_period,
+    priceDisplay: listing.price_display,
+    priceNegotiable: listing.price_negotiable,
+    countryId: str(listing.country_id),
+    regionId: str(listing.region_id),
+    cityId: str(listing.city_id),
+    localityId: str(listing.locality_id),
+    postalCode: str(listing.postal_code),
+    streetAddress: str(listing.private?.street_address),
+    addressVisibility: listing.address_visibility,
+    areaUnit: str(listing.area_unit),
+    areaValue: str(listing.area_value),
+    bedrooms: str(listing.bedrooms),
+    bathrooms: str(listing.bathrooms),
+    parkingSpaces: str(listing.parking_spaces),
+    floorNumber: str(listing.floor_number),
+    totalFloors: str(listing.total_floors),
+    furnishing: str(listing.furnishing),
+    possessionStatus: str(listing.possession_status),
+    availableFrom: str(listing.available_from),
+    contactViaForm: listing.contact_via_form,
+    showPhone: listing.show_phone,
+    showWhatsapp: listing.show_whatsapp,
+    showEmail: listing.show_email,
+    amenityIds: listing.amenities.map((row) => row.amenity_id),
+    videoUrls: [...listing.videos].sort((a, b) => a.sort_order - b.sort_order).map(videoWatchUrl).join("\n"),
+  };
 }
 
 function ToggleRow({ label, value, onChange }: { label: string; value: boolean; onChange: (value: boolean) => void }) {
