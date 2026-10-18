@@ -60,7 +60,7 @@ See [08-excel-import-guide.md](08-excel-import-guide.md) for the administrator g
 | Owner listing editor | Become a lister, my listings, full editor (New project only for builders), video links, photos from gallery or camera converted to JPEG (max 1600 px), submit / withdraw / sold / rented / archive / restore, moderator notes | Typecheck, bundle build; permissions are the same database rules already covered by pgTAP |
 | Build setup | `eas.json` (preview APK / internal, production), identifiers from environment with placeholders | Not run (needs your Expo/Apple/Google accounts) |
 
-Checks run: `typecheck` clean, `lint` 0 findings, Jest 8/8 passing (also 3 display-helper tests), `expo export` built Android and iOS bundles (1351 / 1358 modules, ~4.1 MB each).
+Checks run: `typecheck` clean, `lint` 0 findings, Jest 8/8 passing (5 encrypted-storage, 3 display-helper), `expo export` built Android and iOS bundles (1351 / 1358 modules, ~4.1 MB each).
 
 **Not verified:** running on a phone, simulator or emulator (no Android SDK or Mac on this computer), camera/photo upload and HEIC conversion on real devices, the in-app video player on devices, EAS cloud builds and store submission. Next step: try it with Expo Go on your phone (see 09).
 
