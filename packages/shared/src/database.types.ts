@@ -592,6 +592,11 @@ isOneToOne: false
 "restore_listing":
 { Args: { "p_listing_id": string }; Returns: Database["public"]['Enums']["listing_status"]
                            },
+"search_listings":
+{ Args: { "p_amenity_ids"?: (string)[],"p_area_unit"?: Database["public"]['Enums']["area_unit"],"p_currency"?: string,"p_cursor"?: string,"p_featured_only"?: boolean,"p_furnishing"?: Database["public"]['Enums']["furnishing"],"p_limit"?: number,"p_listed_within_days"?: number,"p_location_id"?: string,"p_max_area"?: number,"p_max_price"?: number,"p_min_area"?: number,"p_min_bathrooms"?: number,"p_min_bedrooms"?: number,"p_min_price"?: number,"p_property_type_ids"?: (string)[],"p_purpose"?: Database["public"]['Enums']["listing_purpose"],"p_q"?: string,"p_sort"?: string }; Returns: {
+              "area_unit": Database["public"]['Enums']["area_unit"],"area_value": number,"bathrooms": number,"bedrooms": number,"city_name": string,"cover_alt": string,"cover_key": string,"currency": string,"cursor": string,"first_published_at": string,"id": string,"is_featured": boolean,"locality_name": string,"price_amount": number,"price_display": Database["public"]['Enums']["price_display"],"price_negotiable": boolean,"price_period": Database["public"]['Enums']["price_period"],"property_type_name": string,"purpose": Database["public"]['Enums']["listing_purpose"],"reference_code": string,"slug": string,"title": string
+            }[]
+                           },
 "set_listing_featured":
 { Args: { "p_featured": boolean,"p_listing_id": string,"p_until"?: string }; Returns: undefined
                            },
@@ -609,6 +614,35 @@ isOneToOne: false
                            },
 "withdraw_listing":
 { Args: { "p_listing_id": string }; Returns: Database["public"]['Enums']["listing_status"]
+                           },
+"worker_claim_jobs":
+{ Args: { "p_limit"?: number }; Returns: {
+              "attempts": number,
+"created_at": string,
+"finished_at": string | null,
+"id": number,
+"kind": string,
+"last_error": string | null,
+"listing_id": string,
+"next_attempt_at": string,
+"status": Database["public"]['Enums']["outbox_status"]
+            }[]
+                          SetofOptions: {
+        from: "*"
+        to: "job_queue"
+        isOneToOne: false
+        isSetofReturn: true
+      } },
+"worker_claim_notifications":
+{ Args: { "p_limit"?: number }; Returns: {
+              "attempts": number,"id": number,"recipient_email": string,"recipient_name": string,"template": string,"template_data": Json
+            }[]
+                           },
+"worker_finish_job":
+{ Args: { "p_error"?: string,"p_id": number,"p_ok": boolean }; Returns: undefined
+                           },
+"worker_finish_notification":
+{ Args: { "p_error"?: string,"p_id": number,"p_permanent"?: boolean,"p_provider_message_id"?: string,"p_status": Database["public"]['Enums']["outbox_status"] }; Returns: undefined
                            }
           }
           Enums: {
