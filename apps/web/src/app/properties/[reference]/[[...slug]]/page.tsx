@@ -5,6 +5,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { Suspense } from "react";
 import { toggleFavorite } from "@/app/actions/favorites";
 import { EnquiryForm } from "@/components/enquiry-form";
+import { VideoGallery } from "@/components/video-gallery";
 import { Badge, ButtonLink, Card } from "@/components/ui";
 import { getViewer } from "@/lib/auth";
 import { absoluteUrl } from "@/lib/env";
@@ -12,10 +13,10 @@ import {
   displayArea,
   displayPrice,
   FURNISHING_LABEL,
+  listingBadge,
   listingPath,
   POSSESSION_LABEL,
   publicImageUrl,
-  PURPOSE_LABEL,
 } from "@/lib/listing-format";
 import { getListingReferenceById, getPublicListing, getSiteSettings, getTaxonomy, locationLabel } from "@/lib/public-data";
 import { createUserClient } from "@/lib/supabase";
@@ -32,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const cover = listing.media.find((item) => item.is_cover && item.public_key) ?? listing.media.find((item) => item.public_key);
   const description =
     listing.seo_description ??
-    `${PURPOSE_LABEL[listing.purpose]} · ${displayPrice(listing, settings.default_locale)}. ${listing.description.slice(0, 120)}`;
+    `${listingBadge(listing)} · ${displayPrice(listing, settings.default_locale)}. ${listing.description.slice(0, 120)}`;
   return {
     title: listing.seo_title ?? listing.title,
     description,
@@ -128,14 +129,14 @@ async function ListingDetail({ reference, slug }: { reference: string; slug?: st
             <Link href="/" className="hover:underline">Home</Link> ›
           </li>
           <li>
-            <Link href={`/search?purpose=${listing.purpose}`} className="hover:underline">
-              {PURPOSE_LABEL[listing.purpose]}
+            <Link href={`/search?category=${listing.category}`} className="hover:underline">
+              {listingBadge(listing)}
             </Link>{" "}
             ›
           </li>
           {city ? (
             <li>
-              <Link href={`/search?purpose=${listing.purpose}&location=${city.id}`} className="hover:underline">
+              <Link href={`/search?category=${listing.category}&location=${city.id}`} className="hover:underline">
                 {city.name}
               </Link>{" "}
               ›
@@ -148,10 +149,11 @@ async function ListingDetail({ reference, slug }: { reference: string; slug?: st
       <header className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <div className="flex flex-wrap gap-2">
-            <Badge>{PURPOSE_LABEL[listing.purpose]}</Badge>
+            <Badge>{listingBadge(listing)}</Badge>
             {listing.is_featured ? <Badge tone="sold">Featured</Badge> : null}
           </div>
           <h1 className="mt-2 text-2xl font-semibold sm:text-3xl">{listing.title}</h1>
+          {listing.project_name ? <p className="font-medium text-brand">{listing.project_name}</p> : null}
           {place ? <p className="text-text-muted">{place}</p> : null}
         </div>
         <div className="sm:text-right">
@@ -180,6 +182,8 @@ async function ListingDetail({ reference, slug }: { reference: string; slug?: st
                 ))}
             </dl>
           </section>
+
+          {listing.category === "new_project" ? <ProjectDetails listing={listing} /> : null}
 
           {listing.description ? (
             <section aria-labelledby="description-heading">
@@ -212,17 +216,21 @@ async function ListingDetail({ reference, slug }: { reference: string; slug?: st
             ) : null}
           </section>
 
-          {listing.video_url || listing.virtual_tour_url ? (
+          {listing.videos.length || listing.virtual_tour_url ? (
             <section aria-labelledby="media-heading">
-              <h2 id="media-heading" className="text-xl font-semibold">Video and tour</h2>
-              <ul className="mt-2 flex flex-col gap-1 text-sm">
-                {listing.video_url ? (
-                  <li><a href={listing.video_url} target="_blank" rel="noopener noreferrer nofollow" className="text-brand underline">Watch the video</a></li>
-                ) : null}
-                {listing.virtual_tour_url ? (
-                  <li><a href={listing.virtual_tour_url} target="_blank" rel="noopener noreferrer nofollow" className="text-brand underline">Open the virtual tour</a></li>
-                ) : null}
-              </ul>
+              <h2 id="media-heading" className="text-xl font-semibold">
+                Videos{listing.virtual_tour_url ? " and tour" : ""}
+              </h2>
+              <div className="mt-3">
+                <VideoGallery title={listing.title} videos={[...listing.videos].sort((a, b) => a.sort_order - b.sort_order)} />
+              </div>
+              {listing.virtual_tour_url ? (
+                <p className="mt-3 text-sm">
+                  <a href={listing.virtual_tour_url} target="_blank" rel="noopener noreferrer nofollow" className="text-brand underline">
+                    Open the virtual tour (new tab)
+                  </a>
+                </p>
+              ) : null}
             </section>
           ) : null}
         </div>
@@ -264,6 +272,55 @@ async function ListingDetail({ reference, slug }: { reference: string; slug?: st
         </aside>
       </div>
     </article>
+  );
+}
+
+function ProjectDetails({
+  listing,
+}: {
+  listing: {
+    project_name: string | null;
+    project_registration_number: string | null;
+    possession_status: keyof typeof POSSESSION_LABEL | null;
+    available_from: string | null;
+    builder: { company_name: string; registration_number: string | null; website: string | null } | null;
+  };
+}) {
+  const rows: Array<[string, React.ReactNode]> = [];
+  if (listing.project_name) rows.push(["Project", listing.project_name]);
+  if (listing.builder) {
+    rows.push([
+      "Builder",
+      <>
+        {listing.builder.company_name} <Badge tone="published">Verified builder</Badge>
+      </>,
+    ]);
+  }
+  if (listing.project_registration_number) rows.push(["Registration number", listing.project_registration_number]);
+  if (listing.builder?.registration_number) rows.push(["Builder registration", listing.builder.registration_number]);
+  if (listing.possession_status) {
+    rows.push(["Possession", `${POSSESSION_LABEL[listing.possession_status]}${listing.available_from ? ` (${listing.available_from})` : ""}`]);
+  }
+  if (listing.builder?.website) {
+    rows.push([
+      "Website",
+      <a key="website" href={listing.builder.website} target="_blank" rel="noopener noreferrer nofollow" className="text-brand underline">
+        {listing.builder.website.replace("https://", "")}
+      </a>,
+    ]);
+  }
+  return (
+    <section aria-labelledby="project-heading" className="rounded-xl border border-border bg-surface p-5">
+      <h2 id="project-heading" className="text-xl font-semibold">New project</h2>
+      <dl className="mt-3 grid gap-2 text-sm sm:grid-cols-[12rem_1fr]">
+        {rows.map(([label, value]) => (
+          <div key={label} className="contents">
+            <dt className="text-text-muted">{label}</dt>
+            <dd className="font-medium">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
   );
 }
 

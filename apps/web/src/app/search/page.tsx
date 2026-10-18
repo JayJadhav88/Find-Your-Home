@@ -138,13 +138,15 @@ function FilterForm({ filters, taxonomy, currency }: { filters: SearchFilters; t
         <TextInput bare name="q" defaultValue={filters.q} placeholder="e.g. garden" />
       </label>
       <label className={field}>
-        Buy or rent
-        <Select bare name="purpose" defaultValue={filters.purpose ?? ""}>
-          <option value="">Either</option>
-          <option value="sale">Buy</option>
-          <option value="rent">Rent</option>
+        Category
+        <Select bare name="category" defaultValue={filters.category ?? ""}>
+          <option value="">Any</option>
+          <option value="rental">Rent</option>
+          <option value="resale">Resale</option>
+          <option value="new_project">New projects</option>
         </Select>
       </label>
+      {filters.purpose ? <input type="hidden" name="purpose" value={filters.purpose} /> : null}
       <label className={field}>
         Area
         <Select bare name="location" defaultValue={filters.location ?? ""}>

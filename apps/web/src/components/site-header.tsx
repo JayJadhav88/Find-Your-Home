@@ -11,11 +11,14 @@ export function SiteHeader({ brandName }: { brandName: string }) {
           {brandName}
         </Link>
         <nav aria-label="Main" className="flex flex-wrap items-center gap-1 text-sm">
-          <Link href="/search?purpose=sale" className="rounded-lg px-3 py-2 hover:bg-surface-muted">
-            Buy
-          </Link>
-          <Link href="/search?purpose=rent" className="rounded-lg px-3 py-2 hover:bg-surface-muted">
+          <Link href="/search?category=rental" className="rounded-lg px-3 py-2 hover:bg-surface-muted">
             Rent
+          </Link>
+          <Link href="/search?category=resale" className="rounded-lg px-3 py-2 hover:bg-surface-muted">
+            Resale
+          </Link>
+          <Link href="/search?category=new_project" className="rounded-lg px-3 py-2 hover:bg-surface-muted">
+            New projects
           </Link>
           <Link href="/account/listings/new" className="rounded-lg px-3 py-2 hover:bg-surface-muted">
             List a property

@@ -85,7 +85,8 @@ export async function getPublicListing(reference: string) {
     .select(
       `*, property_type:property_types(name, slug),
        media:listing_media(id, kind, public_key, alt_text, sort_order, is_cover),
-       amenities:listing_amenities(amenity:amenities(id, name, category))`,
+       amenities:listing_amenities(amenity:amenities(id, name, category)),
+       videos:listing_videos(provider, video_id, instagram_kind, sort_order)`,
     )
     .eq("reference_code", reference)
     .eq("status", "published")
@@ -93,8 +94,13 @@ export async function getPublicListing(reference: string) {
   if (error) throw error;
   if (!listing) return null;
 
-  const { data: contact } = await db.rpc("get_listing_contact", { p_listing_id: listing.id }).maybeSingle();
-  return { ...listing, contact: contact ?? null };
+  const [{ data: contact }, { data: builder }] = await Promise.all([
+    db.rpc("get_listing_contact", { p_listing_id: listing.id }).maybeSingle(),
+    listing.category === "new_project"
+      ? db.from("builder_profiles").select("company_name, registration_number, website").eq("user_id", listing.owner_id).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+  return { ...listing, contact: contact ?? null, builder: builder ?? null };
 }
 
 export async function getListingReferenceById(id: string) {

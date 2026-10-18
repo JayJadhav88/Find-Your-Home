@@ -3,6 +3,7 @@ import {
   formatPrice,
   pricePeriodSuffix,
   type AreaUnit,
+  type ListingCategory,
   type PriceDisplay,
   type PricePeriod,
 } from "@fyh/shared";
@@ -37,6 +38,17 @@ export function displayArea(value: number | null, unit: AreaUnit | null, locale:
 }
 
 export const PURPOSE_LABEL = { sale: "For sale", rent: "For rent" } as const;
+
+export const CATEGORY_BADGE: Record<ListingCategory, string> = {
+  rental: "For rent",
+  resale: "Resale",
+  new_project: "New project",
+};
+
+/** Badge text for a listing: its category when known, otherwise sale/rent. */
+export function listingBadge(listing: { category?: ListingCategory | null; purpose: "sale" | "rent" }): string {
+  return listing.category ? CATEGORY_BADGE[listing.category] : PURPOSE_LABEL[listing.purpose];
+}
 
 export const STATUS_LABEL: Record<string, string> = {
   draft: "Draft",

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import { displayArea, displayPrice, listingPath, PURPOSE_LABEL, publicImageUrl } from "@/lib/listing-format";
-import type { AreaUnit, ListingPurpose, PriceDisplay, PricePeriod } from "@fyh/shared";
+import { displayArea, displayPrice, listingBadge, listingPath, publicImageUrl } from "@/lib/listing-format";
+import type { AreaUnit, ListingCategory, ListingPurpose, PriceDisplay, PricePeriod } from "@fyh/shared";
 import { Badge } from "./ui";
 
 /** Fields a listing card needs; matches search_listings rows (which can contain nulls). */
@@ -11,6 +11,8 @@ export interface ListingCardData {
   slug: string;
   title: string;
   purpose: ListingPurpose;
+  category?: ListingCategory | null;
+  project_name?: string | null;
   price_amount: number | null;
   currency: string | null;
   price_period: PricePeriod;
@@ -50,7 +52,7 @@ export function ListingCard({ listing, locale, isNew = false }: { listing: Listi
           <div className="flex h-full items-center justify-center text-sm text-text-muted">No photo yet</div>
         )}
         <div className="absolute left-3 top-3 flex gap-2">
-          <Badge>{PURPOSE_LABEL[listing.purpose]}</Badge>
+          <Badge>{listingBadge(listing)}</Badge>
           {listing.is_featured ? <Badge tone="sold">Featured</Badge> : null}
           {isNew ? <Badge tone="published">New</Badge> : null}
         </div>
@@ -62,6 +64,7 @@ export function ListingCard({ listing, locale, isNew = false }: { listing: Listi
             {listing.title}
           </Link>
         </h3>
+        {listing.project_name ? <p className="text-sm font-medium text-brand">{listing.project_name}</p> : null}
         {place ? <p className="text-sm text-text-muted">{place}</p> : null}
         {facts.length ? <p className="mt-auto pt-2 text-sm text-text-muted">{facts.join(" · ")}</p> : null}
       </div>

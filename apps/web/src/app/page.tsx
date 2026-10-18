@@ -16,20 +16,22 @@ export default async function HomePage() {
         <div className="mx-auto max-w-6xl px-4 py-14 sm:py-20">
           <h1 className="max-w-2xl text-3xl font-semibold leading-tight sm:text-5xl">Find a home that fits your life.</h1>
           <p className="mt-3 max-w-xl text-lg text-white/85">
-            Browse homes for sale and rent, save the ones you like, and contact the lister directly.
+            Homes to rent, resale homes and new projects from verified builders. Save the ones you like and contact the
+            lister directly.
           </p>
           <form action="/search" className="mt-8 grid gap-3 rounded-xl bg-surface p-4 text-text sm:grid-cols-[1fr_auto_auto_auto]">
             <label className="sr-only" htmlFor="home-q">
               Keyword
             </label>
             <TextInput id="home-q" name="q" placeholder="Keyword, e.g. garden or balcony" />
-            <label className="sr-only" htmlFor="home-purpose">
-              Buy or rent
+            <label className="sr-only" htmlFor="home-category">
+              Category
             </label>
-            <Select id="home-purpose" name="purpose" defaultValue="">
-              <option value="">Buy or rent</option>
-              <option value="sale">Buy</option>
-              <option value="rent">Rent</option>
+            <Select id="home-category" name="category" defaultValue="">
+              <option value="">Any category</option>
+              <option value="rental">Rent</option>
+              <option value="resale">Resale</option>
+              <option value="new_project">New projects</option>
             </Select>
             <label className="sr-only" htmlFor="home-location">
               City
