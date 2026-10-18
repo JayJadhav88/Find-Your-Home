@@ -269,6 +269,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"integration_settings": {
+                  Row: {
+                    "email_from": string | null,"email_reply_to": string | null,"id": boolean,"push_enabled": boolean,"sheets_enabled": boolean,"sheets_webhook_url": string | null,"updated_at": string,"updated_by": string | null,"whatsapp_enabled": boolean,"whatsapp_phone_number_id": string | null,"whatsapp_templates": NonNullable<Json>
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "email_from"?: string | null,"email_reply_to"?: string | null,"id"?: boolean,"push_enabled"?: boolean,"sheets_enabled"?: boolean,"sheets_webhook_url"?: string | null,"updated_at"?: string,"updated_by"?: string | null,"whatsapp_enabled"?: boolean,"whatsapp_phone_number_id"?: string | null,"whatsapp_templates"?: NonNullable<Json>
+                  }
+                  Update: {
+                    "email_from"?: string | null,"email_reply_to"?: string | null,"id"?: boolean,"push_enabled"?: boolean,"sheets_enabled"?: boolean,"sheets_webhook_url"?: string | null,"updated_at"?: string,"updated_by"?: string | null,"whatsapp_enabled"?: boolean,"whatsapp_phone_number_id"?: string | null,"whatsapp_templates"?: NonNullable<Json>
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "integration_settings_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"job_queue": {
                   Row: {
                     "attempts": number,"created_at": string,"finished_at": string | null,"id": number,"kind": string,"last_error": string | null,"listing_id": string,"next_attempt_at": string,"payload": NonNullable<Json>,"status": Database["public"]['Enums']["outbox_status"]
@@ -517,19 +537,65 @@ isOneToOne: false
                   ]
                 },"notification_outbox": {
                   Row: {
-                    "attempts": number,"created_at": string,"id": number,"last_error": string | null,"next_attempt_at": string,"provider_message_id": string | null,"recipient_email": string | null,"recipient_user_id": string | null,"sent_at": string | null,"status": Database["public"]['Enums']["outbox_status"],"template": string,"template_data": NonNullable<Json>
+                    "attempts": number,"broadcast_id": number | null,"channel": Database["public"]['Enums']["notification_channel"],"created_at": string,"id": number,"last_error": string | null,"next_attempt_at": string,"notification_id": number | null,"provider_message_id": string | null,"recipient_email": string | null,"recipient_user_id": string | null,"sent_at": string | null,"status": Database["public"]['Enums']["outbox_status"],"template": string,"template_data": NonNullable<Json>
                   }
                   ComputedFields: never
                   Insert: {
-                    "attempts"?: number,"created_at"?: string,"id"?: never,"last_error"?: string | null,"next_attempt_at"?: string,"provider_message_id"?: string | null,"recipient_email"?: string | null,"recipient_user_id"?: string | null,"sent_at"?: string | null,"status"?: Database["public"]['Enums']["outbox_status"],"template": string,"template_data"?: NonNullable<Json>
+                    "attempts"?: number,"broadcast_id"?: number | null,"channel"?: Database["public"]['Enums']["notification_channel"],"created_at"?: string,"id"?: never,"last_error"?: string | null,"next_attempt_at"?: string,"notification_id"?: number | null,"provider_message_id"?: string | null,"recipient_email"?: string | null,"recipient_user_id"?: string | null,"sent_at"?: string | null,"status"?: Database["public"]['Enums']["outbox_status"],"template": string,"template_data"?: NonNullable<Json>
                   }
                   Update: {
-                    "attempts"?: number,"created_at"?: string,"id"?: never,"last_error"?: string | null,"next_attempt_at"?: string,"provider_message_id"?: string | null,"recipient_email"?: string | null,"recipient_user_id"?: string | null,"sent_at"?: string | null,"status"?: Database["public"]['Enums']["outbox_status"],"template"?: string,"template_data"?: NonNullable<Json>
+                    "attempts"?: number,"broadcast_id"?: number | null,"channel"?: Database["public"]['Enums']["notification_channel"],"created_at"?: string,"id"?: never,"last_error"?: string | null,"next_attempt_at"?: string,"notification_id"?: number | null,"provider_message_id"?: string | null,"recipient_email"?: string | null,"recipient_user_id"?: string | null,"sent_at"?: string | null,"status"?: Database["public"]['Enums']["outbox_status"],"template"?: string,"template_data"?: NonNullable<Json>
                   }
                   Relationships: [
                     {
+      foreignKeyName: "notification_outbox_notification_id_fkey"
+      columns: ["notification_id"]
+isOneToOne: false
+      referencedRelation: "notifications"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "notification_outbox_recipient_user_id_fkey"
       columns: ["recipient_user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"notification_preferences": {
+                  Row: {
+                    "alerts_enabled": boolean,"email_enabled": boolean,"push_enabled": boolean,"quiet_hours_enabled": boolean,"timezone": string | null,"updated_at": string,"user_id": string,"whatsapp_enabled": boolean,"whatsapp_number": string | null,"whatsapp_opt_in_at": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "alerts_enabled"?: boolean,"email_enabled"?: boolean,"push_enabled"?: boolean,"quiet_hours_enabled"?: boolean,"timezone"?: string | null,"updated_at"?: string,"user_id": string,"whatsapp_enabled"?: boolean,"whatsapp_number"?: string | null,"whatsapp_opt_in_at"?: string | null
+                  }
+                  Update: {
+                    "alerts_enabled"?: boolean,"email_enabled"?: boolean,"push_enabled"?: boolean,"quiet_hours_enabled"?: boolean,"timezone"?: string | null,"updated_at"?: string,"user_id"?: string,"whatsapp_enabled"?: boolean,"whatsapp_number"?: string | null,"whatsapp_opt_in_at"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notification_preferences_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: true
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"notifications": {
+                  Row: {
+                    "broadcast_id": number | null,"created_at": string,"data": NonNullable<Json>,"id": number,"kind": string,"read_at": string | null,"user_id": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "broadcast_id"?: number | null,"created_at"?: string,"data"?: NonNullable<Json>,"id"?: never,"kind": string,"read_at"?: string | null,"user_id": string
+                  }
+                  Update: {
+                    "broadcast_id"?: number | null,"created_at"?: string,"data"?: NonNullable<Json>,"id"?: never,"kind"?: string,"read_at"?: string | null,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "notifications_user_id_fkey"
+      columns: ["user_id"]
 isOneToOne: false
       referencedRelation: "profiles"
       referencedColumns: ["id"]
@@ -563,16 +629,36 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
-                },"site_settings": {
+                },"push_tokens": {
                   Row: {
-                    "allowed_image_types": (string)[],"brand_name": string,"captcha_enabled": boolean,"comparison_max": number,"contact_email": string | null,"contact_phone": string | null,"contact_whatsapp": string | null,"default_area_unit": Database["public"]['Enums']["area_unit"],"default_currency": string | null,"default_locale": string,"default_timezone": string,"enquiry_limit_per_hour": number,"id": boolean,"material_change_policy": string,"material_fields": (string)[],"max_image_bytes": number,"max_images_per_listing": number,"new_listing_days": number,"owner_leads_enabled": boolean,"self_service_owner": boolean,"seo_default_description": string | null,"seo_default_title": string | null,"submission_limit_per_day": number,"updated_at": string,"updated_by": string | null
+                    "created_at": string,"last_seen_at": string,"platform": string,"token": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "allowed_image_types"?: (string)[],"brand_name"?: string,"captcha_enabled"?: boolean,"comparison_max"?: number,"contact_email"?: string | null,"contact_phone"?: string | null,"contact_whatsapp"?: string | null,"default_area_unit"?: Database["public"]['Enums']["area_unit"],"default_currency"?: string | null,"default_locale"?: string,"default_timezone"?: string,"enquiry_limit_per_hour"?: number,"id"?: boolean,"material_change_policy"?: string,"material_fields"?: (string)[],"max_image_bytes"?: number,"max_images_per_listing"?: number,"new_listing_days"?: number,"owner_leads_enabled"?: boolean,"self_service_owner"?: boolean,"seo_default_description"?: string | null,"seo_default_title"?: string | null,"submission_limit_per_day"?: number,"updated_at"?: string,"updated_by"?: string | null
+                    "created_at"?: string,"last_seen_at"?: string,"platform": string,"token": string,"user_id": string
                   }
                   Update: {
-                    "allowed_image_types"?: (string)[],"brand_name"?: string,"captcha_enabled"?: boolean,"comparison_max"?: number,"contact_email"?: string | null,"contact_phone"?: string | null,"contact_whatsapp"?: string | null,"default_area_unit"?: Database["public"]['Enums']["area_unit"],"default_currency"?: string | null,"default_locale"?: string,"default_timezone"?: string,"enquiry_limit_per_hour"?: number,"id"?: boolean,"material_change_policy"?: string,"material_fields"?: (string)[],"max_image_bytes"?: number,"max_images_per_listing"?: number,"new_listing_days"?: number,"owner_leads_enabled"?: boolean,"self_service_owner"?: boolean,"seo_default_description"?: string | null,"seo_default_title"?: string | null,"submission_limit_per_day"?: number,"updated_at"?: string,"updated_by"?: string | null
+                    "created_at"?: string,"last_seen_at"?: string,"platform"?: string,"token"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "push_tokens_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"site_settings": {
+                  Row: {
+                    "allowed_image_types": (string)[],"brand_name": string,"broadcast_weekly_cap": number,"captcha_enabled": boolean,"comparison_max": number,"contact_email": string | null,"contact_phone": string | null,"contact_whatsapp": string | null,"default_area_unit": Database["public"]['Enums']["area_unit"],"default_currency": string | null,"default_locale": string,"default_timezone": string,"enquiry_limit_per_hour": number,"id": boolean,"material_change_policy": string,"material_fields": (string)[],"max_image_bytes": number,"max_images_per_listing": number,"new_listing_days": number,"owner_leads_enabled": boolean,"quiet_end_hour": number,"quiet_start_hour": number,"review_hours_target": number,"self_service_owner": boolean,"seo_default_description": string | null,"seo_default_title": string | null,"submission_limit_per_day": number,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "allowed_image_types"?: (string)[],"brand_name"?: string,"broadcast_weekly_cap"?: number,"captcha_enabled"?: boolean,"comparison_max"?: number,"contact_email"?: string | null,"contact_phone"?: string | null,"contact_whatsapp"?: string | null,"default_area_unit"?: Database["public"]['Enums']["area_unit"],"default_currency"?: string | null,"default_locale"?: string,"default_timezone"?: string,"enquiry_limit_per_hour"?: number,"id"?: boolean,"material_change_policy"?: string,"material_fields"?: (string)[],"max_image_bytes"?: number,"max_images_per_listing"?: number,"new_listing_days"?: number,"owner_leads_enabled"?: boolean,"quiet_end_hour"?: number,"quiet_start_hour"?: number,"review_hours_target"?: number,"self_service_owner"?: boolean,"seo_default_description"?: string | null,"seo_default_title"?: string | null,"submission_limit_per_day"?: number,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "allowed_image_types"?: (string)[],"brand_name"?: string,"broadcast_weekly_cap"?: number,"captcha_enabled"?: boolean,"comparison_max"?: number,"contact_email"?: string | null,"contact_phone"?: string | null,"contact_whatsapp"?: string | null,"default_area_unit"?: Database["public"]['Enums']["area_unit"],"default_currency"?: string | null,"default_locale"?: string,"default_timezone"?: string,"enquiry_limit_per_hour"?: number,"id"?: boolean,"material_change_policy"?: string,"material_fields"?: (string)[],"max_image_bytes"?: number,"max_images_per_listing"?: number,"new_listing_days"?: number,"owner_leads_enabled"?: boolean,"quiet_end_hour"?: number,"quiet_start_hour"?: number,"review_hours_target"?: number,"self_service_owner"?: boolean,"seo_default_description"?: string | null,"seo_default_title"?: string | null,"submission_limit_per_day"?: number,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -624,6 +710,11 @@ isOneToOne: false
             "admin_import_listings":
 { Args: { "p_file_name": string,"p_owner_id": string,"p_publish": boolean,"p_rows": Json }; Returns: Json
                            },
+"admin_integration_secrets":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "is_set": boolean,"name": string,"updated_at": string
+            }[]
+                           },
 "admin_list_users":
 { Args: { "p_limit"?: number,"p_offset"?: number,"p_query"?: string }; Returns: {
               "created_at": string,"display_name": string,"email": string,"email_confirmed": boolean,"id": string,"listings_count": number,"roles": (Database["public"]['Enums']["app_role"])[],"status": Database["public"]['Enums']["account_status"]
@@ -634,6 +725,9 @@ isOneToOne: false
                            },
 "admin_set_account_status":
 { Args: { "p_reason"?: string,"p_status": Database["public"]['Enums']["account_status"],"p_user_id": string }; Returns: undefined
+                           },
+"admin_set_integration_secret":
+{ Args: { "p_name": string,"p_value": string }; Returns: undefined
                            },
 "admin_set_role":
 { Args: { "p_granted": boolean,"p_role": Database["public"]['Enums']["app_role"],"p_user_id": string }; Returns: undefined
@@ -663,8 +757,14 @@ isOneToOne: false
               "created_at": string,"from_status": Database["public"]['Enums']["listing_status"],"reason": string,"to_status": Database["public"]['Enums']["listing_status"]
             }[]
                            },
+"mark_notifications_read":
+{ Args: { "p_ids"?: (number)[] }; Returns: number
+                           },
 "moderate_listing":
 { Args: { "p_decision": string,"p_listing_id": string,"p_reason"?: string,"p_reason_visible_to_owner"?: boolean }; Returns: Database["public"]['Enums']["listing_status"]
+                           },
+"register_push_token":
+{ Args: { "p_platform": string,"p_token": string }; Returns: undefined
                            },
 "request_account_deletion":
 { Args: Record<PropertyKey, never>; Returns: string
@@ -695,6 +795,9 @@ isOneToOne: false
 "submit_listing":
 { Args: { "p_listing_id": string }; Returns: Database["public"]['Enums']["listing_status"]
                            },
+"unregister_push_token":
+{ Args: { "p_token": string }; Returns: undefined
+                           },
 "update_enquiry_status":
 { Args: { "p_enquiry_id": string,"p_status": Database["public"]['Enums']["enquiry_status"] }; Returns: undefined
                            },
@@ -721,8 +824,8 @@ isOneToOne: false
         isSetofReturn: true
       } },
 "worker_claim_notifications":
-{ Args: { "p_limit"?: number }; Returns: {
-              "attempts": number,"id": number,"recipient_email": string,"recipient_name": string,"template": string,"template_data": Json
+{ Args: { "p_channels"?: (Database["public"]['Enums']["notification_channel"])[],"p_limit"?: number }; Returns: {
+              "attempts": number,"channel": Database["public"]['Enums']["notification_channel"],"id": number,"notification_id": number,"push_tokens": (string)[],"recipient_email": string,"recipient_locale": string,"recipient_name": string,"recipient_phone": string,"template": string,"template_data": Json
             }[]
                            },
 "worker_finalize_import":
@@ -733,10 +836,16 @@ isOneToOne: false
                            },
 "worker_finish_notification":
 { Args: { "p_error"?: string,"p_id": number,"p_permanent"?: boolean,"p_provider_message_id"?: string,"p_status": Database["public"]['Enums']["outbox_status"] }; Returns: undefined
+                           },
+"worker_integration_config":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
+"worker_remove_push_token":
+{ Args: { "p_token": string }; Returns: undefined
                            }
           }
           Enums: {
-            "account_status": "active"|"suspended"|"deletion_requested","address_visibility": "exact"|"approximate"|"hidden","app_role": "buyer"|"owner"|"agent"|"moderator"|"administrator"|"builder","area_unit": "sq_m"|"sq_ft"|"acre"|"hectare","data_request_kind": "export"|"deletion","data_request_status": "pending"|"in_progress"|"completed"|"rejected","enquiry_kind": "enquiry"|"visit_request","enquiry_status": "new"|"in_progress"|"responded"|"closed"|"spam","furnishing": "unfurnished"|"semi_furnished"|"furnished","listing_category": "rental"|"resale"|"new_project","listing_purpose": "sale"|"rent","listing_status": "draft"|"pending_review"|"published"|"rejected"|"suspended"|"archived"|"sold"|"rented","location_level": "country"|"region"|"city"|"locality","media_kind": "image"|"document","outbox_status": "pending"|"sent"|"failed"|"skipped_not_configured","possession_status": "ready"|"under_construction"|"available_from_date","price_display": "show"|"on_request","price_period": "total"|"per_month"|"per_year"|"per_week"|"per_day","video_provider": "youtube"|"instagram","visit_status": "requested"|"confirmed"|"declined"|"cancelled"
+            "account_status": "active"|"suspended"|"deletion_requested","address_visibility": "exact"|"approximate"|"hidden","app_role": "buyer"|"owner"|"agent"|"moderator"|"administrator"|"builder"|"support"|"marketing","area_unit": "sq_m"|"sq_ft"|"acre"|"hectare","data_request_kind": "export"|"deletion","data_request_status": "pending"|"in_progress"|"completed"|"rejected","enquiry_kind": "enquiry"|"visit_request","enquiry_status": "new"|"in_progress"|"visit_scheduled"|"responded"|"closed"|"spam","furnishing": "unfurnished"|"semi_furnished"|"furnished","listing_category": "rental"|"resale"|"new_project","listing_purpose": "sale"|"rent","listing_status": "draft"|"pending_review"|"published"|"rejected"|"suspended"|"archived"|"sold"|"rented","location_level": "country"|"region"|"city"|"locality","media_kind": "image"|"document","notification_channel": "email"|"whatsapp"|"push","outbox_status": "pending"|"sent"|"failed"|"skipped_not_configured"|"skipped_preference","possession_status": "ready"|"under_construction"|"available_from_date","price_display": "show"|"on_request","price_period": "total"|"per_month"|"per_year"|"per_week"|"per_day","video_provider": "youtube"|"instagram","visit_status": "requested"|"confirmed"|"declined"|"cancelled"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -852,7 +961,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "account_status": ["active", "suspended", "deletion_requested"],"address_visibility": ["exact", "approximate", "hidden"],"app_role": ["buyer", "owner", "agent", "moderator", "administrator", "builder"],"area_unit": ["sq_m", "sq_ft", "acre", "hectare"],"data_request_kind": ["export", "deletion"],"data_request_status": ["pending", "in_progress", "completed", "rejected"],"enquiry_kind": ["enquiry", "visit_request"],"enquiry_status": ["new", "in_progress", "responded", "closed", "spam"],"furnishing": ["unfurnished", "semi_furnished", "furnished"],"listing_category": ["rental", "resale", "new_project"],"listing_purpose": ["sale", "rent"],"listing_status": ["draft", "pending_review", "published", "rejected", "suspended", "archived", "sold", "rented"],"location_level": ["country", "region", "city", "locality"],"media_kind": ["image", "document"],"outbox_status": ["pending", "sent", "failed", "skipped_not_configured"],"possession_status": ["ready", "under_construction", "available_from_date"],"price_display": ["show", "on_request"],"price_period": ["total", "per_month", "per_year", "per_week", "per_day"],"video_provider": ["youtube", "instagram"],"visit_status": ["requested", "confirmed", "declined", "cancelled"]
+            "account_status": ["active", "suspended", "deletion_requested"],"address_visibility": ["exact", "approximate", "hidden"],"app_role": ["buyer", "owner", "agent", "moderator", "administrator", "builder", "support", "marketing"],"area_unit": ["sq_m", "sq_ft", "acre", "hectare"],"data_request_kind": ["export", "deletion"],"data_request_status": ["pending", "in_progress", "completed", "rejected"],"enquiry_kind": ["enquiry", "visit_request"],"enquiry_status": ["new", "in_progress", "visit_scheduled", "responded", "closed", "spam"],"furnishing": ["unfurnished", "semi_furnished", "furnished"],"listing_category": ["rental", "resale", "new_project"],"listing_purpose": ["sale", "rent"],"listing_status": ["draft", "pending_review", "published", "rejected", "suspended", "archived", "sold", "rented"],"location_level": ["country", "region", "city", "locality"],"media_kind": ["image", "document"],"notification_channel": ["email", "whatsapp", "push"],"outbox_status": ["pending", "sent", "failed", "skipped_not_configured", "skipped_preference"],"possession_status": ["ready", "under_construction", "available_from_date"],"price_display": ["show", "on_request"],"price_period": ["total", "per_month", "per_year", "per_week", "per_day"],"video_provider": ["youtube", "instagram"],"visit_status": ["requested", "confirmed", "declined", "cancelled"]
           }
         }
 } as const
