@@ -5,6 +5,7 @@ import { Alert, ButtonLink, Card, PageHeader } from "@/components/ui";
 import { isAdmin, requireStaff } from "@/lib/auth";
 import { getSiteSettings } from "@/lib/public-data";
 import { createUserClient } from "@/lib/supabase";
+import { daysAgoIso } from "@/lib/time";
 
 export default function AdminDashboardPage({ searchParams }: PageProps<"/admin">) {
   return (
@@ -20,7 +21,7 @@ async function Dashboard({ denied }: { denied: boolean }) {
   const viewer = await requireStaff("/admin");
   const supabase = await createUserClient();
   const settings = await getSiteSettings();
-  const weekAgo = new Date(Date.now() - 7 * 86_400_000).toISOString();
+  const weekAgo = daysAgoIso(7);
   const count = (query: PromiseLike<{ count: number | null }>) => query.then((result) => result.count ?? 0);
 
   const [pending, published, enquiriesWeek, newEnquiries, users, outboxPending, outboxFailed, jobsFailed, openRequests] =

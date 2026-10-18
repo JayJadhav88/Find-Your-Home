@@ -8,6 +8,7 @@ import { Alert, Button, ButtonLink, EmptyState, Select, TextInput } from "@/comp
 import { AREA_UNIT_LABEL, FURNISHING_LABEL } from "@/lib/listing-format";
 import { getSiteSettings, getTaxonomy, type Taxonomy } from "@/lib/public-data";
 import { createPublicClient } from "@/lib/supabase";
+import { daysAgoMs } from "@/lib/time";
 
 const PAGE_SIZE = 24;
 
@@ -43,7 +44,7 @@ async function SearchContent({ filters }: { filters: SearchFilters }) {
   const rows = data ?? [];
   const page = rows.slice(0, PAGE_SIZE);
   const nextCursor = rows.length > PAGE_SIZE ? page.at(-1)?.cursor : undefined;
-  const newSince = Date.now() - settings.new_listing_days * 86_400_000;
+  const newSince = daysAgoMs(settings.new_listing_days);
 
   return (
     <div className="mt-6 grid gap-8 lg:grid-cols-[18rem_1fr]">

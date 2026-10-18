@@ -18,10 +18,10 @@ export async function SiteFooter() {
           {settings.contact_phone ? <p>{settings.contact_phone}</p> : null}
         </div>
         <nav aria-label="Footer" className="flex flex-wrap gap-4">
-          <Link href="/about" className="hover:underline">About</Link>
-          <Link href="/contact" className="hover:underline">Contact</Link>
-          <Link href="/privacy" className="hover:underline">Privacy</Link>
-          <Link href="/terms" className="hover:underline">Terms</Link>
+          <Link href="/about" className="inline-block py-2 hover:underline">About</Link>
+          <Link href="/contact" className="inline-block py-2 hover:underline">Contact</Link>
+          <Link href="/privacy" className="inline-block py-2 hover:underline">Privacy</Link>
+          <Link href="/terms" className="inline-block py-2 hover:underline">Terms</Link>
         </nav>
       </div>
     </footer>

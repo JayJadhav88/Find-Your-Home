@@ -149,7 +149,7 @@ async function EditListing({ id, created }: { id: string; created: boolean }) {
           defaultAreaUnit={settings.default_area_unit}
         />
       ) : (
-        <Alert tone="info">Details can't be edited in this state.</Alert>
+        <Alert tone="info">Details can’t be edited in this state.</Alert>
       )}
 
       {history.data?.length ? (

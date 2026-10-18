@@ -36,7 +36,10 @@ async function Enquiries({ status }: { status: string }) {
       <PageHeader
         title="Enquiries"
         description="Open an enquiry to see contact details and update its status."
-        actions={isAdmin(viewer) ? <a className="text-sm text-brand underline" href="/admin/export/enquiries">Export CSV</a> : null}
+        actions={isAdmin(viewer) ? (
+          // File download from a route handler: plain link, no prefetch.
+          <a download className="text-sm text-brand underline" href="/admin/export/enquiries">Export CSV</a>
+        ) : null}
       />
       <form className="flex flex-wrap items-end gap-2" action="/admin/enquiries">
         <label className="flex flex-col gap-1 text-sm font-medium">

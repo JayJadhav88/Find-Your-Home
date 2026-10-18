@@ -37,7 +37,7 @@ export async function updateProfile(_previous: FormState, formData: FormData): P
   return { ok: true, message: "Profile saved." };
 }
 
-export async function becomeOwner(_previous: FormState): Promise<FormState> {
+export async function becomeOwner(): Promise<FormState> {
   await viewerOrSignIn("/account");
   const supabase = await createUserClient();
   const { error } = await supabase.rpc("become_owner");
@@ -45,7 +45,7 @@ export async function becomeOwner(_previous: FormState): Promise<FormState> {
   redirect("/account/listings/new");
 }
 
-export async function requestDataExport(_previous: FormState): Promise<FormState> {
+export async function requestDataExport(): Promise<FormState> {
   await viewerOrSignIn("/account/profile");
   const supabase = await createUserClient();
   const { error } = await supabase.rpc("request_data_export");

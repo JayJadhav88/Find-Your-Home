@@ -48,7 +48,10 @@ async function Listings({ status, q, page }: { status: string; q: string; page: 
       <PageHeader
         title="Listings"
         description={status === "pending_review" ? "Oldest submissions first." : undefined}
-        actions={isAdmin(viewer) ? <a className="text-sm text-brand underline" href="/admin/export/listings">Export CSV</a> : null}
+        actions={isAdmin(viewer) ? (
+          // File download from a route handler: plain link, no prefetch.
+          <a download className="text-sm text-brand underline" href="/admin/export/listings">Export CSV</a>
+        ) : null}
       />
       <form className="flex flex-wrap items-end gap-2" action="/admin/listings">
         <label className="flex flex-col gap-1 text-sm font-medium">

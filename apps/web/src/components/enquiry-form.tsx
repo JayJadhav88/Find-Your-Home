@@ -1,7 +1,7 @@
 "use client";
 
 import { enquirySchema, fieldErrors, zonedLocalToUtc } from "@fyh/shared";
-import { useEffect, useState, useTransition } from "react";
+import { useState, useSyncExternalStore, useTransition } from "react";
 import { getBrowserClient } from "@/lib/supabase-browser";
 import { Alert, Button, Checkbox, Field, TextArea, TextInput } from "./ui";
 
@@ -9,6 +9,7 @@ import { Alert, Button, Checkbox, Field, TextArea, TextInput } from "./ui";
 // the visitor's own IP. The database validates and rate-limits; this form adds fast feedback.
 
 const CONSENT_VERSION = "2026-10-v1";
+const noopSubscribe = () => () => {};
 
 export function EnquiryForm({
   listingId,
@@ -22,14 +23,15 @@ export function EnquiryForm({
   brandName: string;
 }) {
   const [kind, setKind] = useState<"enquiry" | "visit_request">("enquiry");
-  const [timeZone, setTimeZone] = useState("UTC");
+  // The visitor's own time zone; "UTC" while rendering on the server.
+  const timeZone = useSyncExternalStore(
+    noopSubscribe,
+    () => Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+    () => "UTC",
+  );
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
   const [pending, startTransition] = useTransition();
-
-  useEffect(() => {
-    setTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC");
-  }, []);
 
   function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();

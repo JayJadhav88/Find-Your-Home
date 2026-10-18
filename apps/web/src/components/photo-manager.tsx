@@ -209,7 +209,7 @@ export function PhotoManager({
         ) : null}
       </div>
       <div aria-live="polite">{message ? <Alert tone={message.tone}>{message.text}</Alert> : null}</div>
-      {!editable ? <p className="text-sm text-text-muted">Photos can't be changed while the listing is awaiting review or closed.</p> : null}
+      {!editable ? <p className="text-sm text-text-muted">Photos can’t be changed while the listing is awaiting review or closed.</p> : null}
       {items.length === 0 ? (
         <p className="text-sm text-text-muted">Add at least one photo. The first one becomes the cover.</p>
       ) : (
