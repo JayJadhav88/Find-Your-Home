@@ -66,6 +66,9 @@ select lives_ok(
 select tests.as_postgres();
 select isnt((select banned_until from auth.users where id = (select id from fx where key = 'other_owner')),
   null, 'suspension blocks sign-in at the auth layer');
+select ok((select banned_until > now() + interval '50 years' and banned_until <> 'infinity'
+           from auth.users where id = (select id from fx where key = 'other_owner')),
+  'suspension uses a finite far-future ban that Supabase Auth can read');
 
 select tests.as_user('other.owner@example.test');
 select throws_ok(
