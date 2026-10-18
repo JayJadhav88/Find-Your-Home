@@ -8,7 +8,7 @@ module.exports = defineConfig([
     ignores: ['dist/*', 'dist-check/*'],
   },
   {
-    // The monorepo uses Array<T> for complex element types (same as the web app).
+    // The shared package and web app use Array<T> for complex element types; keep one style.
     rules: { '@typescript-eslint/array-type': 'off' },
   },
 ]);
