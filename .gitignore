@@ -30,3 +30,8 @@ supabase/.temp/
 
 *.log
 .DS_Store
+
+# Playwright
+e2e-report/
+test-results/
+playwright/.cache/
