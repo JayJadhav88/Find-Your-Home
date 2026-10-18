@@ -3,8 +3,12 @@ import {
   getNotificationPreferences,
   getSettings,
   notificationPreferencesSchema,
+  STAFF_ROLES,
+  TEAM_ALERT_CHANNELS,
   tokens,
   updateNotificationPreferences,
+  updateTeamAlerts,
+  type TeamAlertChannel,
   WHATSAPP_CONSENT_TEXT,
 } from "@fyh/shared";
 import { useState } from "react";
@@ -18,6 +22,9 @@ import { useResource } from "@/lib/use-resource";
 
 const { colors, spacing } = tokens;
 
+const ALERT_LABEL: Record<TeamAlertChannel, string> = { in_app: "In the app", email: "Email", push: "Phone", whatsapp: "WhatsApp" };
+const ENQUIRY_TEAM = ["administrator", "moderator", "support"];
+
 interface Form {
   emailEnabled: boolean;
   pushEnabled: boolean;
@@ -26,6 +33,8 @@ interface Form {
   alertsEnabled: boolean;
   quietHoursEnabled: boolean;
   timezone: string;
+  enquiryAlerts: TeamAlertChannel[];
+  reviewAlerts: TeamAlertChannel[];
 }
 
 const phoneTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -66,6 +75,8 @@ export default function NotificationSettingsScreen() {
       alertsEnabled: prefs.alerts_enabled,
       quietHoursEnabled: prefs.quiet_hours_enabled,
       timezone: prefs.timezone ?? phoneTimeZone,
+      enquiryAlerts: prefs.enquiry_alerts.filter((value): value is TeamAlertChannel => (TEAM_ALERT_CHANNELS as readonly string[]).includes(value)),
+      reviewAlerts: prefs.review_alerts.filter((value): value is TeamAlertChannel => (TEAM_ALERT_CHANNELS as readonly string[]).includes(value)),
     });
   }
 
@@ -74,6 +85,12 @@ export default function NotificationSettingsScreen() {
   if (data.error) return <ErrorState message={data.error} onRetry={data.reload} />;
   if (!form || !data.data) return <Loading />;
   const settings = data.data.settings;
+  const handlesEnquiries = viewer.roles.some((role) => ENQUIRY_TEAM.includes(role));
+  const reviews = viewer.roles.some((role) => (STAFF_ROLES as readonly string[]).includes(role));
+  const toggleAlert = (key: "enquiryAlerts" | "reviewAlerts", channel: TeamAlertChannel) => (on: boolean) =>
+    setForm((current) =>
+      current ? { ...current, [key]: on ? [...current[key], channel] : current[key].filter((value) => value !== channel) } : current,
+    );
 
   const set = <K extends keyof Form>(key: K) => (value: Form[K]) => setForm((current) => (current ? { ...current, [key]: value } : current));
 
@@ -89,6 +106,9 @@ export default function NotificationSettingsScreen() {
     setSaving(true);
     try {
       await updateNotificationPreferences(supabase, viewer.id, form);
+      if (handlesEnquiries || reviews) {
+        await updateTeamAlerts(supabase, viewer.id, { enquiry: form.enquiryAlerts, review: form.reviewAlerts });
+      }
       setNotice({ tone: "success", text: "Notification settings saved." });
       data.reload();
     } catch (error) {
@@ -133,6 +153,22 @@ export default function NotificationSettingsScreen() {
         />
         <Field label="Time zone" value={form.timezone} onChangeText={set("timezone")} autoCapitalize="none" error={errors.timezone} hint={`This phone: ${phoneTimeZone}`} />
       </Card>
+      {handlesEnquiries ? (
+        <Card style={{ gap: spacing.sm }}>
+          <Text style={text.h2}>New enquiries (team)</Text>
+          {TEAM_ALERT_CHANNELS.map((channel) => (
+            <Toggle key={channel} label={ALERT_LABEL[channel]} value={form.enquiryAlerts.includes(channel)} onChange={toggleAlert("enquiryAlerts", channel)} />
+          ))}
+        </Card>
+      ) : null}
+      {reviews ? (
+        <Card style={{ gap: spacing.sm }}>
+          <Text style={text.h2}>Listings to review (team)</Text>
+          {TEAM_ALERT_CHANNELS.map((channel) => (
+            <Toggle key={channel} label={ALERT_LABEL[channel]} value={form.reviewAlerts.includes(channel)} onChange={toggleAlert("reviewAlerts", channel)} />
+          ))}
+        </Card>
+      ) : null}
       {notice ? <Notice tone={notice.tone}>{notice.text}</Notice> : null}
       <Button label="Save" loading={saving} onPress={save} />
     </ScrollView>

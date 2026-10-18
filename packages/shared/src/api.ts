@@ -393,3 +393,16 @@ export async function registerPushToken(client: Client, token: string, platform:
 export async function unregisterPushToken(client: Client, token: string) {
   check(await client.rpc("unregister_push_token", { p_token: token }));
 }
+
+export const TEAM_ALERT_CHANNELS = ["in_app", "email", "push", "whatsapp"] as const;
+export type TeamAlertChannel = (typeof TEAM_ALERT_CHANNELS)[number];
+
+/** Team members: how they hear about new enquiries and listings to review. */
+export async function updateTeamAlerts(client: Client, userId: string, alerts: { enquiry: TeamAlertChannel[]; review: TeamAlertChannel[] }) {
+  check(
+    await client
+      .from("notification_preferences")
+      .update({ enquiry_alerts: alerts.enquiry, review_alerts: alerts.review })
+      .eq("user_id", userId),
+  );
+}
