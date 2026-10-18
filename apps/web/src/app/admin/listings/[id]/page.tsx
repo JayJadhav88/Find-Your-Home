@@ -6,7 +6,7 @@ import { assignAgent, moderateListing, setListingFeatured } from "@/app/actions/
 import { ActionForm } from "@/components/action-form";
 import { VideoGallery } from "@/components/video-gallery";
 import { Loading } from "@/components/loading";
-import { Badge, Card, Checkbox, Field, PageHeader, Select, TextArea, TextInput } from "@/components/ui";
+import { Alert, Badge, Card, Checkbox, Field, PageHeader, Select, TextArea, TextInput } from "@/components/ui";
 import { isAdmin, requireStaff } from "@/lib/auth";
 import {
   AREA_UNIT_LABEL,
@@ -47,13 +47,14 @@ async function Review({ id }: { id: string }) {
     .maybeSingle();
   if (!listing) notFound();
 
-  const [settings, taxonomy, { data: events }, agents] = await Promise.all([
+  const [settings, taxonomy, { data: events }, agents, { data: flags }] = await Promise.all([
     getSiteSettings(),
     getTaxonomy(),
     supabase.from("listing_status_events").select("*, actor:profiles(display_name)").eq("listing_id", id).order("created_at", { ascending: false }),
     isAdmin(viewer)
       ? supabase.from("user_roles").select("user_id, profile:profiles!user_roles_user_id_fkey(display_name)").eq("role", "agent")
       : Promise.resolve({ data: [] as Array<{ user_id: string; profile: { display_name: string } | null }> }),
+    supabase.rpc("admin_listing_flags", { p_listing_id: id }),
   ]);
 
   const images = listing.media.filter((item) => item.kind === "image").sort((a, b) => Number(b.is_cover) - Number(a.is_cover) || a.sort_order - b.sort_order);
@@ -98,6 +99,16 @@ async function Review({ id }: { id: string }) {
           ) : null
         }
       />
+      {flags?.length ? (
+        <Alert tone="warning" title="Check before approving">
+          <ul className="list-disc pl-5">
+            {flags.map((item) => (
+              <li key={item.flag}>{item.detail}</li>
+            ))}
+          </ul>
+          <p className="mt-1 text-xs">These are automatic signals, not proof. See also <Link className="underline" href="/admin/reports">Reports</Link>.</p>
+        </Alert>
+      ) : null}
       <Card className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
           <Badge tone={listing.status}>{STATUS_LABEL[listing.status]}</Badge>

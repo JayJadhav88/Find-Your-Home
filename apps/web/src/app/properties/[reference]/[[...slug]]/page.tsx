@@ -5,6 +5,8 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { Suspense } from "react";
 import { toggleFavorite } from "@/app/actions/favorites";
 import { EnquiryForm } from "@/components/enquiry-form";
+import { ReportListing } from "@/components/report-listing";
+import { ViewBeacon } from "@/components/view-beacon";
 import { VideoGallery } from "@/components/video-gallery";
 import { Badge, ButtonLink, Card } from "@/components/ui";
 import { getViewer } from "@/lib/auth";
@@ -269,6 +271,8 @@ async function ListingDetail({ reference, slug }: { reference: string; slug?: st
               )}
             </div>
           </Card>
+          <ReportListing listingId={listing.id} />
+          <ViewBeacon listingId={listing.id} />
         </aside>
       </div>
     </article>

@@ -97,6 +97,9 @@ async function Settings() {
             <Field label="Messages per member per week" name="broadcastCap" hint="Most broadcasts one person gets outside the app in 7 days.">
               <TextInput name="broadcastCap" inputMode="numeric" defaultValue={settings.broadcast_weekly_cap} />
             </Field>
+            <Field label="Listings expire after (days)" name="expiryDays" hint="Owners get a reminder 7 days before and can renew. 0 = never.">
+              <TextInput name="expiryDays" inputMode="numeric" defaultValue={settings.listing_expiry_days} />
+            </Field>
             <Field label="Quiet hours start (0–23)" name="quietStart" hint="News and alerts wait until quiet hours end, in each member's time zone.">
               <TextInput name="quietStart" inputMode="numeric" defaultValue={settings.quiet_start_hour} />
             </Field>

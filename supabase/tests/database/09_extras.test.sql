@@ -105,6 +105,7 @@ select is((select count(*)::int from public.my_listing_stats()), 0, 'other membe
 -- ---------------------------------------------------------------------------
 select tests.as_postgres();
 update public.site_settings set listing_expiry_days = 30;
+update app.config set value = '1970-01-01T00:00:00Z' where key = 'expiry_last_run';
 update public.listings set published_at = now() - interval '25 days' where title = 'Normal flat 2';
 update public.listings set published_at = now() - interval '31 days' where title = 'Normal flat 3';
 select is(
@@ -116,6 +117,8 @@ select is(
   (select count(*)::int from public.notifications where kind in ('listing_expiring', 'listing_expired')),
   2, 'the owner is told about both'
 );
+select is((select public.worker_expire_listings() ->> 'skipped'), 'ran within the last hour', 'expiry runs at most hourly');
+update app.config set value = '1970-01-01T00:00:00Z' where key = 'expiry_last_run';
 select is((select public.worker_expire_listings() ->> 'reminded'), '0', 'reminders are sent once');
 
 insert into fx select 'flat3', id from public.listings where title = 'Normal flat 3';

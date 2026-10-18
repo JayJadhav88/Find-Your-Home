@@ -117,7 +117,13 @@ async function publish(db: SupabaseClient, listingId: string) {
       .upload(publicKey, clean.bytes, { contentType: clean.type, cacheControl: "31536000", upsert: false });
     if (uploadError) throw new Error(`Upload failed for ${item.id}: ${uploadError.message}`);
 
-    const { error: updateError } = await db.from("listing_media").update({ public_key: publicKey }).eq("id", item.id);
+    // Fingerprint of the published picture, so moderators can spot photos reused across listings.
+    const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", clean.bytes));
+    const contentHash = Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("");
+    const { error: updateError } = await db
+      .from("listing_media")
+      .update({ public_key: publicKey, content_hash: contentHash })
+      .eq("id", item.id);
     if (updateError) {
       await db.storage.from(PUBLIC_BUCKET).remove([publicKey]);
       throw updateError;

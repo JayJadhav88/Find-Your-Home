@@ -81,6 +81,12 @@ export function describeNotification(kind: string, data: Record<string, unknown>
         body: `Someone is interested in "${title}".`,
         target: enquiry,
       };
+    case "listing_reported":
+      return {
+        title: "Listing reported",
+        body: `A visitor reported "${title}"${d.reference ? ` (${str(d.reference)})` : ""}: ${str(d.reason).replace(/_/g, " ") || "no reason"}.`,
+        target: listingId ? { kind: "admin_listing", id: listingId } : { kind: "none" },
+      };
     case "enquiry_alert":
       return {
         title: d.kind === "visit_request" ? "New visit request" : "New enquiry",

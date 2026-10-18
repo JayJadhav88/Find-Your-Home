@@ -2,7 +2,7 @@ import "server-only";
 import type { Database } from "@fyh/shared";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { connection } from "next/server";
 import { env } from "./env";
 
@@ -14,8 +14,12 @@ export async function createUserClient() {
   // Per-user data is always request-time. supabase-js reads the clock while loading the
   // session, which Next.js forbids during (runtime) prerendering of the shell.
   await connection();
-  const cookieStore = await cookies();
+  const [cookieStore, requestHeaders] = await Promise.all([cookies(), headers()]);
+  // Pass the visitor's address on, so per-visitor rate limits (enquiries, reports, view
+  // counts) apply to each visitor rather than to this server as a whole.
+  const visitorIp = (requestHeaders.get("x-forwarded-for") ?? requestHeaders.get("x-real-ip") ?? "").split(",")[0]?.trim();
   return createServerClient<Database>(env.supabaseUrl, env.supabasePublishableKey, {
+    global: visitorIp ? { headers: { "x-forwarded-for": visitorIp } } : undefined,
     cookies: {
       getAll: () => cookieStore.getAll(),
       setAll: (cookiesToSet) => {

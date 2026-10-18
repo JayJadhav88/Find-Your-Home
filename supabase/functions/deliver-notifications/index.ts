@@ -55,9 +55,14 @@ Deno.serve(async (request) => {
   const expoAccessToken = config.secrets.expo_access_token ?? Deno.env.get("EXPO_ACCESS_TOKEN");
   const whatsappToken = config.secrets.whatsapp_access_token ?? Deno.env.get("WHATSAPP_ACCESS_TOKEN");
 
-  // Due broadcasts become queued deliveries first (in the database, one transaction each).
+  // Scheduled work becomes queued deliveries first (in the database): due broadcasts,
+  // saved-search alerts (hourly per search) and listing expiry (at most hourly).
   const { data: broadcastsSent, error: broadcastError } = await db.rpc("worker_send_due_broadcasts");
   if (broadcastError) return json({ error: errorMessage(broadcastError) }, 500);
+  const { data: searchAlerts, error: alertError } = await db.rpc("worker_run_saved_search_alerts");
+  if (alertError) return json({ error: errorMessage(alertError) }, 500);
+  const { data: expiry, error: expiryError } = await db.rpc("worker_expire_listings");
+  if (expiryError) return json({ error: errorMessage(expiryError) }, 500);
 
   const { data: queued, error } = await db.rpc("worker_claim_notifications", { p_limit: 50, p_channels: ["push", "whatsapp"] });
   if (error) return json({ error: errorMessage(error) }, 500);
@@ -152,5 +157,5 @@ Deno.serve(async (request) => {
     results.push({ id: item.id, channel: item.channel, status: outcome.status });
   }
 
-  return json({ broadcastsSent, processed: results.length, logOnly, browserPush: Boolean(vapid), results });
+  return json({ broadcastsSent, searchAlerts, expiry, processed: results.length, logOnly, browserPush: Boolean(vapid), results });
 });

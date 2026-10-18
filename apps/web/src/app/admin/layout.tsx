@@ -10,6 +10,7 @@ export const prefetch = "force-disabled";
 const LINKS: Array<[string, string, (viewer: Viewer | null) => boolean]> = [
   ["/admin", "Dashboard", isTeam],
   ["/admin/listings", "Listings", isStaff],
+  ["/admin/reports", "Reports", isStaff],
   ["/admin/import", "Import from Excel", isAdmin],
   ["/admin/enquiries", "Enquiries", canManageEnquiries],
   ["/admin/broadcasts", "Send a message", canSendBroadcasts],

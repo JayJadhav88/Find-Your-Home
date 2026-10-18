@@ -11,6 +11,7 @@ const LINKS = [
   ["/account/listings", "My listings"],
   ["/account/enquiries", "Enquiries"],
   ["/account/favorites", "Saved homes"],
+  ["/account/saved-searches", "Saved searches"],
   ["/account/profile", "Profile & privacy"],
 ] as const;
 

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { ListingCard, ListingGrid } from "@/components/listing-card";
+import { SaveSearch } from "@/components/save-search";
 import { Alert, Button, ButtonLink, EmptyState, Select, TextInput } from "@/components/ui";
 import { AREA_UNIT_LABEL, FURNISHING_LABEL } from "@/lib/listing-format";
 import { getSiteSettings, getTaxonomy, type Taxonomy } from "@/lib/public-data";
@@ -55,6 +56,9 @@ async function SearchContent({ filters }: { filters: SearchFilters }) {
             {error ? "Search unavailable" : page.length ? `Showing ${page.length} home${page.length === 1 ? "" : "s"}` : "No matches"}
           </h2>
           <SortLinks filters={filters} />
+        </div>
+        <div className="mb-4">
+          <SaveSearch query={searchFiltersToQuery({ ...filters, cursor: undefined })} />
         </div>
         {error ? (
           <Alert tone="danger" title="We couldn't run that search">

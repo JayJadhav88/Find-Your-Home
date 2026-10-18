@@ -162,6 +162,7 @@ export async function updateSettings(_previous: FormState, formData: FormData): 
       enquiry_limit_per_hour: number("enquiryLimit"),
       submission_limit_per_day: number("submissionLimit"),
       review_hours_target: number("reviewHours"),
+      listing_expiry_days: number("expiryDays"),
       quiet_start_hour: number("quietStart"),
       quiet_end_hour: number("quietEnd"),
       broadcast_weekly_cap: number("broadcastCap"),
@@ -267,4 +268,19 @@ export async function updateDataRequest(_previous: FormState, formData: FormData
   });
   if (error) return { error: friendlyDbError(error) };
   return done("Request updated.");
+}
+
+// ---------------------------------------------------------------------------
+// Reports
+// ---------------------------------------------------------------------------
+export async function handleReport(_previous: FormState, formData: FormData): Promise<FormState> {
+  const ctx = await staffClient();
+  if (!ctx) return NOT_ALLOWED;
+  const input = z
+    .object({ id: z.coerce.number().int().positive(), status: z.enum(["resolved", "dismissed", "open"]) })
+    .safeParse({ id: formData.get("id"), status: formData.get("status") });
+  if (!input.success) return { error: "Invalid request." };
+  const { error } = await ctx.supabase.rpc("admin_handle_report", { p_report_id: input.data.id, p_status: input.data.status });
+  if (error) return { error: friendlyDbError(error) };
+  return done(input.data.status === "open" ? "Reopened." : `Marked ${input.data.status}.`);
 }
