@@ -19,6 +19,7 @@
     "admin:bootstrap": "node scripts/admin-bootstrap.mjs",
     "workers": "node scripts/run-workers.mjs",
     "test:functions": "vitest run supabase/functions",
+    "sync:functions": "node scripts/sync-functions-shared.mjs",
     "smoke": "node scripts/local-smoke-test.mjs",
     "e2e": "pnpm --filter @fyh/web e2e"
   },
