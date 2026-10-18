@@ -64,6 +64,22 @@ Checks run: `typecheck` clean, `lint` 0 findings, Jest 8/8 passing (5 encrypted-
 
 **Not verified:** running on a phone, simulator or emulator (no Android SDK or Mac on this computer), camera/photo upload and HEIC conversion on real devices, the in-app video player on devices, EAS cloud builds and store submission. Next step: try it with Expo Go on your phone (see 09).
 
+## Phase 3b — Notifications, admin team and lead management (started 2026-10-18)
+
+Owner decisions: WhatsApp through **Meta WhatsApp Cloud API**; enquiries to Google Sheets through an **Apps Script webhook**; login with **email and Google**; include saved-search alerts, listing expiry and renewal, report and fraud checks, and owner insights.
+
+| Milestone | Scope | Status |
+| --- | --- | --- |
+| A. Data model | In-app notifications, per-user channel preferences (quiet hours, weekly cap, WhatsApp opt-in with time of consent), push tokens, admin permissions (super admin, moderator, support, marketing), integration secrets encrypted in Supabase Vault, review-time setting | Planned |
+| B. In-app notifications | Bell with unread count on web and mobile; events: listing submitted / approved / changes requested, enquiry received, enquiry updates; "usually reviewed within N hours" message after submitting | Planned |
+| C. Channels | Worker delivers email (Resend), WhatsApp (Meta templates), push (Expo); respects opt-in, opt-out, quiet hours and caps | Planned |
+| D. Admin | Integrations page (keys write-only, test send), team access, broadcasts (audience, channels, preview, schedule, delivery report) | Planned |
+| E. Enquiries | Status pipeline (new → contacted → visit → closed), notes, assignment, admin alerts per channel, Google Sheets row per enquiry | Planned |
+| F. Google sign-in | Web and mobile; needs the owner's Google OAuth client | Planned |
+| G. Extras | Saved-search alerts, expiry and renewal reminders, report listing and fraud flags (duplicate photos, phone reused across many listings), owner views/enquiries per listing | Planned |
+
+Not testable locally without the owner's accounts: real WhatsApp delivery (Meta Business account, approved templates), push to phones (EAS build with an Expo account), Google sign-in (OAuth client). Each is built behind an adapter with a log-only mode for local development.
+
 ## Phase 4 — Hardening and launch readiness
 
 RLS/authorization review, cross-platform flow verification, accessibility and responsive review, query plans for search, image performance, production Supabase project with backups/PITR decision, monitoring (Sentry or similar), spend alerts, email sender domain (SPF/DKIM/DMARC), restore drill, privacy and store disclosure docs, launch checklist with what was and was not exercised.
