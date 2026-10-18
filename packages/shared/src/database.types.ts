@@ -549,11 +549,22 @@ isOneToOne: false
             [_ in never]: never
           }
           Functions: {
-            "admin_set_account_status":
+            "admin_list_users":
+{ Args: { "p_limit"?: number,"p_offset"?: number,"p_query"?: string }; Returns: {
+              "created_at": string,"display_name": string,"email": string,"email_confirmed": boolean,"id": string,"listings_count": number,"roles": (Database["public"]['Enums']["app_role"])[],"status": Database["public"]['Enums']["account_status"]
+            }[]
+                           },
+"admin_record_export":
+{ Args: { "p_kind": string,"p_rows": number }; Returns: undefined
+                           },
+"admin_set_account_status":
 { Args: { "p_reason"?: string,"p_status": Database["public"]['Enums']["account_status"],"p_user_id": string }; Returns: undefined
                            },
 "admin_set_role":
 { Args: { "p_granted": boolean,"p_role": Database["public"]['Enums']["app_role"],"p_user_id": string }; Returns: undefined
+                           },
+"admin_update_data_request":
+{ Args: { "p_id": string,"p_notes"?: string,"p_status": Database["public"]['Enums']["data_request_status"] }; Returns: undefined
                            },
 "assign_listing_agent":
 { Args: { "p_agent_id": string,"p_listing_id": string }; Returns: undefined
