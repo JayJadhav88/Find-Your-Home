@@ -250,5 +250,38 @@ select is(
   false, 'removed keys show as not set'
 );
 
+-- ---------------------------------------------------------------------------
+-- Browser push subscriptions
+-- ---------------------------------------------------------------------------
+select tests.as_user('n.other@example.test');
+select throws_ok(
+  $$ select public.register_web_push('https://attacker.example/collect', repeat('A', 87), repeat('B', 22)) $$,
+  '23514', null, 'browser subscriptions must point at a known push service'
+);
+select lives_ok(
+  $$ select public.register_web_push('https://fcm.googleapis.com/fcm/send/abc123', repeat('A', 87), repeat('B', 22)) $$,
+  'a Chrome subscription is accepted'
+);
+select tests.as_postgres();
+select app.enqueue_notification('visit_cancelled', (select id from fx where key = 'other'), null, '{}');
+select is(
+  (select count(*)::int from public.notification_outbox
+   where recipient_user_id = (select id from fx where key = 'other') and channel = 'push'),
+  1, 'a browser subscription alone is enough to queue push'
+);
+select is(
+  (select jsonb_array_length(c.web_push) from public.worker_claim_notifications(100, array['push']::public.notification_channel[]) c
+   where c.template = 'visit_cancelled' and c.push_tokens = '{}'),
+  1, 'the worker receives the browser subscription'
+);
+select tests.as_user('n.owner@example.test');
+select is((select count(*)::int from public.web_push_subscriptions), 0, 'people cannot see other accounts'' browsers');
+select lives_ok(
+  $$ select public.unregister_web_push('https://fcm.googleapis.com/fcm/send/abc123') $$,
+  'removing someone else''s subscription does nothing'
+);
+select tests.as_postgres();
+select is((select count(*)::int from public.web_push_subscriptions), 1, 'the other account''s subscription is untouched');
+
 select * from finish();
 rollback;
