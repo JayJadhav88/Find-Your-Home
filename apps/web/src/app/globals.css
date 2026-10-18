@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+/* Values mirror packages/shared/src/tokens.ts. Phase 2 generates this block from the tokens. */
+:root {
+  --fyh-brand: #1f5f57;
+  --fyh-brand-strong: #164640;
+  --fyh-brand-soft: #e3efec;
+  --fyh-accent: #c8693b;
+  --fyh-surface: #ffffff;
+  --fyh-surface-muted: #f6f4f0;
+  --fyh-border: #dad5cc;
+  --fyh-text: #1c1b19;
+  --fyh-text-muted: #5c5850;
+  --fyh-focus: #2563eb;
+}
+
+@theme inline {
+  --color-brand: var(--fyh-brand);
+  --color-brand-strong: var(--fyh-brand-strong);
+  --color-brand-soft: var(--fyh-brand-soft);
+  --color-accent: var(--fyh-accent);
+  --color-surface: var(--fyh-surface);
+  --color-surface-muted: var(--fyh-surface-muted);
+  --color-border: var(--fyh-border);
+  --color-text: var(--fyh-text);
+  --color-text-muted: var(--fyh-text-muted);
+  --font-sans: var(--font-geist-sans);
+}
+
+body {
+  background: var(--fyh-surface-muted);
+  color: var(--fyh-text);
+}
+
+:focus-visible {
+  outline: 3px solid var(--fyh-focus);
+  outline-offset: 2px;
+}

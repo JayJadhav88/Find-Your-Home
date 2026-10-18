@@ -1,0 +1,32 @@
+node_modules/
+.turbo/
+dist/
+coverage/
+
+# Next.js
+.next/
+out/
+next-env.d.ts
+
+# Expo
+.expo/
+web-build/
+ios/
+android/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Supabase
+supabase/.branches/
+supabase/.temp/
+
+# Env files: only .env.example is committed
+.env
+.env.*
+!.env.example
+
+*.log
+.DS_Store
