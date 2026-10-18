@@ -3,8 +3,8 @@
   "configurations": [
     {
       "name": "web",
-      "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--filter", "@fyh/web", "start"],
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["apps/web/node_modules/next/dist/bin/next", "start", "apps/web"],
       "port": 3000
     }
   ]

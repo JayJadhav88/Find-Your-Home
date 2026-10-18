@@ -59,7 +59,7 @@ async function Broadcasts() {
       />
 
       <Card>
-        <ActionForm action={createBroadcast} submitLabel="Send">
+        <ActionForm action={createBroadcast} submitLabel="Send" resetOnSuccess>
           <Field label="Title" name="title" required hint="Up to 80 characters.">
             <TextInput name="title" maxLength={80} />
           </Field>

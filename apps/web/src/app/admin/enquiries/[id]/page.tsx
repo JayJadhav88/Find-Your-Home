@@ -97,7 +97,7 @@ async function AdminEnquiry({ id }: { id: string }) {
               </a>
               {enquiry.phone ? (
                 <>
-                  <a className="rounded-lg border border-border px-3 py-2 text-sm hover:bg-surface-muted" href={`tel:${enquiry.phone}`}>Call</a>
+                  <a className="rounded-lg border border-border px-3 py-2 text-sm hover:bg-surface-muted" href={`tel:${enquiry.phone.replace(/[^\d+]/g, "")}`}>Call</a>
                   <a className="rounded-lg border border-border px-3 py-2 text-sm hover:bg-surface-muted" href={`https://wa.me/${digits(enquiry.phone)}`} target="_blank" rel="noopener noreferrer">
                     WhatsApp
                   </a>
@@ -121,7 +121,7 @@ async function AdminEnquiry({ id }: { id: string }) {
                 ))}
               </ul>
             ) : null}
-            <ActionForm action={addEnquiryNote} submitLabel="Add note" variant="secondary">
+            <ActionForm action={addEnquiryNote} submitLabel="Add note" variant="secondary" resetOnSuccess>
               <input type="hidden" name="id" value={enquiry.id} />
               <Field label="New note" name="body">
                 <TextArea name="body" rows={3} maxLength={2000} />

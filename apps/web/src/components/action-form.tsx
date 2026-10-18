@@ -1,12 +1,17 @@
 "use client";
 
-import { useActionState, type ReactNode } from "react";
+import { startTransition, useActionState, useEffect, useRef, type ReactNode } from "react";
 import { initialFormState, type FormState } from "@/app/actions/types";
 import { Alert, Button } from "./ui";
 
 /**
  * Generic form for a Server Action with the (previousState, formData) signature. Shows the
  * result, disables the button while pending, and can ask for confirmation first.
+ *
+ * Submits through a transition instead of the form's `action`, because React resets a form
+ * after an action submission: after a validation error people would lose what they typed.
+ * `resetOnSuccess` clears the fields after a successful save (e.g. "add a note"). Without
+ * JavaScript the form still posts through `action`.
  */
 export function ActionForm({
   action,
@@ -17,6 +22,7 @@ export function ActionForm({
   confirm,
   className,
   inline = false,
+  resetOnSuccess = false,
 }: {
   action: (previous: FormState, formData: FormData) => Promise<FormState>;
   children?: ReactNode;
@@ -27,16 +33,27 @@ export function ActionForm({
   confirm?: string;
   className?: string;
   inline?: boolean;
+  resetOnSuccess?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(action, initialFormState);
+  const formRef = useRef<HTMLFormElement>(null);
   const errors = state.fieldErrors ? Object.values(state.fieldErrors) : [];
+
+  useEffect(() => {
+    if (resetOnSuccess && state.ok) formRef.current?.reset();
+  }, [resetOnSuccess, state]);
+
   return (
     <form
+      ref={formRef}
       action={formAction}
       noValidate
       className={className ?? (inline ? "flex flex-wrap items-end gap-2" : "flex flex-col gap-3")}
       onSubmit={(event) => {
-        if (confirm && !window.confirm(confirm)) event.preventDefault();
+        event.preventDefault();
+        if (confirm && !window.confirm(confirm)) return;
+        const data = new FormData(event.currentTarget);
+        startTransition(() => formAction(data));
       }}
     >
       {children}

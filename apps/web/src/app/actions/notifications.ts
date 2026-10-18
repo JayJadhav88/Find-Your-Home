@@ -19,6 +19,8 @@ export async function openNotification(formData: FormData): Promise<void> {
   const { data } = await supabase.from("notifications").select("kind, data").eq("id", id.data).maybeSingle();
   await supabase.rpc("mark_notifications_read", { p_ids: [id.data] });
   const href = data ? notificationWebHref(describeNotification(data.kind, data.data as Record<string, unknown>).target) : null;
+  // Redraw the header too, so the bell's unread count drops straight away.
+  refresh();
   // External links from broadcasts open from the page itself; redirects stay on this site.
   redirect(safeNext(href, "/account/notifications"));
 }
