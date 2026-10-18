@@ -1,7 +1,7 @@
 "use server";
 
 import { fieldErrors, profileSchema } from "@fyh/shared";
-import { refresh } from "next/cache";
+import { refresh, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { getViewer } from "@/lib/auth";
@@ -60,6 +60,40 @@ export async function requestAccountDeletion(_previous: FormState, formData: For
   const { error } = await supabase.rpc("request_account_deletion");
   if (error) return { error: friendlyDbError(error) };
   return { ok: true, message: "Deletion requested. We'll confirm by email once your account and data are removed." };
+}
+
+const builderInput = z.object({
+  companyName: z.string().trim().min(1, "Enter the company name").max(120),
+  registrationNumber: z.string().trim().max(60),
+  website: z.union([z.literal(""), z.url({ protocol: /^https$/, error: "Use a full https:// link" }).max(300)]),
+  description: z.string().trim().max(2000),
+});
+
+export async function updateBuilderProfile(_previous: FormState, formData: FormData): Promise<FormState> {
+  const viewer = await viewerOrSignIn("/account/profile");
+  if (!viewer.roles.includes("builder")) return { error: "Only verified builders have a company profile." };
+  const parsed = builderInput.safeParse({
+    companyName: formData.get("companyName"),
+    registrationNumber: formData.get("registrationNumber") ?? "",
+    website: (formData.get("website") as string | null)?.trim() ?? "",
+    description: formData.get("description") ?? "",
+  });
+  if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error), values: formValues(formData) };
+
+  const supabase = await createUserClient();
+  const { error } = await supabase
+    .from("builder_profiles")
+    .update({
+      company_name: parsed.data.companyName,
+      registration_number: parsed.data.registrationNumber || null,
+      website: parsed.data.website || null,
+      description: parsed.data.description || null,
+    })
+    .eq("user_id", viewer.id);
+  if (error) return { error: friendlyDbError(error), values: formValues(formData) };
+  updateTag("listings");
+  refresh();
+  return { ok: true, message: "Company profile saved." };
 }
 
 const enquiryAction = z.object({

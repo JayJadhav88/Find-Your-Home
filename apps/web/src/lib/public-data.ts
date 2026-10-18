@@ -65,13 +65,17 @@ export async function getHomeListings() {
   cacheLife("minutes");
   cacheTag("listings");
   const db = createPublicClient();
-  const [featured, recent] = await Promise.all([
+  const [featured, recent, projects] = await Promise.all([
     db.rpc("search_listings", { p_featured_only: true, p_limit: 6 }),
     db.rpc("search_listings", { p_limit: 6 }),
+    db.rpc("search_listings", { p_category: "new_project", p_limit: 3 }),
   ]);
-  if (featured.error) throw featured.error;
-  if (recent.error) throw recent.error;
-  return { featured: (featured.data ?? []).slice(0, 6), recent: (recent.data ?? []).slice(0, 6) };
+  for (const result of [featured, recent, projects]) if (result.error) throw result.error;
+  return {
+    featured: (featured.data ?? []).slice(0, 6),
+    recent: (recent.data ?? []).slice(0, 6),
+    newProjects: (projects.data ?? []).slice(0, 3),
+  };
 }
 
 /** Full public listing by reference code (published only, enforced by RLS). */

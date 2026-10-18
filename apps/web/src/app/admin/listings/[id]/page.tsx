@@ -1,9 +1,10 @@
-import { formatDateTime } from "@fyh/shared";
+import { CATEGORY_LABEL, formatDateTime } from "@fyh/shared";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { assignAgent, moderateListing, setListingFeatured } from "@/app/actions/admin";
 import { ActionForm } from "@/components/action-form";
+import { VideoGallery } from "@/components/video-gallery";
 import { Loading } from "@/components/loading";
 import { Badge, Card, Checkbox, Field, PageHeader, Select, TextArea, TextInput } from "@/components/ui";
 import { isAdmin, requireStaff } from "@/lib/auth";
@@ -39,7 +40,8 @@ async function Review({ id }: { id: string }) {
        property_type:property_types(name),
        private:listing_private_details(street_address, owner_notes),
        media:listing_media(id, upload_key, public_key, alt_text, is_cover, sort_order, kind, mime_type, bytes),
-       amenities:listing_amenities(amenity:amenities(name))`,
+       amenities:listing_amenities(amenity:amenities(name)),
+       videos:listing_videos(provider, video_id, instagram_kind, sort_order)`,
     )
     .eq("id", id)
     .maybeSingle();
@@ -62,7 +64,9 @@ async function Review({ id }: { id: string }) {
   const unit = listing.area_unit ? AREA_UNIT_LABEL[listing.area_unit] : "";
 
   const facts: Array<[string, string | number | null | undefined]> = [
-    ["Purpose", listing.purpose],
+    ["Category", CATEGORY_LABEL[listing.category]],
+    ["Project name", listing.project_name],
+    ["Project registration", listing.project_registration_number],
     ["Type", listing.property_type?.name],
     ["Price", displayPrice(listing, settings.default_locale)],
     ["Negotiable", listing.price_negotiable ? "Yes" : "No"],
@@ -178,6 +182,17 @@ async function Review({ id }: { id: string }) {
           </ul>
         ) : (
           <p className="mt-2 text-sm text-danger">No photos. A cover photo is required before approval.</p>
+        )}
+      </Card>
+
+      <Card>
+        <h2 className="text-lg font-semibold">Videos ({listing.videos.length})</h2>
+        {listing.videos.length ? (
+          <div className="mt-3">
+            <VideoGallery title={listing.title} videos={[...listing.videos].sort((a, b) => a.sort_order - b.sort_order)} />
+          </div>
+        ) : (
+          <p className="mt-2 text-sm text-text-muted">No videos.</p>
         )}
       </Card>
 

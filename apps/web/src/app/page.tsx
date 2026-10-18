@@ -3,7 +3,7 @@ import { Button, EmptyState, Select, TextInput } from "@/components/ui";
 import { getHomeListings, getSiteSettings, getTaxonomy } from "@/lib/public-data";
 
 export default async function HomePage() {
-  const [settings, taxonomy, { featured, recent }] = await Promise.all([
+  const [settings, taxonomy, { featured, recent, newProjects }] = await Promise.all([
     getSiteSettings(),
     getTaxonomy(),
     getHomeListings(),
@@ -57,6 +57,24 @@ export default async function HomePage() {
             </h2>
             <ListingGrid>
               {featured.map((listing) => (
+                <ListingCard key={listing.id} listing={listing} locale={settings.default_locale} />
+              ))}
+            </ListingGrid>
+          </section>
+        ) : null}
+
+        {newProjects.length ? (
+          <section aria-labelledby="projects-heading">
+            <div className="mb-4 flex items-end justify-between gap-4">
+              <h2 id="projects-heading" className="text-2xl font-semibold">
+                New projects from verified builders
+              </h2>
+              <a href="/search?category=new_project" className="text-sm font-medium text-brand underline">
+                All new projects
+              </a>
+            </div>
+            <ListingGrid>
+              {newProjects.map((listing) => (
                 <ListingCard key={listing.id} listing={listing} locale={settings.default_locale} />
               ))}
             </ListingGrid>

@@ -1,7 +1,9 @@
 import { Suspense } from "react";
+import { updateBuilderProfile } from "@/app/actions/account";
 import { DataExportButton, DeleteAccountForm, ProfileForm } from "@/components/account-forms";
+import { ActionForm } from "@/components/action-form";
 import { Loading } from "@/components/loading";
-import { Card, PageHeader } from "@/components/ui";
+import { Card, Field, PageHeader, TextArea, TextInput } from "@/components/ui";
 import { requireViewer } from "@/lib/auth";
 import { createUserClient } from "@/lib/supabase";
 
@@ -16,13 +18,17 @@ export default function ProfilePage() {
 async function Profile() {
   const viewer = await requireViewer("/account/profile");
   const supabase = await createUserClient();
-  const [{ data: profile }, { data: requests }] = await Promise.all([
+  const isBuilder = viewer.roles.includes("builder");
+  const [{ data: profile }, { data: requests }, { data: builder }] = await Promise.all([
     supabase.from("profiles").select("display_name, phone, marketing_opt_in").eq("id", viewer.id).single(),
     supabase
       .from("data_requests")
       .select("kind, status, requested_at")
       .eq("user_id", viewer.id)
       .order("requested_at", { ascending: false }),
+    isBuilder
+      ? supabase.from("builder_profiles").select("*").eq("user_id", viewer.id).maybeSingle()
+      : Promise.resolve({ data: null }),
   ]);
   return (
     <div className="flex flex-col gap-6">
@@ -35,6 +41,26 @@ async function Profile() {
           marketingOptIn={profile?.marketing_opt_in ?? false}
         />
       </Card>
+      {builder ? (
+        <Card>
+          <h2 className="text-lg font-semibold">Builder company profile</h2>
+          <p className="mb-4 mt-1 text-sm text-text-muted">Shown as “Verified builder” on your new-project listings.</p>
+          <ActionForm action={updateBuilderProfile} submitLabel="Save company profile">
+            <Field label="Company name" name="companyName" required>
+              <TextInput name="companyName" defaultValue={builder.company_name} maxLength={120} />
+            </Field>
+            <Field label="Registration number" name="registrationNumber" hint="Optional, e.g. a regulator or company registration number.">
+              <TextInput name="registrationNumber" defaultValue={builder.registration_number ?? ""} maxLength={60} />
+            </Field>
+            <Field label="Website" name="website">
+              <TextInput name="website" type="url" placeholder="https://" defaultValue={builder.website ?? ""} />
+            </Field>
+            <Field label="About the company" name="description">
+              <TextArea name="description" rows={4} defaultValue={builder.description ?? ""} maxLength={2000} />
+            </Field>
+          </ActionForm>
+        </Card>
+      ) : null}
       <Card>
         <h2 className="text-lg font-semibold">Your data</h2>
         <p className="mt-1 text-sm text-text-muted">Request a copy of the personal data we hold about you.</p>
