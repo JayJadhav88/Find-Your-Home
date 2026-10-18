@@ -4,6 +4,7 @@ packages:
 
 # Packages allowed to run install scripts (pnpm blocks them by default).
 allowBuilds:
+  "@parcel/watcher": false
   sharp: false
   supabase: true
   unrs-resolver: false
