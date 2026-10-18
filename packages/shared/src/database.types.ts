@@ -415,14 +415,14 @@ isOneToOne: false
                   ]
                 },"listing_media": {
                   Row: {
-                    "alt_text": string | null,"bytes": number | null,"created_at": string,"height": number | null,"id": string,"is_cover": boolean,"kind": Database["public"]['Enums']["media_kind"],"listing_id": string,"mime_type": string | null,"public_key": string | null,"sort_order": number,"upload_key": string,"width": number | null
+                    "alt_text": string | null,"bytes": number | null,"content_hash": string | null,"created_at": string,"height": number | null,"id": string,"is_cover": boolean,"kind": Database["public"]['Enums']["media_kind"],"listing_id": string,"mime_type": string | null,"public_key": string | null,"sort_order": number,"upload_key": string,"width": number | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "alt_text"?: string | null,"bytes"?: number | null,"created_at"?: string,"height"?: number | null,"id"?: string,"is_cover"?: boolean,"kind"?: Database["public"]['Enums']["media_kind"],"listing_id": string,"mime_type"?: string | null,"public_key"?: string | null,"sort_order"?: number,"upload_key": string,"width"?: number | null
+                    "alt_text"?: string | null,"bytes"?: number | null,"content_hash"?: string | null,"created_at"?: string,"height"?: number | null,"id"?: string,"is_cover"?: boolean,"kind"?: Database["public"]['Enums']["media_kind"],"listing_id": string,"mime_type"?: string | null,"public_key"?: string | null,"sort_order"?: number,"upload_key": string,"width"?: number | null
                   }
                   Update: {
-                    "alt_text"?: string | null,"bytes"?: number | null,"created_at"?: string,"height"?: number | null,"id"?: string,"is_cover"?: boolean,"kind"?: Database["public"]['Enums']["media_kind"],"listing_id"?: string,"mime_type"?: string | null,"public_key"?: string | null,"sort_order"?: number,"upload_key"?: string,"width"?: number | null
+                    "alt_text"?: string | null,"bytes"?: number | null,"content_hash"?: string | null,"created_at"?: string,"height"?: number | null,"id"?: string,"is_cover"?: boolean,"kind"?: Database["public"]['Enums']["media_kind"],"listing_id"?: string,"mime_type"?: string | null,"public_key"?: string | null,"sort_order"?: number,"upload_key"?: string,"width"?: number | null
                   }
                   Relationships: [
                     {
@@ -450,6 +450,38 @@ isOneToOne: false
       columns: ["listing_id"]
 isOneToOne: true
       referencedRelation: "listings"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"listing_reports": {
+                  Row: {
+                    "created_at": string,"details": string | null,"handled_at": string | null,"handled_by": string | null,"id": number,"ip_hash": string | null,"listing_id": string,"reason": string,"reporter_user_id": string | null,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"details"?: string | null,"handled_at"?: string | null,"handled_by"?: string | null,"id"?: never,"ip_hash"?: string | null,"listing_id": string,"reason": string,"reporter_user_id"?: string | null,"status"?: string
+                  }
+                  Update: {
+                    "created_at"?: string,"details"?: string | null,"handled_at"?: string | null,"handled_by"?: string | null,"id"?: never,"ip_hash"?: string | null,"listing_id"?: string,"reason"?: string,"reporter_user_id"?: string | null,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "listing_reports_handled_by_fkey"
+      columns: ["handled_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "listing_reports_listing_id_fkey"
+      columns: ["listing_id"]
+isOneToOne: false
+      referencedRelation: "listings"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "listing_reports_reporter_user_id_fkey"
+      columns: ["reporter_user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
       referencedColumns: ["id"]
     }
                   ]
@@ -499,16 +531,36 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"listings": {
+                },"listing_views": {
                   Row: {
-                    "address_visibility": Database["public"]['Enums']["address_visibility"],"agent_id": string | null,"archived_at": string | null,"area_unit": Database["public"]['Enums']["area_unit"] | null,"area_value": number | null,"available_from": string | null,"balconies": number | null,"bathrooms": number | null,"bedrooms": number | null,"built_up_area": number | null,"carpet_area": number | null,"category": Database["public"]['Enums']["listing_category"],"city_id": string | null,"contact_via_form": boolean,"country_id": string | null,"created_at": string,"currency": string | null,"description": string,"featured_until": string | null,"first_published_at": string | null,"floor_number": number | null,"furnishing": Database["public"]['Enums']["furnishing"] | null,"id": string,"import_batch_id": string | null,"is_featured": boolean,"locality_id": string | null,"owner_id": string,"parking_spaces": number | null,"plot_area": number | null,"possession_status": Database["public"]['Enums']["possession_status"] | null,"postal_code": string | null,"price_amount": number | null,"price_display": Database["public"]['Enums']["price_display"],"price_negotiable": boolean,"price_period": Database["public"]['Enums']["price_period"],"project_name": string | null,"project_registration_number": string | null,"property_type_id": string | null,"public_lat": number | null,"public_lng": number | null,"published_at": string | null,"purpose": Database["public"]['Enums']["listing_purpose"],"reference_code": string,"region_id": string | null,"reviewed_at": string | null,"reviewed_by": string | null,"search_vector": unknown,"seo_description": string | null,"seo_title": string | null,"show_email": boolean,"show_phone": boolean,"show_whatsapp": boolean,"slug": string,"status": Database["public"]['Enums']["listing_status"],"submitted_at": string | null,"title": string,"total_floors": number | null,"updated_at": string,"video_url": string | null,"virtual_tour_url": string | null,"year_built": number | null
+                    "day": string,"listing_id": string,"views": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "address_visibility"?: Database["public"]['Enums']["address_visibility"],"agent_id"?: string | null,"archived_at"?: string | null,"area_unit"?: Database["public"]['Enums']["area_unit"] | null,"area_value"?: number | null,"available_from"?: string | null,"balconies"?: number | null,"bathrooms"?: number | null,"bedrooms"?: number | null,"built_up_area"?: number | null,"carpet_area"?: number | null,"category": Database["public"]['Enums']["listing_category"],"city_id"?: string | null,"contact_via_form"?: boolean,"country_id"?: string | null,"created_at"?: string,"currency"?: string | null,"description"?: string,"featured_until"?: string | null,"first_published_at"?: string | null,"floor_number"?: number | null,"furnishing"?: Database["public"]['Enums']["furnishing"] | null,"id"?: string,"import_batch_id"?: string | null,"is_featured"?: boolean,"locality_id"?: string | null,"owner_id": string,"parking_spaces"?: number | null,"plot_area"?: number | null,"possession_status"?: Database["public"]['Enums']["possession_status"] | null,"postal_code"?: string | null,"price_amount"?: number | null,"price_display"?: Database["public"]['Enums']["price_display"],"price_negotiable"?: boolean,"price_period"?: Database["public"]['Enums']["price_period"],"project_name"?: string | null,"project_registration_number"?: string | null,"property_type_id"?: string | null,"public_lat"?: number | null,"public_lng"?: number | null,"published_at"?: string | null,"purpose": Database["public"]['Enums']["listing_purpose"],"reference_code"?: string,"region_id"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"search_vector"?: never,"seo_description"?: string | null,"seo_title"?: string | null,"show_email"?: boolean,"show_phone"?: boolean,"show_whatsapp"?: boolean,"slug": string,"status"?: Database["public"]['Enums']["listing_status"],"submitted_at"?: string | null,"title": string,"total_floors"?: number | null,"updated_at"?: string,"video_url"?: string | null,"virtual_tour_url"?: string | null,"year_built"?: number | null
+                    "day": string,"listing_id": string,"views"?: number
                   }
                   Update: {
-                    "address_visibility"?: Database["public"]['Enums']["address_visibility"],"agent_id"?: string | null,"archived_at"?: string | null,"area_unit"?: Database["public"]['Enums']["area_unit"] | null,"area_value"?: number | null,"available_from"?: string | null,"balconies"?: number | null,"bathrooms"?: number | null,"bedrooms"?: number | null,"built_up_area"?: number | null,"carpet_area"?: number | null,"category"?: Database["public"]['Enums']["listing_category"],"city_id"?: string | null,"contact_via_form"?: boolean,"country_id"?: string | null,"created_at"?: string,"currency"?: string | null,"description"?: string,"featured_until"?: string | null,"first_published_at"?: string | null,"floor_number"?: number | null,"furnishing"?: Database["public"]['Enums']["furnishing"] | null,"id"?: string,"import_batch_id"?: string | null,"is_featured"?: boolean,"locality_id"?: string | null,"owner_id"?: string,"parking_spaces"?: number | null,"plot_area"?: number | null,"possession_status"?: Database["public"]['Enums']["possession_status"] | null,"postal_code"?: string | null,"price_amount"?: number | null,"price_display"?: Database["public"]['Enums']["price_display"],"price_negotiable"?: boolean,"price_period"?: Database["public"]['Enums']["price_period"],"project_name"?: string | null,"project_registration_number"?: string | null,"property_type_id"?: string | null,"public_lat"?: number | null,"public_lng"?: number | null,"published_at"?: string | null,"purpose"?: Database["public"]['Enums']["listing_purpose"],"reference_code"?: string,"region_id"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"search_vector"?: never,"seo_description"?: string | null,"seo_title"?: string | null,"show_email"?: boolean,"show_phone"?: boolean,"show_whatsapp"?: boolean,"slug"?: string,"status"?: Database["public"]['Enums']["listing_status"],"submitted_at"?: string | null,"title"?: string,"total_floors"?: number | null,"updated_at"?: string,"video_url"?: string | null,"virtual_tour_url"?: string | null,"year_built"?: number | null
+                    "day"?: string,"listing_id"?: string,"views"?: number
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "listing_views_listing_id_fkey"
+      columns: ["listing_id"]
+isOneToOne: false
+      referencedRelation: "listings"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"listings": {
+                  Row: {
+                    "address_visibility": Database["public"]['Enums']["address_visibility"],"agent_id": string | null,"archived_at": string | null,"area_unit": Database["public"]['Enums']["area_unit"] | null,"area_value": number | null,"available_from": string | null,"balconies": number | null,"bathrooms": number | null,"bedrooms": number | null,"built_up_area": number | null,"carpet_area": number | null,"category": Database["public"]['Enums']["listing_category"],"city_id": string | null,"contact_via_form": boolean,"country_id": string | null,"created_at": string,"currency": string | null,"description": string,"expired_at": string | null,"expiry_reminded_at": string | null,"featured_until": string | null,"first_published_at": string | null,"floor_number": number | null,"furnishing": Database["public"]['Enums']["furnishing"] | null,"id": string,"import_batch_id": string | null,"is_featured": boolean,"locality_id": string | null,"owner_id": string,"parking_spaces": number | null,"plot_area": number | null,"possession_status": Database["public"]['Enums']["possession_status"] | null,"postal_code": string | null,"price_amount": number | null,"price_display": Database["public"]['Enums']["price_display"],"price_negotiable": boolean,"price_period": Database["public"]['Enums']["price_period"],"project_name": string | null,"project_registration_number": string | null,"property_type_id": string | null,"public_lat": number | null,"public_lng": number | null,"published_at": string | null,"purpose": Database["public"]['Enums']["listing_purpose"],"reference_code": string,"region_id": string | null,"renewed_at": string | null,"reviewed_at": string | null,"reviewed_by": string | null,"search_vector": unknown,"seo_description": string | null,"seo_title": string | null,"show_email": boolean,"show_phone": boolean,"show_whatsapp": boolean,"slug": string,"status": Database["public"]['Enums']["listing_status"],"submitted_at": string | null,"title": string,"total_floors": number | null,"updated_at": string,"video_url": string | null,"virtual_tour_url": string | null,"year_built": number | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "address_visibility"?: Database["public"]['Enums']["address_visibility"],"agent_id"?: string | null,"archived_at"?: string | null,"area_unit"?: Database["public"]['Enums']["area_unit"] | null,"area_value"?: number | null,"available_from"?: string | null,"balconies"?: number | null,"bathrooms"?: number | null,"bedrooms"?: number | null,"built_up_area"?: number | null,"carpet_area"?: number | null,"category": Database["public"]['Enums']["listing_category"],"city_id"?: string | null,"contact_via_form"?: boolean,"country_id"?: string | null,"created_at"?: string,"currency"?: string | null,"description"?: string,"expired_at"?: string | null,"expiry_reminded_at"?: string | null,"featured_until"?: string | null,"first_published_at"?: string | null,"floor_number"?: number | null,"furnishing"?: Database["public"]['Enums']["furnishing"] | null,"id"?: string,"import_batch_id"?: string | null,"is_featured"?: boolean,"locality_id"?: string | null,"owner_id": string,"parking_spaces"?: number | null,"plot_area"?: number | null,"possession_status"?: Database["public"]['Enums']["possession_status"] | null,"postal_code"?: string | null,"price_amount"?: number | null,"price_display"?: Database["public"]['Enums']["price_display"],"price_negotiable"?: boolean,"price_period"?: Database["public"]['Enums']["price_period"],"project_name"?: string | null,"project_registration_number"?: string | null,"property_type_id"?: string | null,"public_lat"?: number | null,"public_lng"?: number | null,"published_at"?: string | null,"purpose": Database["public"]['Enums']["listing_purpose"],"reference_code"?: string,"region_id"?: string | null,"renewed_at"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"search_vector"?: never,"seo_description"?: string | null,"seo_title"?: string | null,"show_email"?: boolean,"show_phone"?: boolean,"show_whatsapp"?: boolean,"slug": string,"status"?: Database["public"]['Enums']["listing_status"],"submitted_at"?: string | null,"title": string,"total_floors"?: number | null,"updated_at"?: string,"video_url"?: string | null,"virtual_tour_url"?: string | null,"year_built"?: number | null
+                  }
+                  Update: {
+                    "address_visibility"?: Database["public"]['Enums']["address_visibility"],"agent_id"?: string | null,"archived_at"?: string | null,"area_unit"?: Database["public"]['Enums']["area_unit"] | null,"area_value"?: number | null,"available_from"?: string | null,"balconies"?: number | null,"bathrooms"?: number | null,"bedrooms"?: number | null,"built_up_area"?: number | null,"carpet_area"?: number | null,"category"?: Database["public"]['Enums']["listing_category"],"city_id"?: string | null,"contact_via_form"?: boolean,"country_id"?: string | null,"created_at"?: string,"currency"?: string | null,"description"?: string,"expired_at"?: string | null,"expiry_reminded_at"?: string | null,"featured_until"?: string | null,"first_published_at"?: string | null,"floor_number"?: number | null,"furnishing"?: Database["public"]['Enums']["furnishing"] | null,"id"?: string,"import_batch_id"?: string | null,"is_featured"?: boolean,"locality_id"?: string | null,"owner_id"?: string,"parking_spaces"?: number | null,"plot_area"?: number | null,"possession_status"?: Database["public"]['Enums']["possession_status"] | null,"postal_code"?: string | null,"price_amount"?: number | null,"price_display"?: Database["public"]['Enums']["price_display"],"price_negotiable"?: boolean,"price_period"?: Database["public"]['Enums']["price_period"],"project_name"?: string | null,"project_registration_number"?: string | null,"property_type_id"?: string | null,"public_lat"?: number | null,"public_lng"?: number | null,"published_at"?: string | null,"purpose"?: Database["public"]['Enums']["listing_purpose"],"reference_code"?: string,"region_id"?: string | null,"renewed_at"?: string | null,"reviewed_at"?: string | null,"reviewed_by"?: string | null,"search_vector"?: never,"seo_description"?: string | null,"seo_title"?: string | null,"show_email"?: boolean,"show_phone"?: boolean,"show_whatsapp"?: boolean,"slug"?: string,"status"?: Database["public"]['Enums']["listing_status"],"submitted_at"?: string | null,"title"?: string,"total_floors"?: number | null,"updated_at"?: string,"video_url"?: string | null,"virtual_tour_url"?: string | null,"year_built"?: number | null
                   }
                   Relationships: [
                     {
@@ -719,16 +771,36 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
-                },"site_settings": {
+                },"saved_searches": {
                   Row: {
-                    "allowed_image_types": (string)[],"brand_name": string,"broadcast_weekly_cap": number,"captcha_enabled": boolean,"comparison_max": number,"contact_email": string | null,"contact_phone": string | null,"contact_whatsapp": string | null,"default_area_unit": Database["public"]['Enums']["area_unit"],"default_currency": string | null,"default_locale": string,"default_timezone": string,"enquiry_limit_per_hour": number,"id": boolean,"material_change_policy": string,"material_fields": (string)[],"max_image_bytes": number,"max_images_per_listing": number,"new_listing_days": number,"owner_leads_enabled": boolean,"quiet_end_hour": number,"quiet_start_hour": number,"review_hours_target": number,"self_service_owner": boolean,"seo_default_description": string | null,"seo_default_title": string | null,"submission_limit_per_day": number,"updated_at": string,"updated_by": string | null
+                    "alerts": boolean,"created_at": string,"filters": NonNullable<Json>,"id": string,"last_checked_at": string,"name": string,"query_string": string,"user_id": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "allowed_image_types"?: (string)[],"brand_name"?: string,"broadcast_weekly_cap"?: number,"captcha_enabled"?: boolean,"comparison_max"?: number,"contact_email"?: string | null,"contact_phone"?: string | null,"contact_whatsapp"?: string | null,"default_area_unit"?: Database["public"]['Enums']["area_unit"],"default_currency"?: string | null,"default_locale"?: string,"default_timezone"?: string,"enquiry_limit_per_hour"?: number,"id"?: boolean,"material_change_policy"?: string,"material_fields"?: (string)[],"max_image_bytes"?: number,"max_images_per_listing"?: number,"new_listing_days"?: number,"owner_leads_enabled"?: boolean,"quiet_end_hour"?: number,"quiet_start_hour"?: number,"review_hours_target"?: number,"self_service_owner"?: boolean,"seo_default_description"?: string | null,"seo_default_title"?: string | null,"submission_limit_per_day"?: number,"updated_at"?: string,"updated_by"?: string | null
+                    "alerts"?: boolean,"created_at"?: string,"filters"?: NonNullable<Json>,"id"?: string,"last_checked_at"?: string,"name": string,"query_string"?: string,"user_id"?: string
                   }
                   Update: {
-                    "allowed_image_types"?: (string)[],"brand_name"?: string,"broadcast_weekly_cap"?: number,"captcha_enabled"?: boolean,"comparison_max"?: number,"contact_email"?: string | null,"contact_phone"?: string | null,"contact_whatsapp"?: string | null,"default_area_unit"?: Database["public"]['Enums']["area_unit"],"default_currency"?: string | null,"default_locale"?: string,"default_timezone"?: string,"enquiry_limit_per_hour"?: number,"id"?: boolean,"material_change_policy"?: string,"material_fields"?: (string)[],"max_image_bytes"?: number,"max_images_per_listing"?: number,"new_listing_days"?: number,"owner_leads_enabled"?: boolean,"quiet_end_hour"?: number,"quiet_start_hour"?: number,"review_hours_target"?: number,"self_service_owner"?: boolean,"seo_default_description"?: string | null,"seo_default_title"?: string | null,"submission_limit_per_day"?: number,"updated_at"?: string,"updated_by"?: string | null
+                    "alerts"?: boolean,"created_at"?: string,"filters"?: NonNullable<Json>,"id"?: string,"last_checked_at"?: string,"name"?: string,"query_string"?: string,"user_id"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "saved_searches_user_id_fkey"
+      columns: ["user_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"site_settings": {
+                  Row: {
+                    "allowed_image_types": (string)[],"brand_name": string,"broadcast_weekly_cap": number,"captcha_enabled": boolean,"comparison_max": number,"contact_email": string | null,"contact_phone": string | null,"contact_whatsapp": string | null,"default_area_unit": Database["public"]['Enums']["area_unit"],"default_currency": string | null,"default_locale": string,"default_timezone": string,"enquiry_limit_per_hour": number,"id": boolean,"listing_expiry_days": number,"material_change_policy": string,"material_fields": (string)[],"max_image_bytes": number,"max_images_per_listing": number,"new_listing_days": number,"owner_leads_enabled": boolean,"quiet_end_hour": number,"quiet_start_hour": number,"review_hours_target": number,"self_service_owner": boolean,"seo_default_description": string | null,"seo_default_title": string | null,"submission_limit_per_day": number,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "allowed_image_types"?: (string)[],"brand_name"?: string,"broadcast_weekly_cap"?: number,"captcha_enabled"?: boolean,"comparison_max"?: number,"contact_email"?: string | null,"contact_phone"?: string | null,"contact_whatsapp"?: string | null,"default_area_unit"?: Database["public"]['Enums']["area_unit"],"default_currency"?: string | null,"default_locale"?: string,"default_timezone"?: string,"enquiry_limit_per_hour"?: number,"id"?: boolean,"listing_expiry_days"?: number,"material_change_policy"?: string,"material_fields"?: (string)[],"max_image_bytes"?: number,"max_images_per_listing"?: number,"new_listing_days"?: number,"owner_leads_enabled"?: boolean,"quiet_end_hour"?: number,"quiet_start_hour"?: number,"review_hours_target"?: number,"self_service_owner"?: boolean,"seo_default_description"?: string | null,"seo_default_title"?: string | null,"submission_limit_per_day"?: number,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "allowed_image_types"?: (string)[],"brand_name"?: string,"broadcast_weekly_cap"?: number,"captcha_enabled"?: boolean,"comparison_max"?: number,"contact_email"?: string | null,"contact_phone"?: string | null,"contact_whatsapp"?: string | null,"default_area_unit"?: Database["public"]['Enums']["area_unit"],"default_currency"?: string | null,"default_locale"?: string,"default_timezone"?: string,"enquiry_limit_per_hour"?: number,"id"?: boolean,"listing_expiry_days"?: number,"material_change_policy"?: string,"material_fields"?: (string)[],"max_image_bytes"?: number,"max_images_per_listing"?: number,"new_listing_days"?: number,"owner_leads_enabled"?: boolean,"quiet_end_hour"?: number,"quiet_start_hour"?: number,"review_hours_target"?: number,"self_service_owner"?: boolean,"seo_default_description"?: string | null,"seo_default_title"?: string | null,"submission_limit_per_day"?: number,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -816,6 +888,9 @@ isOneToOne: false
 "admin_create_broadcast":
 { Args: { "p_audience": string,"p_body": string,"p_channels": (Database["public"]['Enums']["notification_channel"])[],"p_city": string,"p_scheduled_at"?: string,"p_title": string,"p_url": string }; Returns: number
                            },
+"admin_handle_report":
+{ Args: { "p_report_id": number,"p_status": string }; Returns: undefined
+                           },
 "admin_import_listings":
 { Args: { "p_file_name": string,"p_owner_id": string,"p_publish": boolean,"p_rows": Json }; Returns: Json
                            },
@@ -827,6 +902,11 @@ isOneToOne: false
 "admin_list_users":
 { Args: { "p_limit"?: number,"p_offset"?: number,"p_query"?: string }; Returns: {
               "created_at": string,"display_name": string,"email": string,"email_confirmed": boolean,"id": string,"listings_count": number,"roles": (Database["public"]['Enums']["app_role"])[],"status": Database["public"]['Enums']["account_status"]
+            }[]
+                           },
+"admin_listing_flags":
+{ Args: { "p_listing_id": string }; Returns: {
+              "detail": string,"flag": string
             }[]
                            },
 "admin_new_sheets_secret":
@@ -889,11 +969,25 @@ isOneToOne: false
 "moderate_listing":
 { Args: { "p_decision": string,"p_listing_id": string,"p_reason"?: string,"p_reason_visible_to_owner"?: boolean }; Returns: Database["public"]['Enums']["listing_status"]
                            },
+"my_listing_stats":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "enquiries_30d": number,"enquiries_total": number,"expires_at": string,"listing_id": string,"saves": number,"views_30d": number
+            }[]
+                           },
+"record_listing_view":
+{ Args: { "p_listing_id": string,"p_visitor"?: string }; Returns: undefined
+                           },
 "register_push_token":
 { Args: { "p_platform": string,"p_token": string }; Returns: undefined
                            },
 "register_web_push":
 { Args: { "p_auth": string,"p_endpoint": string,"p_p256dh": string }; Returns: undefined
+                           },
+"renew_listing":
+{ Args: { "p_listing_id": string }; Returns: Database["public"]['Enums']["listing_status"]
+                           },
+"report_listing":
+{ Args: { "p_details"?: string,"p_listing_id": string,"p_reason": string }; Returns: undefined
                            },
 "request_account_deletion":
 { Args: Record<PropertyKey, never>; Returns: string
@@ -960,6 +1054,9 @@ isOneToOne: false
               "attempts": number,"channel": Database["public"]['Enums']["notification_channel"],"id": number,"notification_id": number,"push_tokens": (string)[],"recipient_email": string,"recipient_locale": string,"recipient_name": string,"recipient_phone": string,"template": string,"template_data": Json,"web_push": Json
             }[]
                            },
+"worker_expire_listings":
+{ Args: Record<PropertyKey, never>; Returns: Json
+                           },
 "worker_finalize_import":
 { Args: { "p_listing_id": string,"p_publish": boolean }; Returns: Database["public"]['Enums']["listing_status"]
                            },
@@ -978,8 +1075,14 @@ isOneToOne: false
 "worker_remove_web_push":
 { Args: { "p_endpoint": string }; Returns: undefined
                            },
+"worker_run_saved_search_alerts":
+{ Args: Record<PropertyKey, never>; Returns: number
+                           },
 "worker_send_due_broadcasts":
 { Args: Record<PropertyKey, never>; Returns: number
+                           },
+"worker_set_media_hash":
+{ Args: { "p_hash": string,"p_media_id": string }; Returns: undefined
                            }
           }
           Enums: {
