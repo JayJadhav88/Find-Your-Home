@@ -51,3 +51,39 @@ export function formatDateTime(value: Date | string, { locale, timeZone }: Local
     timeZone,
   }).format(typeof value === "string" ? new Date(value) : value);
 }
+
+/**
+ * Converts a wall-clock time ("2026-10-20T14:30" from <input type="datetime-local">) in an
+ * IANA time zone to a UTC ISO string, using only Intl (no date library).
+ */
+export function zonedLocalToUtc(local: string, timeZone: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(local);
+  if (!match) throw new RangeError(`Invalid local date-time: ${local}`);
+  const [y, mo, d, h, mi] = match.slice(1, 6).map(Number) as [number, number, number, number, number];
+  const seconds = match[6] ? Number(match[6]) : 0;
+  const wallClock = Date.UTC(y, mo - 1, d, h, mi, seconds);
+
+  const offsetAt = (instant: number) => {
+    const parts = Object.fromEntries(
+      new Intl.DateTimeFormat("en-US", {
+        timeZone,
+        hourCycle: "h23",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      })
+        .formatToParts(new Date(instant))
+        .map((part) => [part.type, part.value]),
+    );
+    const asUtc = Date.UTC(+parts.year!, +parts.month! - 1, +parts.day!, +parts.hour!, +parts.minute!, +parts.second!);
+    return asUtc - instant;
+  };
+
+  // Two passes settle the offset around DST transitions.
+  let instant = wallClock - offsetAt(wallClock);
+  instant = wallClock - offsetAt(instant);
+  return new Date(instant).toISOString();
+}

@@ -12,6 +12,9 @@
   --fyh-text: #1c1b19;
   --fyh-text-muted: #5c5850;
   --fyh-focus: #2563eb;
+  --fyh-danger: #b42318;
+  --fyh-success: #1e7a44;
+  --fyh-warning: #9a6700;
 }
 
 @theme inline {
@@ -24,6 +27,9 @@
   --color-border: var(--fyh-border);
   --color-text: var(--fyh-text);
   --color-text-muted: var(--fyh-text-muted);
+  --color-danger: var(--fyh-danger);
+  --color-success: var(--fyh-success);
+  --color-warning: var(--fyh-warning);
   --font-sans: var(--font-geist-sans);
 }
 
