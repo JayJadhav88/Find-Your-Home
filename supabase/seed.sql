@@ -6,6 +6,7 @@
 --   demo.moderator@example.test (moderator)
 --   demo.owner@example.test  (owner)
 --   demo.buyer@example.test  (buyer)
+--   demo.builder@example.test (builder: can list new projects)
 
 -- Currency and defaults for the demo. Real deployments choose these in admin settings.
 update public.currencies set is_enabled = true where code = 'USD';
@@ -26,7 +27,8 @@ from (values
   ('d0000000-0000-4000-8000-000000000001'::uuid, 'demo.admin@example.test', 'Demo Admin'),
   ('d0000000-0000-4000-8000-000000000002'::uuid, 'demo.moderator@example.test', 'Demo Moderator'),
   ('d0000000-0000-4000-8000-000000000003'::uuid, 'demo.owner@example.test', 'Demo Owner'),
-  ('d0000000-0000-4000-8000-000000000004'::uuid, 'demo.buyer@example.test', 'Demo Buyer')
+  ('d0000000-0000-4000-8000-000000000004'::uuid, 'demo.buyer@example.test', 'Demo Buyer'),
+  ('d0000000-0000-4000-8000-000000000005'::uuid, 'demo.builder@example.test', 'Demo Builder')
 ) as u (id, email, display_name);
 
 insert into auth.identities (id, user_id, provider_id, provider, identity_data, last_sign_in_at, created_at, updated_at)
@@ -37,7 +39,11 @@ from auth.users u where u.email like 'demo.%@example.test';
 insert into public.user_roles (user_id, role) values
   ('d0000000-0000-4000-8000-000000000001', 'administrator'),
   ('d0000000-0000-4000-8000-000000000002', 'moderator'),
-  ('d0000000-0000-4000-8000-000000000003', 'owner');
+  ('d0000000-0000-4000-8000-000000000003', 'owner'),
+  ('d0000000-0000-4000-8000-000000000005', 'builder');
+
+insert into public.builder_profiles (user_id, company_name, registration_number)
+values ('d0000000-0000-4000-8000-000000000005', '[DEMO] Example Builders Ltd', 'DEMO-REG-001');
 
 -- Fictional locations (ZZ is an ISO user-assigned code, not a real country)
 insert into public.locations (id, parent_id, level, name, slug, country_code) values
