@@ -11,7 +11,7 @@ test.describe("accounts", () => {
     await page.getByLabel("Email").fill(email);
     await page.getByLabel("Password").fill("short");
     await page.getByRole("button", { name: "Create account" }).click();
-    await expect(page.getByRole("alert")).toContainText("Use at least 10 characters");
+    await expect(page.locator("main").getByRole("alert")).toContainText("Use at least 10 characters");
     await expect(page.getByLabel("Email")).toHaveValue(email);
 
     await page.getByLabel("Password").fill(password);
@@ -23,7 +23,7 @@ test.describe("accounts", () => {
     await page.getByLabel("Email").fill(email);
     await page.getByLabel(/^Password/).fill(password);
     await page.getByRole("button", { name: "Sign in" }).click();
-    await expect(page.getByRole("alert")).toContainText("confirm your email");
+    await expect(page.locator("main").getByRole("alert")).toContainText("confirm your email");
 
     await page.goto(await emailLink(email, "Confirm"));
     await expect(page).toHaveURL(/\/account$/);
@@ -60,7 +60,7 @@ test.describe("accounts", () => {
     await page.getByLabel(/^New password/).fill(newPassword);
     await page.getByLabel("Repeat the new password").fill("Different12345");
     await page.getByRole("button", { name: "Save new password" }).click();
-    await expect(page.getByRole("alert")).toContainText("Passwords do not match");
+    await expect(page.locator("main").getByRole("alert")).toContainText("Passwords do not match");
 
     await page.getByLabel(/^New password/).fill(newPassword);
     await page.getByLabel("Repeat the new password").fill(newPassword);
@@ -73,7 +73,7 @@ test.describe("accounts", () => {
     await page.getByLabel("Email").fill(email);
     await page.getByLabel(/^Password/).fill(password);
     await page.getByRole("button", { name: "Sign in" }).click();
-    await expect(page.getByRole("alert")).toContainText("Email or password is incorrect");
+    await expect(page.locator("main").getByRole("alert")).toContainText("Email or password is incorrect");
     await signIn(page, email, newPassword);
   });
 

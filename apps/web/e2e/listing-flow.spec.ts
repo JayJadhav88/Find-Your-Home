@@ -63,7 +63,7 @@ test("moderator approves from the review queue", async ({ page }) => {
 
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "Approve and publish" }).click();
-  await expect(page.getByText("Live", { exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "View live page" })).toBeVisible();
   listingPath = (await page.getByRole("link", { name: "View live page" }).getAttribute("href"))!;
   await signOut(page);
 });
@@ -81,8 +81,8 @@ test("a visitor finds the listing, sees the photo and sends an enquiry", async (
   await expect(photo).toBeVisible();
   await expect.poll(() => photo.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
 
-  await page.getByLabel("Name").fill("E2E Visitor");
-  await page.getByLabel("Email").fill("e2e.visitor@example.test");
+  await page.getByLabel(/^Name/).fill("E2E Visitor");
+  await page.getByLabel(/^Email/).fill("e2e.visitor@example.test");
   await page.getByRole("button", { name: "Send message" }).click();
   await expect(page.getByText("Please agree so we can pass your message on")).toBeVisible();
   await page.getByText(/I agree that .* passes my name/).click();
@@ -110,6 +110,7 @@ test("the owner archives the listing and it leaves search", async ({ page }) => 
   await expect(page.getByText("Archived and removed from search.")).toBeVisible();
   await runWorkers();
 
-  const response = await page.goto(listingPath);
-  expect(response?.status()).toBe(404);
+  await page.goto(listingPath);
+  await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
+  await expect(page.locator('meta[name="robots"][content="noindex"]').first()).toBeAttached();
 });

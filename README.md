@@ -2,7 +2,7 @@
 
 Real estate listing platform: public website, web app with admin panel, and iOS/Android apps on one shared Supabase backend.
 
-**Current status: Phase 2 (web MVP) built and checked locally — public site, search, listing pages, sign-in, account area, owner listing form with photos, and the admin panel, on top of the Phase 1 backend. Not yet built: the mobile app (Phase 3), comparison view, curated SEO landing pages, automated browser tests. Nothing is deployed.** See [docs/04-delivery-plan.md](docs/04-delivery-plan.md) for exactly what was and wasn't tested.
+**Current status: Phase 2 (web MVP) built and checked locally — public site, search, listing pages, sign-in, account area, owner listing form with photos, and the admin panel, on top of the Phase 1 backend. Not yet built: the mobile app (Phase 3), comparison view, curated SEO landing pages. Nothing is deployed.** See [docs/04-delivery-plan.md](docs/04-delivery-plan.md) for exactly what was and wasn't tested.
 
 | Document | Contents |
 | --- | --- |
@@ -29,7 +29,8 @@ pnpm db:test         # database permission and workflow tests (pgTAP)
 pnpm test            # shared package unit tests
 pnpm test:functions  # Edge Function unit tests (image sanitizer, email)
 pnpm workers         # run the photo + email workers once (needs supabase/functions/.env)
-pnpm smoke           # end-to-end flow against the local stack (demo accounts)
+pnpm smoke           # API-level end-to-end flow against the local stack (demo accounts)
+pnpm e2e             # Playwright browser tests (needs a web build; see apps/web/e2e/README.md)
 pnpm typecheck && pnpm lint && pnpm build
 ```
 

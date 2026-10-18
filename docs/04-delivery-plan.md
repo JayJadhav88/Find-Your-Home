@@ -20,19 +20,21 @@ Docs `01`–`06`. No code. Exit: owner answers the blocking questions in [06-ope
 
 ## Phase 2 — Web MVP
 
-Status 2026-10-18: **built; lint, typecheck and production build pass; core flows checked by hand in a browser against the local stack.** No automated browser tests yet.
+Status 2026-10-18: **built; lint, typecheck and production build pass; 32 Playwright browser tests pass (twice in a row) against the local stack** — see [apps/web/e2e/README.md](../apps/web/e2e/README.md). Earlier manual browser testing found and fixed: signed-in pages hanging under Next 16 prerendering, suspended users getting HTTP 500 at sign-in, stale listing photos after approval, local image optimisation blocked, duplicate form ids and ambiguous button names in admin.
+
+Known behaviour: a missing or unpublished listing renders “Page not found” with `noindex` but HTTP status 200, because listing pages stream (Next.js sends the status before the lookup finishes). Truly unknown routes return 404.
 
 | Area | Built | How it was checked |
 | --- | --- | --- |
 | Design system | Tokens → Tailwind theme, accessible form fields, buttons, alerts, badges, cards, empty states, focus styles, skip link | Label check on the search filters (28/28 fields labelled); mobile layout at 375 px (no horizontal scroll) |
 | Public pages | Home (featured + recent), search (all filters as shareable URLs, sort, keyset “Next page”), listing page (gallery, facts, amenities, location + OpenStreetMap link, contact card, JSON-LD, breadcrumbs, canonical redirect), About/Contact/Privacy/Terms (admin-edited, unpublished notice by default), sitemap, robots, 404/error pages | Browser: home, filtered search + sort, listing page, JSON-LD present |
 | Search backend | `search_listings` RPC | 17 pgTAP checks |
-| Auth | Sign up (email confirmation), sign in, sign out, forgot/reset password, email-link callback, session-refresh proxy, `?next=` redirects | Browser: sign in/out as demo owner and moderator, redirect to sign-in for private pages. **Not checked:** sign-up email confirmation and password reset via Mailpit |
+| Auth | Sign up (email confirmation), sign in, sign out, forgot/reset password, email-link callback, session-refresh proxy, `?next=` redirects | e2e: sign-up with email confirmation (Mailpit), unconfirmed sign-in refused, password reset (mismatch, new works, old fails), no account enumeration |
 | Account | Overview, profile, privacy (data copy, deletion request), saved homes, enquiries inbox + detail (reply status, confirm/decline/cancel visits), my listings | Browser: enquiry received by owner and marked replied; saving a home. **Not checked:** visit confirm/decline in the UI, deletion request |
-| Owner listing flow | Guided form (all fields, cascading location pickers), draft → photos (upload, previews, alt text, cover, reorder, remove) → submit → withdraw / sold / rented / archive / restore, moderator notes, history | Browser: create draft, refused submit without photo, upload photo, submit. **Not checked:** editing a live listing in the UI (covered by pgTAP), reorder/remove photo |
-| Moderation & admin | Dashboard, listings table (filter, search, paging), review page (private photo previews, all details, approve/reject/suspend/reinstate with reasons, feature, assign agent), users (roles, suspend), enquiries, types/amenities/places, settings + currencies, content pages, privacy requests, audit log, CSV exports | Browser: moderation queue, approve as moderator, moderator blocked from Settings. 17 pgTAP checks for admin RPCs/audit. **Not checked in the browser:** administrator-only pages (users, settings, taxonomy, content, exports) |
+| Owner listing flow | Guided form (all fields, cascading location pickers), draft → photos (upload, previews, alt text, cover, reorder, remove) → submit → withdraw / sold / rented / archive / restore, moderator notes, history | e2e: create draft, submit refused without photo, JPEG upload + alt text, non-image refused, submit, archive. **Not automated:** editing a live listing in the UI (covered by pgTAP), photo reorder/remove |
+| Moderation & admin | Dashboard, listings table (filter, search, paging), review page (private photo previews, all details, approve/reject/suspend/reinstate with reasons, feature, assign agent), users (roles, suspend), enquiries, types/amenities/places, settings + currencies, content pages, privacy requests, audit log, CSV exports | Browser (manual): users (grant/remove role, suspend → sign-in refused, reactivate), settings (save, invalid time zone, currency), taxonomy (amenity, neighbourhood with inherited country), content page (Markdown, script stays inert), exports + audit log. e2e: moderation approve, users, settings, amenity, export audit, moderator/buyer blocked. 17 pgTAP checks |
 | Photos & email | Worker publishes metadata-free copies and asks the website to refresh its cache | Browser: approved listing showed its published photo on the home page after the worker ran |
-| Deferred | Comparison view, curated location/type landing pages (table exists), Playwright suite, Lighthouse/axe audit | — |
+| Deferred | Comparison view, curated location/type landing pages (table exists), full Lighthouse/axe audit (only label/id/tap-target checks are automated) | — |
 
 ## Phase 3 — Mobile MVP
 

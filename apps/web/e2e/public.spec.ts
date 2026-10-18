@@ -67,9 +67,17 @@ test.describe("public site", () => {
   });
 
   test("unknown pages show a helpful 404", async ({ page }) => {
-    const response = await page.goto("/properties/FYH-999999/nothing-here");
-    expect(response?.status()).toBe(404);
+    const unknownRoute = await page.goto("/definitely-not-a-page");
+    expect(unknownRoute?.status()).toBe(404);
     await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
+  });
+
+  test("a missing listing shows not-found and is never indexed", async ({ page }) => {
+    // Listing pages stream, so the status is sent before the lookup finishes; Next.js marks
+    // the not-found result noindex instead.
+    await page.goto("/properties/FYH-999999/nothing-here");
+    await expect(page.getByRole("heading", { name: "Page not found" })).toBeVisible();
+    await expect(page.locator('meta[name="robots"][content="noindex"]').first()).toBeAttached();
   });
 
   test("private areas send visitors to sign in and keep the destination", async ({ page }) => {

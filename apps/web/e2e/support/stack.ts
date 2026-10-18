@@ -1,11 +1,11 @@
 import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
-import { fileURLToPath } from "node:url";
 import path from "node:path";
 
 // Reads local stack details at runtime so no keys live in the test files.
 
-const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../../..");
+// Playwright runs from apps/web (see the e2e script).
+const repoRoot = path.resolve(process.cwd(), "../..");
 
 function readEnvFile(file: string): Record<string, string> {
   try {
