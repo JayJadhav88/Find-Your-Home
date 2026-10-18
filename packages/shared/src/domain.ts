@@ -1,10 +1,19 @@
 // Domain enumerations. These mirror the PostgreSQL enums defined in
 // supabase/migrations and must be changed together with a migration.
 
-export const APP_ROLES = ["buyer", "owner", "agent", "moderator", "administrator"] as const;
+export const APP_ROLES = ["buyer", "owner", "agent", "moderator", "administrator", "builder"] as const;
 export type AppRole = (typeof APP_ROLES)[number];
 
 export const STAFF_ROLES = ["moderator", "administrator"] as const satisfies readonly AppRole[];
+
+export const LISTING_CATEGORIES = ["rental", "resale", "new_project"] as const;
+export type ListingCategory = (typeof LISTING_CATEGORIES)[number];
+
+export const CATEGORY_LABEL: Record<ListingCategory, string> = {
+  rental: "Rental",
+  resale: "Resale",
+  new_project: "New project",
+};
 
 export const LISTING_PURPOSES = ["sale", "rent"] as const;
 export type ListingPurpose = (typeof LISTING_PURPOSES)[number];

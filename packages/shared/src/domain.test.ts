@@ -6,6 +6,7 @@ import * as domain from "./domain";
 // `pnpm db:types` after changing an enum in a migration.
 const pairs = {
   app_role: domain.APP_ROLES,
+  listing_category: domain.LISTING_CATEGORIES,
   listing_purpose: domain.LISTING_PURPOSES,
   listing_status: domain.LISTING_STATUSES,
   price_period: domain.PRICE_PERIODS,
