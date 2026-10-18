@@ -64,19 +64,23 @@ Checks run: `typecheck` clean, `lint` 0 findings, Jest 8/8 passing (5 encrypted-
 
 **Not verified:** running on a phone, simulator or emulator (no Android SDK or Mac on this computer), camera/photo upload and HEIC conversion on real devices, the in-app video player on devices, EAS cloud builds and store submission. Next step: try it with Expo Go on your phone (see 09).
 
-## Phase 3b — Notifications, admin team and lead management (started 2026-10-18)
+## Phase 3b — Notifications, admin team and lead management (2026-10-18/19)
 
 Owner decisions: WhatsApp through **Meta WhatsApp Cloud API**; enquiries to Google Sheets through an **Apps Script webhook**; login with **email and Google**; include saved-search alerts, listing expiry and renewal, report and fraud checks, and owner insights.
 
 | Milestone | Scope | Status |
 | --- | --- | --- |
-| A. Data model | In-app notifications, per-user channel preferences (quiet hours, weekly cap, WhatsApp opt-in with time of consent), push tokens, admin permissions (super admin, moderator, support, marketing), integration secrets encrypted in Supabase Vault, review-time setting | Planned |
-| B. In-app notifications | Bell with unread count on web and mobile; events: listing submitted / approved / changes requested, enquiry received, enquiry updates; "usually reviewed within N hours" message after submitting | Planned |
-| C. Channels | Worker delivers email (Resend), WhatsApp (Meta templates), push (Expo); respects opt-in, opt-out, quiet hours and caps | Planned |
-| D. Admin | Integrations page (keys write-only, test send), team access, broadcasts (audience, channels, preview, schedule, delivery report) | Planned |
-| E. Enquiries | Status pipeline (new → contacted → visit → closed), notes, assignment, admin alerts per channel, Google Sheets row per enquiry | Planned |
-| F. Google sign-in | Web and mobile; needs the owner's Google OAuth client | Planned |
-| G. Extras | Saved-search alerts, expiry and renewal reminders, report listing and fraud flags (duplicate photos, phone reused across many listings), owner views/enquiries per listing | Planned |
+| A. Data model | In-app notifications, channel preferences with WhatsApp consent, push tokens and browser subscriptions, support/marketing roles, integration keys in Vault | Built; pgTAP |
+| B. In-app notifications | Bell/badge on web and app, notification pages, "usually reviewed within N hours" | Built |
+| C. Channels | Delivery worker for phone push (Expo), browser push (Web Push), WhatsApp (Meta templates); email via saved Resend key | Built; unit tests; worker run against local stack |
+| D. Admin | Integrations page with tests and delivery log, role-aware menu, team roles, broadcasts with audience, schedule, caps and report | Built; pgTAP |
+| E. Enquiries | Pipeline, team owner, follow-up, internal notes, per-person alerts, Google Sheets via Apps Script | Built; pgTAP; unit tests |
+| F. Google sign-in | Website and app (needs the owner's OAuth client) | Built; not run against Google |
+| G. Extras | Saved-search alerts, expiry and renewal, reports and fraud signals, owner insights | Built; pgTAP |
+
+Checks run: database tests 9 files / 271 passing on a clean rebuild; shared unit tests 73; Edge Function unit tests 82; app typecheck, lint and Jest (10); website typecheck and lint; app bundle build for iOS and Android; all three workers run against the local stack (a real browser-push request reached Google's push service). Also fixed: the website now forwards the visitor's IP so per-visitor limits (enquiries, reports) no longer apply to all visitors together.
+
+Not done in this session: clicking through the new website pages in a browser and re-running the Playwright suite (held back to keep the laptop's load low); real provider delivery. Setup steps: [10-notifications-and-team.md](10-notifications-and-team.md).
 
 Not testable locally without the owner's accounts: real WhatsApp delivery (Meta Business account, approved templates), push to phones (EAS build with an Expo account), Google sign-in (OAuth client). Each is built behind an adapter with a log-only mode for local development.
 

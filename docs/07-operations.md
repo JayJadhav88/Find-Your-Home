@@ -1,14 +1,16 @@
 # 07 · Background workers, email and scheduling
 
-Two Edge Functions do the work that needs secrets. Business events only write rows (`job_queue`, `notification_outbox`) in the same transaction as the change, so nothing is lost if a worker or provider is down. Workers retry with backoff (1, 2, 4 … 60 minutes, up to 8 attempts).
+Three Edge Functions do the work that needs secrets. Business events only write rows (`job_queue`, `notification_outbox`) in the same transaction as the change, so nothing is lost if a worker or provider is down. Workers retry with backoff (1, 2, 4 … 60 minutes, up to 8 attempts).
 
 | Function | Reads | Does |
 | --- | --- | --- |
 | `process-jobs` | `job_queue` | On publish: downloads each listing photo from the private bucket, verifies its real file type, strips metadata (GPS, camera serials, XMP, comments, PNG text, WebP EXIF/XMP) while keeping orientation, and writes a copy under a random name to the public `listing-public` bucket. On unpublish (rejected, suspended, sold, rented, archived, material edit): deletes the public copies. Skips jobs that are stale (e.g. re-approved meanwhile). |
 | `process-jobs` (image import) | `job_queue` kind `import_listing_images` | Downloads spreadsheet image links with SSRF protection (https only, private/local addresses blocked after DNS lookup and on every redirect, 15 s timeout, 10 MB cap), checks the real file type, strips metadata, stores the copy, then publishes the listing or sends it to review. Per-link results are saved in the job's `payload.result`. Remaining risk: DNS rebinding between the check and the request; acceptable for admin-only input. |
-| `send-emails` | `notification_outbox` | Renders the template and sends through the configured provider. Emails only say *what happened* and link to the dashboard; enquirer contact details and messages are never put in email. |
+| `process-jobs` (Google Sheets) | `job_queue` kind `sync_enquiry_sheet` | Posts one enquiry (new or changed) to the owner's Apps Script web app, which adds or updates its row. Visitor text is escaped so it can never run as a spreadsheet formula. |
+| `send-emails` | `notification_outbox` (channel `email`) | Renders the template and sends through Resend (key from Admin → Integrations, or `RESEND_API_KEY`). Emails only say *what happened* and link to the dashboard; enquirer contact details and messages are never put in email. |
+| `deliver-notifications` | `broadcasts`, `saved_searches`, listings, `notification_outbox` (channels `push`, `whatsapp`) | First turns due broadcasts, saved-search matches (hourly per search) and listing expiry (hourly) into deliveries, then sends phone push (Expo), browser push (Web Push) and WhatsApp template messages. Dead phones and browsers are removed automatically. `NOTIFY_LOG_ONLY=true` prints instead of sending. |
 
-Both functions require the header `x-worker-secret: <WORKER_SECRET>`; they are deployed with `verify_jwt = false` because they are not called by users.
+All three functions require the header `x-worker-secret: <WORKER_SECRET>`; they are deployed with `verify_jwt = false` because they are not called by users.
 
 Photos are not re-encoded (the Edge Runtime's CPU limits make that unreliable for large images). Metadata stripping is done on the bytes, and file types are checked by content. HEIC uploads are refused; the mobile app converts photos to JPEG on the device before upload (Phase 3).
 
@@ -45,7 +47,7 @@ Nothing below has been done yet; it needs the owner's Resend account and domain.
 pnpm exec supabase secrets set EMAIL_PROVIDER=resend RESEND_API_KEY=<key> EMAIL_FROM="Find Your Home <notifications@mail.your-domain.com>" SITE_URL=https://your-domain.com WORKER_SECRET=<64 hex chars>
 ```
 
-4. Deploy the functions: `pnpm exec supabase functions deploy process-jobs send-emails`.
+4. Deploy the functions: `pnpm exec supabase functions deploy process-jobs send-emails deliver-notifications`.
 
 If `EMAIL_PROVIDER` is missing or incomplete, `send-emails` claims nothing and reports `configured: false`; queued emails wait until it is configured. Resend's free tier has daily and monthly sending limits — check current limits and pricing on resend.com before launch.
 
@@ -69,6 +71,16 @@ select vault.create_secret('<same WORKER_SECRET as the function secret>', 'worke
 select cron.schedule('fyh-process-jobs', '* * * * *', $$
   select net.http_post(
     url := (select decrypted_secret from vault.decrypted_secrets where name = 'functions_url') || '/process-jobs',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'x-worker-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'worker_secret')),
+    body := '{}'::jsonb,
+    timeout_milliseconds := 60000);
+$$);
+
+select cron.schedule('fyh-deliver-notifications', '* * * * *', $$
+  select net.http_post(
+    url := (select decrypted_secret from vault.decrypted_secrets where name = 'functions_url') || '/deliver-notifications',
     headers := jsonb_build_object(
       'Content-Type', 'application/json',
       'x-worker-secret', (select decrypted_secret from vault.decrypted_secrets where name = 'worker_secret')),

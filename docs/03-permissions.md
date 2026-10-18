@@ -36,6 +36,10 @@ Builders (role `builder`, granted only by an administrator) have the same rights
 
 \* Editing material fields of a published listing triggers the material-change policy (see data model).
 
+## Team roles added in Phase 3b
+
+`support` (enquiries: read all, assign, status, internal notes) and `marketing` (broadcasts) can open the admin panel but cannot review listings or change settings. Moderators also handle enquiries and reports. Only administrators manage integrations, users, roles and settings. See [10-notifications-and-team.md](10-notifications-and-team.md).
+
 ## Rules that apply to every row above
 
 1. Identity comes from `auth.uid()` on the server. Any `user_id`, `owner_id`, `role` or `status` in a client payload is ignored or rejected by triggers.
