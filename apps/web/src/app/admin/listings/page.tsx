@@ -17,19 +17,21 @@ export default function AdminListingsPage({ searchParams }: PageProps<"/admin/li
           status={typeof params.status === "string" ? params.status : ""}
           q={typeof params.q === "string" ? params.q.trim() : ""}
           page={Math.max(1, Number(params.page) || 1)}
+          batch={typeof params.batch === "string" ? params.batch : ""}
         />
       ))}
     </Suspense>
   );
 }
 
-async function Listings({ status, q, page }: { status: string; q: string; page: number }) {
+async function Listings({ status, q, page, batch }: { status: string; q: string; page: number; batch: string }) {
   const viewer = await requireStaff("/admin/listings");
   const supabase = await createUserClient();
   let query = supabase
     .from("listings")
     .select("id, title, reference_code, status, purpose, submitted_at, updated_at, is_featured, owner:profiles!listings_owner_id_fkey(display_name)", { count: "exact" });
   if ((LISTING_STATUSES as readonly string[]).includes(status)) query = query.eq("status", status as (typeof LISTING_STATUSES)[number]);
+  if (/^[0-9a-f-]{36}$/.test(batch)) query = query.eq("import_batch_id", batch);
   if (q) {
     const safe = q.replace(/[%,()]/g, " ");
     query = query.or(`title.ilike.%${safe}%,reference_code.ilike.%${safe}%`);
@@ -47,7 +49,7 @@ async function Listings({ status, q, page }: { status: string; q: string; page: 
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Listings"
-        description={status === "pending_review" ? "Oldest submissions first." : undefined}
+        description={batch ? "Listings from one spreadsheet import." : status === "pending_review" ? "Oldest submissions first." : undefined}
         actions={isAdmin(viewer) ? (
           // File download from a route handler: plain link, no prefetch.
           <a download className="text-sm text-brand underline" href="/admin/export/listings">Export CSV</a>

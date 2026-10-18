@@ -7,6 +7,7 @@ export const prefetch = "force-disabled";
 const LINKS = [
   ["/admin", "Dashboard"],
   ["/admin/listings", "Listings"],
+  ["/admin/import", "Import from Excel"],
   ["/admin/enquiries", "Enquiries"],
   ["/admin/users", "Users"],
   ["/admin/taxonomy", "Types, amenities & places"],
