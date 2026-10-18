@@ -37,7 +37,7 @@ async function Taxonomy() {
         <ul className="flex flex-col gap-2">
           {(types.data ?? []).map((type) => (
             <li key={type.id}>
-              <ActionForm action={saveTaxonomyItem} submitLabel="Save" variant="secondary" inline>
+              <ActionForm action={saveTaxonomyItem} submitLabel="Save" submitAriaLabel={`Save ${type.name}`} variant="secondary" inline>
                 <input type="hidden" name="table" value="property_types" />
                 <input type="hidden" name="id" value={type.id} />
                 <label className={label}>Name<TextInput name="name" defaultValue={type.name} /></label>
@@ -65,7 +65,7 @@ async function Taxonomy() {
         <ul className="flex flex-col gap-2">
           {(amenities.data ?? []).map((amenity) => (
             <li key={amenity.id}>
-              <ActionForm action={saveTaxonomyItem} submitLabel="Save" variant="secondary" inline>
+              <ActionForm action={saveTaxonomyItem} submitLabel="Save" submitAriaLabel={`Save ${amenity.name}`} variant="secondary" inline>
                 <input type="hidden" name="table" value="amenities" />
                 <input type="hidden" name="id" value={amenity.id} />
                 <label className={label}>Name<TextInput name="name" defaultValue={amenity.name} /></label>
@@ -90,7 +90,7 @@ async function Taxonomy() {
         <ul className="flex flex-col gap-2">
           {allLocations.map((location) => (
             <li key={location.id}>
-              <ActionForm action={saveTaxonomyItem} submitLabel="Save" variant="secondary" inline>
+              <ActionForm action={saveTaxonomyItem} submitLabel="Save" submitAriaLabel={`Save ${location.name}`} variant="secondary" inline>
                 <input type="hidden" name="table" value="locations" />
                 <input type="hidden" name="id" value={location.id} />
                 <input type="hidden" name="level" value={location.level} />

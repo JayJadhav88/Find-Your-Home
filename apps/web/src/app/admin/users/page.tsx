@@ -60,7 +60,7 @@ async function Users({ q }: { q: string }) {
                 </div>
                 {user.id !== viewer.id ? (
                   <div className="flex flex-wrap gap-6">
-                    <ActionForm action={setUserRole} submitLabel="Apply" variant="secondary" inline>
+                    <ActionForm action={setUserRole} submitLabel="Apply" submitAriaLabel={`Apply role change for ${user.display_name}`} variant="secondary" inline>
                       <input type="hidden" name="userId" value={user.id} />
                       <label className="flex flex-col gap-1 text-sm font-medium">
                         Role
@@ -79,12 +79,12 @@ async function Users({ q }: { q: string }) {
                       </label>
                     </ActionForm>
                     {user.status === "suspended" ? (
-                      <ActionForm action={setUserStatus} submitLabel="Reactivate" variant="secondary" inline>
+                      <ActionForm action={setUserStatus} submitLabel="Reactivate" submitAriaLabel={`Reactivate ${user.display_name}`} variant="secondary" inline>
                         <input type="hidden" name="userId" value={user.id} />
                         <input type="hidden" name="status" value="active" />
                       </ActionForm>
                     ) : (
-                      <ActionForm action={setUserStatus} submitLabel="Suspend" variant="danger" inline confirm="Suspend this account and sign it out everywhere?">
+                      <ActionForm action={setUserStatus} submitLabel="Suspend" submitAriaLabel={`Suspend ${user.display_name}`} variant="danger" inline confirm="Suspend this account and sign it out everywhere?">
                         <input type="hidden" name="userId" value={user.id} />
                         <input type="hidden" name="status" value="suspended" />
                         <label className="flex flex-col gap-1 text-sm font-medium">

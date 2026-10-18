@@ -40,7 +40,7 @@ async function Settings() {
                 {currency.code} <span className="text-text-muted">{currency.name}</span>{" "}
                 {currency.is_enabled ? <Badge tone="published">on</Badge> : null}
               </span>
-              <ActionForm action={setCurrencyEnabled} submitLabel={currency.is_enabled ? "Disable" : "Enable"} variant="ghost" inline>
+              <ActionForm action={setCurrencyEnabled} submitLabel={currency.is_enabled ? "Disable" : "Enable"} submitAriaLabel={`${currency.is_enabled ? "Disable" : "Enable"} ${currency.code}`} variant="ghost" inline>
                 <input type="hidden" name="code" value={currency.code} />
                 <input type="hidden" name="enabled" value={currency.is_enabled ? "0" : "1"} />
               </ActionForm>

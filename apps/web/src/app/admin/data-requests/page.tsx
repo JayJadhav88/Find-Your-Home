@@ -46,7 +46,7 @@ async function DataRequests() {
                   </Badge>
                 </div>
                 {request.notes ? <p className="text-sm text-text-muted">Notes: {request.notes}</p> : null}
-                <ActionForm action={updateDataRequest} submitLabel="Update" variant="secondary" inline>
+                <ActionForm action={updateDataRequest} submitLabel="Update" submitAriaLabel={`Update request from ${request.user?.display_name ?? "deleted account"}`} variant="secondary" inline>
                   <input type="hidden" name="id" value={request.id} />
                   <label className="flex flex-col gap-1 text-sm font-medium">
                     Status

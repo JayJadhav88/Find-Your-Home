@@ -12,6 +12,7 @@ export function ActionForm({
   action,
   children,
   submitLabel,
+  submitAriaLabel,
   variant = "primary",
   confirm,
   className,
@@ -20,6 +21,8 @@ export function ActionForm({
   action: (previous: FormState, formData: FormData) => Promise<FormState>;
   children?: ReactNode;
   submitLabel: string;
+  /** Accessible name when the visible label repeats on the page, e.g. "Enable EUR". */
+  submitAriaLabel?: string;
   variant?: "primary" | "secondary" | "danger" | "ghost";
   confirm?: string;
   className?: string;
@@ -38,7 +41,7 @@ export function ActionForm({
     >
       {children}
       <div>
-        <Button type="submit" variant={variant} disabled={pending}>
+        <Button type="submit" variant={variant} disabled={pending} aria-label={submitAriaLabel}>
           {pending ? "Working…" : submitLabel}
         </Button>
       </div>
