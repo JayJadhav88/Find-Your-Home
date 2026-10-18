@@ -5,6 +5,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./database.types";
 import type { ListingStatus } from "./domain";
+import { notificationPreferencesSchema, type NotificationPreferencesInput } from "./notifications";
 import { listingFormToRow, listingFormVideos, searchFiltersToRpcArgs, type ListingFormValues, type SearchFilters } from "./schemas";
 
 export type Client = SupabaseClient<Database>;
@@ -337,4 +338,58 @@ export async function removePhoto(client: Client, media: { id: string; upload_ke
 export async function setCoverPhoto(client: Client, listingId: string, mediaId: string) {
   check(await client.from("listing_media").update({ is_cover: false }).eq("listing_id", listingId).eq("is_cover", true));
   check(await client.from("listing_media").update({ is_cover: true }).eq("id", mediaId));
+}
+
+// Notifications
+export async function listNotifications(client: Client, limit = 50) {
+  return check(
+    await client
+      .from("notifications")
+      .select("id, kind, data, read_at, created_at")
+      .order("created_at", { ascending: false })
+      .limit(limit),
+  );
+}
+
+export type InboxItem = Awaited<ReturnType<typeof listNotifications>>[number];
+
+export async function countUnreadNotifications(client: Client): Promise<number> {
+  const result = await client.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null);
+  if (result.error) throw new ApiError(friendlyError(result.error), result.error.code);
+  return result.count ?? 0;
+}
+
+/** Marks the given notifications (or all of them) as read. */
+export async function markNotificationsRead(client: Client, ids?: number[]) {
+  return check(await client.rpc("mark_notifications_read", ids ? { p_ids: ids } : {}));
+}
+
+export async function getNotificationPreferences(client: Client, userId: string) {
+  return checkMaybe(await client.from("notification_preferences").select("*").eq("user_id", userId).maybeSingle());
+}
+
+export async function updateNotificationPreferences(client: Client, userId: string, input: NotificationPreferencesInput) {
+  const values = notificationPreferencesSchema.parse(input);
+  check(
+    await client
+      .from("notification_preferences")
+      .update({
+        email_enabled: values.emailEnabled,
+        push_enabled: values.pushEnabled,
+        whatsapp_enabled: values.whatsappEnabled,
+        whatsapp_number: values.whatsappNumber || null,
+        alerts_enabled: values.alertsEnabled,
+        quiet_hours_enabled: values.quietHoursEnabled,
+        timezone: values.timezone || null,
+      })
+      .eq("user_id", userId),
+  );
+}
+
+export async function registerPushToken(client: Client, token: string, platform: "ios" | "android") {
+  check(await client.rpc("register_push_token", { p_token: token, p_platform: platform }));
+}
+
+export async function unregisterPushToken(client: Client, token: string) {
+  check(await client.rpc("unregister_push_token", { p_token: token }));
 }

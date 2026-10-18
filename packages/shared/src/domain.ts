@@ -1,10 +1,24 @@
 // Domain enumerations. These mirror the PostgreSQL enums defined in
 // supabase/migrations and must be changed together with a migration.
 
-export const APP_ROLES = ["buyer", "owner", "agent", "moderator", "administrator", "builder"] as const;
+export const APP_ROLES = ["buyer", "owner", "agent", "moderator", "administrator", "builder", "support", "marketing"] as const;
 export type AppRole = (typeof APP_ROLES)[number];
 
+/** Roles that may review listings. */
 export const STAFF_ROLES = ["moderator", "administrator"] as const satisfies readonly AppRole[];
+/** Roles that may open the admin panel. Administrator is the super admin. */
+export const TEAM_ROLES = ["administrator", "moderator", "support", "marketing"] as const satisfies readonly AppRole[];
+
+export const ROLE_LABEL: Record<AppRole, string> = {
+  buyer: "Member",
+  owner: "Owner",
+  agent: "Agent",
+  builder: "Builder",
+  moderator: "Moderator (reviews listings)",
+  administrator: "Super admin (everything)",
+  support: "Support (enquiries)",
+  marketing: "Marketing (messages)",
+};
 
 export const LISTING_CATEGORIES = ["rental", "resale", "new_project"] as const;
 export type ListingCategory = (typeof LISTING_CATEGORIES)[number];
@@ -51,8 +65,20 @@ export type AreaUnit = (typeof AREA_UNITS)[number];
 export const ENQUIRY_KINDS = ["enquiry", "visit_request"] as const;
 export type EnquiryKind = (typeof ENQUIRY_KINDS)[number];
 
-export const ENQUIRY_STATUSES = ["new", "in_progress", "responded", "closed", "spam"] as const;
+export const ENQUIRY_STATUSES = ["new", "in_progress", "visit_scheduled", "responded", "closed", "spam"] as const;
 export type EnquiryStatus = (typeof ENQUIRY_STATUSES)[number];
+
+export const ENQUIRY_STATUS_LABEL: Record<EnquiryStatus, string> = {
+  new: "New",
+  in_progress: "Contacted",
+  visit_scheduled: "Visit scheduled",
+  responded: "Responded",
+  closed: "Closed",
+  spam: "Spam",
+};
+
+export const NOTIFICATION_CHANNELS = ["email", "whatsapp", "push"] as const;
+export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];
 
 export const VISIT_STATUSES = ["requested", "confirmed", "declined", "cancelled"] as const;
 export type VisitStatus = (typeof VISIT_STATUSES)[number];

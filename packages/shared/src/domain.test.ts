@@ -18,6 +18,7 @@ const pairs = {
   enquiry_kind: domain.ENQUIRY_KINDS,
   enquiry_status: domain.ENQUIRY_STATUSES,
   visit_status: domain.VISIT_STATUSES,
+  notification_channel: domain.NOTIFICATION_CHANNELS,
 } as const;
 
 describe("domain enums match the database", () => {
