@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Loading } from "@/components/loading";
 import { Alert, ButtonLink, Card, PageHeader } from "@/components/ui";
-import { isAdmin, requireStaff } from "@/lib/auth";
+import { isAdmin, requireTeam } from "@/lib/auth";
 import { getSiteSettings } from "@/lib/public-data";
 import { createUserClient } from "@/lib/supabase";
 import { daysAgoIso } from "@/lib/time";
@@ -11,14 +11,14 @@ export default function AdminDashboardPage({ searchParams }: PageProps<"/admin">
   return (
     <Suspense fallback={<Loading />}>
       {searchParams.then((params) => (
-        <Dashboard denied={params.denied === "admin-only"} />
+        <Dashboard denied={params.denied === "admin-only" || params.denied === "permission"} />
       ))}
     </Suspense>
   );
 }
 
 async function Dashboard({ denied }: { denied: boolean }) {
-  const viewer = await requireStaff("/admin");
+  const viewer = await requireTeam("/admin");
   const supabase = await createUserClient();
   const settings = await getSiteSettings();
   const weekAgo = daysAgoIso(7);
@@ -49,7 +49,7 @@ async function Dashboard({ denied }: { denied: boolean }) {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title="Dashboard" description={`Signed in as ${viewer.displayName} (${viewer.roles.filter((role) => role !== "buyer").join(", ")})`} />
-      {denied ? <Alert tone="warning">That section is for administrators only.</Alert> : null}
+      {denied ? <Alert tone="warning">Your team role doesn&rsquo;t include that section. Ask a super admin if you need access.</Alert> : null}
       {!settings.default_currency ? (
         <Alert tone="warning" title="Setup needed">
           No default currency is set. <Link className="underline" href="/admin/settings">Open settings</Link> to enable your currency.

@@ -1,4 +1,4 @@
-import { formatDateTime, videoWatchUrl } from "@fyh/shared";
+import { formatDateTime, formatReviewTime, videoWatchUrl } from "@fyh/shared";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -128,7 +128,11 @@ async function EditListing({ id, created }: { id: string; created: boolean }) {
           <span className="text-sm text-text-muted">Status</span>
           <Badge tone={listing.status}>{STATUS_LABEL[listing.status]}</Badge>
         </div>
-        <p className="text-sm">{STATUS_HELP[listing.status]}</p>
+        <p className="text-sm">
+          {listing.status === "pending_review"
+            ? `A moderator is reviewing this listing. Listings are usually reviewed within ${formatReviewTime(settings.review_hours_target)}; we'll notify you here and by email. Withdraw it if you need to make changes.`
+            : STATUS_HELP[listing.status]}
+        </p>
         {lastDecision?.reason && (listing.status === "rejected" || listing.status === "suspended") ? (
           <Alert tone="warning" title="Note from our moderators">{lastDecision.reason}</Alert>
         ) : null}

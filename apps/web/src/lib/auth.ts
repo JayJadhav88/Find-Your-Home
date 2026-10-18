@@ -45,6 +45,10 @@ export function hasRole(viewer: Viewer | null, ...roles: AppRole[]): boolean {
 
 export const isStaff = (viewer: Viewer | null) => hasRole(viewer, "moderator", "administrator");
 export const isAdmin = (viewer: Viewer | null) => hasRole(viewer, "administrator");
+/** Anyone who may open the admin panel (each page checks its own permission). */
+export const isTeam = (viewer: Viewer | null) => hasRole(viewer, "administrator", "moderator", "support", "marketing");
+export const canManageEnquiries = (viewer: Viewer | null) => hasRole(viewer, "administrator", "moderator", "support");
+export const canSendBroadcasts = (viewer: Viewer | null) => hasRole(viewer, "administrator", "marketing");
 export const canList = (viewer: Viewer | null) => hasRole(viewer, "owner", "agent", "builder", "administrator");
 
 export async function requireViewer(next: string): Promise<Viewer> {
@@ -55,7 +59,19 @@ export async function requireViewer(next: string): Promise<Viewer> {
 
 export async function requireStaff(next: string): Promise<Viewer> {
   const viewer = await requireViewer(next);
-  if (!isStaff(viewer)) redirect("/account?denied=admin");
+  if (!isStaff(viewer)) redirect(isTeam(viewer) ? "/admin?denied=permission" : "/account?denied=admin");
+  return viewer;
+}
+
+export async function requireTeam(next: string): Promise<Viewer> {
+  const viewer = await requireViewer(next);
+  if (!isTeam(viewer)) redirect("/account?denied=admin");
+  return viewer;
+}
+
+export async function requireEnquiryTeam(next: string): Promise<Viewer> {
+  const viewer = await requireViewer(next);
+  if (!canManageEnquiries(viewer)) redirect(isTeam(viewer) ? "/admin?denied=permission" : "/account?denied=admin");
   return viewer;
 }
 

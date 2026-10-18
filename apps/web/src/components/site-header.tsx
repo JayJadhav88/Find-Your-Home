@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { signOut } from "@/app/actions/auth";
-import { getViewer, isStaff } from "@/lib/auth";
+import { getViewer, isTeam } from "@/lib/auth";
+import { createUserClient } from "@/lib/supabase";
 
 export function SiteHeader({ brandName }: { brandName: string }) {
   return (
@@ -41,9 +42,24 @@ async function UserMenu() {
       </Link>
     );
   }
+  const supabase = await createUserClient();
+  const { count } = await supabase.from("notifications").select("id", { count: "exact", head: true }).is("read_at", null);
+  const unread = count ?? 0;
   return (
     <>
-      {isStaff(viewer) ? (
+      <Link
+        href="/account/notifications"
+        className="relative rounded-lg px-3 py-2 hover:bg-surface-muted"
+        aria-label={unread ? `Notifications, ${unread} unread` : "Notifications"}
+      >
+        <span aria-hidden>🔔</span>
+        {unread ? (
+          <span aria-hidden className="absolute -right-0.5 -top-0.5 min-w-5 rounded-full bg-danger px-1 text-center text-xs font-semibold leading-5 text-white">
+            {unread > 99 ? "99+" : unread}
+          </span>
+        ) : null}
+      </Link>
+      {isTeam(viewer) ? (
         <Link href="/admin" className="rounded-lg px-3 py-2 hover:bg-surface-muted">
           Admin
         </Link>

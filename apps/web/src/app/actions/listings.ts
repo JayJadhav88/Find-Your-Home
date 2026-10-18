@@ -1,10 +1,11 @@
 "use server";
 
-import { fieldErrors, listingFormSchema, listingFormToRow, listingFormVideos, type ListingFormValues } from "@fyh/shared";
+import { fieldErrors, formatReviewTime, listingFormSchema, listingFormToRow, listingFormVideos, type ListingFormValues } from "@fyh/shared";
 import { refresh, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { canList, getViewer, hasRole } from "@/lib/auth";
+import { getSiteSettings } from "@/lib/public-data";
 import { createUserClient } from "@/lib/supabase";
 import { formValues, friendlyDbError, type FormState } from "./types";
 
@@ -144,8 +145,9 @@ export async function listingWorkflow(_previous: FormState, formData: FormData):
   if (error) return { error: friendlyDbError(error) };
   await invalidateListing(listing?.reference_code);
   refresh();
+  const settings = await getSiteSettings();
   const messages = {
-    submit: "Submitted. A moderator will review it; you'll get an email with the decision.",
+    submit: `Submitted. Listings are usually reviewed within ${formatReviewTime(settings.review_hours_target)}; we'll notify you here and by email.`,
     withdraw: "Withdrawn. The listing is a draft again.",
     sold: "Marked as sold and removed from search.",
     rented: "Marked as rented and removed from search.",

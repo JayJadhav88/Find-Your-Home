@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Suspense } from "react";
 import { Loading } from "@/components/loading";
 import { Badge, Button, EmptyState, PageHeader, Select } from "@/components/ui";
-import { isAdmin, requireStaff } from "@/lib/auth";
+import { isAdmin, requireEnquiryTeam } from "@/lib/auth";
 import { getSiteSettings } from "@/lib/public-data";
 import { createUserClient } from "@/lib/supabase";
 
@@ -18,7 +18,7 @@ export default function AdminEnquiriesPage({ searchParams }: PageProps<"/admin/e
 }
 
 async function Enquiries({ status }: { status: string }) {
-  const viewer = await requireStaff("/admin/enquiries");
+  const viewer = await requireEnquiryTeam("/admin/enquiries");
   const supabase = await createUserClient();
   const settings = await getSiteSettings();
   let query = supabase

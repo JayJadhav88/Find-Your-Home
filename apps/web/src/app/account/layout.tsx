@@ -7,6 +7,7 @@ export const prefetch = "force-disabled";
 
 const LINKS = [
   ["/account", "Overview"],
+  ["/account/notifications", "Notifications"],
   ["/account/listings", "My listings"],
   ["/account/enquiries", "Enquiries"],
   ["/account/favorites", "Saved homes"],
