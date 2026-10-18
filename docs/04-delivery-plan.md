@@ -20,15 +20,19 @@ Docs `01`–`06`. No code. Exit: owner answers the blocking questions in [06-ope
 
 ## Phase 2 — Web MVP
 
-1. Design system: tokens → Tailwind, base components (button, field, select, dialog, toast, card, gallery, pagination) with focus states and labels.
-2. Public pages: home, search (URL filters, server-rendered, keyset pagination), listing detail (gallery, facts, map link, enquiry form), property-type and location landing pages, about/contact, legal placeholders.
-3. Auth pages: sign up, sign in, verify email, reset password.
-4. Account: profile, favorites, comparison, sent enquiries, data export/deletion request.
-5. Owner: listing wizard (draft autosave, photo upload/reorder/alt text, preview, submit), my listings with status and moderation reasons, leads (if enabled).
-6. Admin: dashboard, listings table + review page, moderation actions with reasons, users and roles, taxonomy, settings, enquiries, audit log, CSV export.
-7. Email: outbox processor + provider adapter + templates.
-8. SEO: metadata, canonical URLs, Open Graph, JSON-LD (`RealEstateListing`/`Offer` from validated fields only), breadcrumbs, sitemap, robots.
-9. Playwright suite for the MVP definition-of-done flows; Lighthouse/axe checks on key pages.
+Status 2026-10-18: **built; lint, typecheck and production build pass; core flows checked by hand in a browser against the local stack.** No automated browser tests yet.
+
+| Area | Built | How it was checked |
+| --- | --- | --- |
+| Design system | Tokens → Tailwind theme, accessible form fields, buttons, alerts, badges, cards, empty states, focus styles, skip link | Label check on the search filters (28/28 fields labelled); mobile layout at 375 px (no horizontal scroll) |
+| Public pages | Home (featured + recent), search (all filters as shareable URLs, sort, keyset “Next page”), listing page (gallery, facts, amenities, location + OpenStreetMap link, contact card, JSON-LD, breadcrumbs, canonical redirect), About/Contact/Privacy/Terms (admin-edited, unpublished notice by default), sitemap, robots, 404/error pages | Browser: home, filtered search + sort, listing page, JSON-LD present |
+| Search backend | `search_listings` RPC | 17 pgTAP checks |
+| Auth | Sign up (email confirmation), sign in, sign out, forgot/reset password, email-link callback, session-refresh proxy, `?next=` redirects | Browser: sign in/out as demo owner and moderator, redirect to sign-in for private pages. **Not checked:** sign-up email confirmation and password reset via Mailpit |
+| Account | Overview, profile, privacy (data copy, deletion request), saved homes, enquiries inbox + detail (reply status, confirm/decline/cancel visits), my listings | Browser: enquiry received by owner and marked replied; saving a home. **Not checked:** visit confirm/decline in the UI, deletion request |
+| Owner listing flow | Guided form (all fields, cascading location pickers), draft → photos (upload, previews, alt text, cover, reorder, remove) → submit → withdraw / sold / rented / archive / restore, moderator notes, history | Browser: create draft, refused submit without photo, upload photo, submit. **Not checked:** editing a live listing in the UI (covered by pgTAP), reorder/remove photo |
+| Moderation & admin | Dashboard, listings table (filter, search, paging), review page (private photo previews, all details, approve/reject/suspend/reinstate with reasons, feature, assign agent), users (roles, suspend), enquiries, types/amenities/places, settings + currencies, content pages, privacy requests, audit log, CSV exports | Browser: moderation queue, approve as moderator, moderator blocked from Settings. 17 pgTAP checks for admin RPCs/audit. **Not checked in the browser:** administrator-only pages (users, settings, taxonomy, content, exports) |
+| Photos & email | Worker publishes metadata-free copies and asks the website to refresh its cache | Browser: approved listing showed its published photo on the home page after the worker ran |
+| Deferred | Comparison view, curated location/type landing pages (table exists), Playwright suite, Lighthouse/axe audit | — |
 
 ## Phase 3 — Mobile MVP
 

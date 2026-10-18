@@ -2,7 +2,7 @@
 
 Real estate listing platform: public website, web app with admin panel, and iOS/Android apps on one shared Supabase backend.
 
-**Current status: Phase 1 (secure platform foundation) complete — database, permissions, auth rules, storage, photo-publishing and email workers, admin bootstrap and demo data are built and tested locally. Not yet built: every user-facing screen (Phase 2 web, Phase 3 mobile). Nothing is deployed.**
+**Current status: Phase 2 (web MVP) built and checked locally — public site, search, listing pages, sign-in, account area, owner listing form with photos, and the admin panel, on top of the Phase 1 backend. Not yet built: the mobile app (Phase 3), comparison view, curated SEO landing pages, automated browser tests. Nothing is deployed.** See [docs/04-delivery-plan.md](docs/04-delivery-plan.md) for exactly what was and wasn't tested.
 
 | Document | Contents |
 | --- | --- |
@@ -41,7 +41,8 @@ pnpm typecheck && pnpm lint && pnpm build
 | `pnpm db:reset` | Rebuild the local database from migrations + demo seed |
 | `pnpm db:test` | Run `supabase/tests/database/*.test.sql` |
 | `pnpm db:types` | Regenerate `packages/shared/src/database.types.ts` after a schema change |
-| `pnpm --filter @fyh/web dev` | Website on http://localhost:3000 |
+| `pnpm --filter @fyh/web dev` | Website on http://localhost:3000 (development mode) |
+| `pnpm --filter @fyh/web build && pnpm --filter @fyh/web start` | Production build of the website on http://localhost:3000 |
 | `pnpm --filter @fyh/mobile start` | Expo dev server |
 
 Local auth emails (confirmation, password reset) are caught by Mailpit at http://127.0.0.1:54324.
@@ -85,6 +86,8 @@ Rule of thumb: clients read and write content through RLS-protected tables; anyt
 
 - **`supabase start` times out with "kong container is not ready"** and Kong restarts with exit code 0: a Docker image was corrupted by an interrupted download (seen after a sudden shutdown). Check with `docker run --rm --entrypoint sh public.ecr.aws/supabase/kong:2.8.1 -c "wc -c /docker-entrypoint.sh"`. If it prints `0`, run `pnpm db:stop`, `docker rmi public.ecr.aws/supabase/kong:2.8.1`, then `pnpm db:start`. The same fix applies to any other image that misbehaves silently.
 - **`supabase_edge_runtime` exits (code 255) after `pnpm db:reset`:** run `docker start supabase_edge_runtime_find-your-home` (or `pnpm db:stop && pnpm db:start`).
+- **A signed-in page stays on “Loading…”** under Next.js 16: anything that reads the session must go through `createUserClient()` (it calls `connection()`), and any clock read must happen after it. Check `next start` output for `blocking-prerender-current-time`.
+- **New photos or listings don't appear after a local rebuild:** `next build` can reuse cached data from an earlier build. Restart, then refresh the listing cache: `curl -X POST http://localhost:3000/api/revalidate -H "x-revalidate-secret: <REVALIDATE_SECRET>"`. The photo worker calls this automatically when `REVALIDATE_URL`/`REVALIDATE_SECRET` are set.
 - **Low memory:** Realtime, Studio, vector storage and log analytics are switched off in `supabase/config.toml` to keep the local stack light. Turn Studio (`[studio] enabled = true`) back on if you want the database UI at http://127.0.0.1:54323.
 - **`permission denied for function …`** from the API: the function is deliberately not callable by that role (for example `bootstrap_admin` for anyone but the service role).
 
