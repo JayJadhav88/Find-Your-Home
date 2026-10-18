@@ -15,6 +15,9 @@ export function openNotificationTarget(router: ReturnType<typeof useRouter>, tar
     case "admin_listing":
       void WebBrowser.openBrowserAsync(`${env.siteUrl}/admin/listings/${target.id}`);
       break;
+    case "admin_enquiry":
+      void WebBrowser.openBrowserAsync(`${env.siteUrl}/admin/enquiries/${target.id}`);
+      break;
     case "url":
       void WebBrowser.openBrowserAsync(target.url.startsWith("/") ? `${env.siteUrl}${target.url}` : target.url);
       break;

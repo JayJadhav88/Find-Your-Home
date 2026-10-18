@@ -8,6 +8,7 @@ export type NotificationTarget =
   | { kind: "my_listing"; id: string }
   | { kind: "enquiry"; id: string }
   | { kind: "admin_listing"; id: string }
+  | { kind: "admin_enquiry"; id: string }
   | { kind: "url"; url: string }
   | { kind: "none" };
 
@@ -81,6 +82,18 @@ export function describeNotification(kind: string, data: Record<string, unknown>
         body: `Someone is interested in "${title}".`,
         target: enquiry,
       };
+    case "enquiry_alert":
+      return {
+        title: d.kind === "visit_request" ? "New visit request" : "New enquiry",
+        body: `${str(d.name) || "Someone"} asked about "${title}"${d.reference ? ` (${str(d.reference)})` : ""}.`,
+        target: enquiryId ? { kind: "admin_enquiry", id: enquiryId } : { kind: "none" },
+      };
+    case "enquiry_assigned":
+      return {
+        title: "Enquiry assigned to you",
+        body: `About "${title}"${d.reference ? ` (${str(d.reference)})` : ""}.`,
+        target: enquiryId ? { kind: "admin_enquiry", id: enquiryId } : { kind: "none" },
+      };
     case "visit_response":
       return d.visit_status === "confirmed"
         ? { title: "Visit confirmed", body: "The lister confirmed your visit.", target: enquiry }
@@ -128,6 +141,8 @@ export function notificationWebHref(target: NotificationTarget): string | null {
       return `/account/enquiries/${target.id}`;
     case "admin_listing":
       return `/admin/listings/${target.id}`;
+    case "admin_enquiry":
+      return `/admin/enquiries/${target.id}`;
     case "url":
       return target.url;
     default:

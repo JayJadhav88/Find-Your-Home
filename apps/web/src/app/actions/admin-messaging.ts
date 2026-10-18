@@ -204,3 +204,40 @@ export async function cancelBroadcast(_previous: FormState, formData: FormData):
   refresh();
   return { ok: true, message: "Cancelled." };
 }
+
+// ---------------------------------------------------------------------------
+// Google Sheets
+// ---------------------------------------------------------------------------
+const SHEET_WEBHOOK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{10,200}\/exec$/;
+
+export async function saveSheetsIntegration(_previous: FormState, formData: FormData): Promise<FormState> {
+  const supabase = await adminClient();
+  if (!supabase) return NOT_ALLOWED;
+  const url = text(formData, "sheetsUrl");
+  const enabled = formData.get("sheetsEnabled") === "on";
+  if (url && !SHEET_WEBHOOK.test(url)) {
+    return { fieldErrors: { sheetsUrl: "Paste the web app URL from Apps Script: https://script.google.com/macros/s/…/exec" }, values: formValues(formData) };
+  }
+  if (enabled && !url) return { fieldErrors: { sheetsUrl: "Add the web app URL to switch Google Sheets on." }, values: formValues(formData) };
+  const { error } = await supabase.from("integration_settings").update({ sheets_enabled: enabled, sheets_webhook_url: url || null }).eq("id", true);
+  if (error) return { error: friendlyDbError(error) };
+  refresh();
+  return { ok: true, message: enabled ? "Saved. New enquiries will be added to the sheet." : "Saved." };
+}
+
+export async function createSheetsSecret(): Promise<FormState> {
+  const supabase = await adminClient();
+  if (!supabase) return NOT_ALLOWED;
+  const { data, error } = await supabase.rpc("admin_new_sheets_secret");
+  if (error || !data) return { error: friendlyDbError(error) };
+  refresh();
+  return { ok: true, message: `New secret (shown only now): ${data} — paste it into the script in place of PASTE_SECRET_HERE, then deploy a new version.` };
+}
+
+export async function syncAllEnquiriesToSheet(): Promise<FormState> {
+  const supabase = await adminClient();
+  if (!supabase) return NOT_ALLOWED;
+  const { data, error } = await supabase.rpc("admin_sync_all_enquiries_to_sheet");
+  if (error) return { error: friendlyDbError(error) };
+  return { ok: true, message: `${data ?? 0} enquiries queued. They appear in the sheet over the next few minutes.` };
+}

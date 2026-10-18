@@ -92,3 +92,20 @@ export async function removeWebPushSubscription(endpoint: string): Promise<void>
   const supabase = await createUserClient();
   await supabase.rpc("unregister_web_push", { p_endpoint: endpoint });
 }
+
+const ALERT_CHANNELS = ["in_app", "email", "push", "whatsapp"] as const;
+
+/** Team members choose how they hear about new enquiries and listings to review. */
+export async function saveTeamAlerts(_previous: FormState, formData: FormData): Promise<FormState> {
+  const viewer = await getViewer();
+  if (!viewer) redirect("/sign-in?next=/account/notifications");
+  const pick = (name: string) => ALERT_CHANNELS.filter((channel) => formData.getAll(name).includes(channel));
+  const supabase = await createUserClient();
+  const { error } = await supabase
+    .from("notification_preferences")
+    .update({ enquiry_alerts: pick("enquiryAlerts"), review_alerts: pick("reviewAlerts") })
+    .eq("user_id", viewer.id);
+  if (error) return { error: friendlyDbError(error) };
+  refresh();
+  return { ok: true, message: "Team alerts saved." };
+}

@@ -1,7 +1,10 @@
 import { formatDateTime } from "@fyh/shared";
 import { Suspense, type ReactNode } from "react";
 import {
+  createSheetsSecret,
   removeIntegrationKey,
+  saveSheetsIntegration,
+  syncAllEnquiriesToSheet,
   saveEmailIntegration,
   savePushIntegration,
   saveWhatsAppIntegration,
@@ -11,6 +14,7 @@ import { ActionForm } from "@/components/action-form";
 import { Loading } from "@/components/loading";
 import { Badge, Card, Checkbox, Field, PageHeader, TextInput } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
+import { SHEETS_APPS_SCRIPT } from "@/lib/sheets-script";
 import { getSiteSettings } from "@/lib/public-data";
 import { createUserClient } from "@/lib/supabase";
 
@@ -117,6 +121,33 @@ async function Integrations() {
           </Field>
         </ActionForm>
         <TestButton channel="push" label="Send a test notification to my devices" hint="Turn on notifications on your phone or in this browser first." />
+      </Card>
+
+      <Card className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold">Google Sheets (enquiries)</h2>
+        <ol className="list-decimal space-y-1 pl-5 text-sm">
+          <li>Create a Google Sheet, open Extensions → Apps Script, and paste the script below.</li>
+          <li>Click “Create a new secret” here and put the secret into the script.</li>
+          <li>In Apps Script: Deploy → New deployment → Web app, execute as you, access “Anyone”. Copy the URL ending in /exec.</li>
+          <li>Paste the URL below, tick the box and save. Every new enquiry, and later status changes, update the sheet.</li>
+        </ol>
+        <KeyStatus label="Shared secret" secret={secret("sheets_webhook_secret")} name="sheets_webhook_secret" fmt={fmt} />
+        <ActionForm action={createSheetsSecret} submitLabel="Create a new secret" variant="secondary" confirm="Create a new secret? The sheet stops updating until you paste the new one into the script.">
+          {null}
+        </ActionForm>
+        <ActionForm action={saveSheetsIntegration} submitLabel="Save Google Sheets settings">
+          <Checkbox name="sheetsEnabled" label="Copy enquiries to my Google Sheet" defaultChecked={config.sheets_enabled} />
+          <Field label="Apps Script web app URL" name="sheetsUrl">
+            <TextInput name="sheetsUrl" type="url" placeholder="https://script.google.com/macros/s/…/exec" defaultValue={config.sheets_webhook_url ?? ""} />
+          </Field>
+        </ActionForm>
+        <ActionForm action={syncAllEnquiriesToSheet} submitLabel="Send all existing enquiries to the sheet" variant="secondary">
+          {null}
+        </ActionForm>
+        <details>
+          <summary className="cursor-pointer text-sm font-medium">Show the Apps Script</summary>
+          <pre className="mt-2 max-h-96 overflow-auto rounded-lg bg-surface-muted p-3 text-xs"><code>{SHEETS_APPS_SCRIPT}</code></pre>
+        </details>
       </Card>
 
       <Card>

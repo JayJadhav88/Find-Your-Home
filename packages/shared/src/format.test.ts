@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatArea, formatDateTime, formatPrice, zonedLocalToUtc } from "./format";
+import { formatArea, formatDateTime, formatPrice, utcToZonedLocal, zonedLocalToUtc } from "./format";
 
 describe("formatPrice", () => {
   it("uses the configured locale and currency", () => {
@@ -38,5 +38,12 @@ describe("zonedLocalToUtc", () => {
 
   it("rejects malformed input", () => {
     expect(() => zonedLocalToUtc("tomorrow", "UTC")).toThrow(RangeError);
+  });
+});
+
+describe("utcToZonedLocal", () => {
+  it("shows a UTC time as local wall-clock time and back", () => {
+    expect(utcToZonedLocal("2026-10-20T09:00:00Z", "Asia/Kolkata")).toBe("2026-10-20T14:30");
+    expect(zonedLocalToUtc(utcToZonedLocal("2026-10-20T09:00:00Z", "Asia/Kolkata"), "Asia/Kolkata")).toBe("2026-10-20T09:00:00.000Z");
   });
 });

@@ -1,7 +1,10 @@
 // Processes job_queue: copies approved listing photos (metadata stripped) into the public
-// bucket on publish, and removes them on unpublish. Invoked by the scheduler.
+// bucket on publish, removes them on unpublish, imports spreadsheet image links, and copies
+// enquiries to the owner's Google Sheet. Invoked by the scheduler.
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { extensionFor, ImageRejectedError, sanitizeImage } from "../_shared/image-sanitize.ts";
+import { loadIntegrationConfig } from "../_shared/integrations.ts";
+import { postToSheet, sheetRow } from "../_shared/sheets.ts";
 import { safeFetch } from "../_shared/safe-fetch.ts";
 import { errorMessage, json, rejectUnlessWorker, serviceClient } from "../_shared/worker.ts";
 
@@ -10,10 +13,10 @@ const PUBLIC_BUCKET = "listing-public";
 
 interface Job {
   id: number;
-  kind: "publish_listing_media" | "unpublish_listing_media" | "import_listing_images";
+  kind: "publish_listing_media" | "unpublish_listing_media" | "import_listing_images" | "sync_enquiry_sheet";
   listing_id: string;
   attempts: number;
-  payload: { urls?: string[]; publish?: boolean };
+  payload: { urls?: string[]; publish?: boolean; enquiry_id?: string };
 }
 
 const MAX_IMPORT_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -34,7 +37,9 @@ Deno.serve(async (request) => {
           ? await publish(db, job.listing_id)
           : job.kind === "import_listing_images"
             ? await importImages(db, job)
-            : await unpublish(db, job.listing_id);
+            : job.kind === "sync_enquiry_sheet"
+              ? await syncEnquirySheet(db, job)
+              : await unpublish(db, job.listing_id);
       await finish(db, job.id, true);
       results.push({ id: job.id, kind: job.kind, ok: true, ...outcome });
     } catch (failure) {
@@ -45,7 +50,7 @@ Deno.serve(async (request) => {
     }
   }
 
-  if (results.some((result) => result.ok)) await refreshWebsiteCache();
+  if (results.some((result) => result.ok && result.kind !== "sync_enquiry_sheet")) await refreshWebsiteCache();
   return json({ processed: results.length, results });
 });
 
@@ -212,4 +217,52 @@ async function listPublicObjects(db: SupabaseClient, listingId: string): Promise
   const { data, error } = await db.storage.from(PUBLIC_BUCKET).list(listingId, { limit: 1000 });
   if (error) throw error;
   return (data ?? []).map((object) => `${listingId}/${object.name}`);
+}
+
+// ---------------------------------------------------------------------------
+// Google Sheets
+// ---------------------------------------------------------------------------
+async function syncEnquirySheet(db: SupabaseClient, job: Job) {
+  const config = await loadIntegrationConfig(db);
+  const secret = config.secrets.sheets_webhook_secret;
+  if (!config.sheets_enabled || !config.sheets_webhook_url || !secret) return { skipped: "Google Sheets is not connected" };
+  const siteUrl = Deno.env.get("SITE_URL");
+  if (!siteUrl) throw new Error("SITE_URL is not configured");
+
+  const { data: enquiry, error } = await db
+    .from("enquiries")
+    .select(
+      "id, created_at, status, kind, name, email, phone, message, requested_visit_at, requested_timezone, follow_up_at, " +
+        "listing:listings(title, reference_code, category, city:locations!listings_city_id_fkey(name)), " +
+        "owner:profiles!enquiries_team_assignee_fkey(display_name)",
+    )
+    .eq("id", job.payload.enquiry_id ?? "")
+    .maybeSingle();
+  if (error) throw new Error(`Could not load the enquiry: ${error.message}`);
+  if (!enquiry) return { skipped: "Enquiry no longer exists" };
+
+  type Loaded = {
+    id: string; created_at: string; status: string; kind: string; name: string; email: string; phone: string | null;
+    message: string; requested_visit_at: string | null; requested_timezone: string | null; follow_up_at: string | null;
+    listing: { title: string; reference_code: string; category: string; city: { name: string } | null } | null;
+    owner: { display_name: string } | null;
+  };
+  const row = enquiry as unknown as Loaded;
+  const result = await postToSheet(
+    config.sheets_webhook_url,
+    secret,
+    sheetRow(
+      {
+        ...row,
+        listing_title: row.listing?.title ?? null,
+        reference: row.listing?.reference_code ?? null,
+        category: row.listing?.category ?? null,
+        city: row.listing?.city?.name ?? null,
+        team_owner: row.owner?.display_name ?? null,
+      },
+      siteUrl,
+    ),
+  );
+  if (!result.ok) throw new Error(result.error);
+  return { synced: row.id };
 }

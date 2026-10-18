@@ -1,13 +1,20 @@
 import { describeNotification, formatDateTime, notificationWebHref, WHATSAPP_CONSENT_TEXT } from "@fyh/shared";
 import { Suspense } from "react";
-import { markAllNotificationsRead, openNotification, saveNotificationPreferences } from "@/app/actions/notifications";
+import { markAllNotificationsRead, openNotification, saveNotificationPreferences, saveTeamAlerts } from "@/app/actions/notifications";
 import { ActionForm } from "@/components/action-form";
 import { Loading } from "@/components/loading";
 import { Button, Card, Checkbox, cx, EmptyState, Field, PageHeader, TextInput } from "@/components/ui";
 import { WebPushToggle } from "@/components/web-push-toggle";
-import { requireViewer } from "@/lib/auth";
+import { canManageEnquiries, isStaff, requireViewer } from "@/lib/auth";
 import { getSiteSettings } from "@/lib/public-data";
 import { createUserClient } from "@/lib/supabase";
+
+const ALERT_OPTIONS = [
+  ["in_app", "In the app"],
+  ["email", "Email"],
+  ["push", "Phone and browser"],
+  ["whatsapp", "WhatsApp"],
+] as const;
 
 export default function NotificationsPage() {
   return (
@@ -124,6 +131,33 @@ async function Notifications() {
           ) : null}
         </ActionForm>
       </Card>
+
+      {canManageEnquiries(viewer) || isStaff(viewer) ? (
+        <Card>
+          <h2 className="text-lg font-semibold">Team alerts</h2>
+          <p className="mb-4 mt-1 text-sm text-text-muted">
+            How you hear about new work. WhatsApp needs your number and consent above; phone and browser alerts need notifications turned on.
+          </p>
+          <ActionForm action={saveTeamAlerts} submitLabel="Save team alerts">
+            {canManageEnquiries(viewer) ? (
+              <fieldset className="flex flex-col gap-1">
+                <legend className="mb-1 text-sm font-medium">New enquiries and visit requests</legend>
+                {ALERT_OPTIONS.map(([value, label]) => (
+                  <Checkbox key={value} name="enquiryAlerts" value={value} label={label} defaultChecked={(prefs?.enquiry_alerts ?? []).includes(value)} />
+                ))}
+              </fieldset>
+            ) : null}
+            {isStaff(viewer) ? (
+              <fieldset className="flex flex-col gap-1">
+                <legend className="mb-1 text-sm font-medium">Listings waiting for review</legend>
+                {ALERT_OPTIONS.map(([value, label]) => (
+                  <Checkbox key={value} name="reviewAlerts" value={value} label={label} defaultChecked={(prefs?.review_alerts ?? []).includes(value)} />
+                ))}
+              </fieldset>
+            ) : null}
+          </ActionForm>
+        </Card>
+      ) : null}
     </div>
   );
 }

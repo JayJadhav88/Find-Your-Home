@@ -868,6 +868,11 @@ isOneToOne: false
 "cancel_visit_request":
 { Args: { "p_enquiry_id": string }; Returns: undefined
                            },
+"enquiry_team":
+{ Args: Record<PropertyKey, never>; Returns: {
+              "display_name": string,"id": string
+            }[]
+                           },
 "get_listing_contact":
 { Args: { "p_listing_id": string }; Returns: {
               "agency_name": string,"contact_via_form": boolean,"display_name": string,"email": string,"phone": string,"whatsapp": string

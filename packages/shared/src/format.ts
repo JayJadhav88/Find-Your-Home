@@ -56,6 +56,21 @@ export function formatDateTime(value: Date | string, { locale, timeZone }: Local
  * Converts a wall-clock time ("2026-10-20T14:30" from <input type="datetime-local">) in an
  * IANA time zone to a UTC ISO string, using only Intl (no date library).
  */
+/** "2026-10-20T14:30" in the given time zone, for datetime-local inputs. */
+export function utcToZonedLocal(value: Date | string, timeZone: string): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(typeof value === "string" ? new Date(value) : value);
+  const get = (type: string) => parts.find((part) => part.type === type)?.value ?? "00";
+  return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}`;
+}
+
 export function zonedLocalToUtc(local: string, timeZone: string): string {
   const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/.exec(local);
   if (!match) throw new RangeError(`Invalid local date-time: ${local}`);
