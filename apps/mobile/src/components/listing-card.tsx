@@ -1,4 +1,4 @@
-import { publicImageUrl, tokens, type ListingCategory, type SearchResultItem } from "@fyh/shared";
+import { publicImageUrl, tokens, type AreaUnit, type ListingCategory, type PriceDisplay, type PricePeriod } from "@fyh/shared";
 import { Image } from "expo-image";
 import { Link } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -8,17 +8,26 @@ import { Badge } from "./ui";
 
 const { colors, spacing, radius, fontSize } = tokens;
 
-export type CardListing = Pick<
-  SearchResultItem,
-  "reference_code" | "title" | "price_amount" | "currency" | "price_period" | "price_display" | "bedrooms" | "bathrooms" | "area_value" | "area_unit" | "is_featured"
-> & {
+/** Fields a card needs; search results and saved homes both fit (values may be empty). */
+export interface CardListing {
+  reference_code: string;
+  title: string;
   category: ListingCategory;
   project_name: string | null;
+  price_amount: number | null;
+  currency: string | null;
+  price_period: PricePeriod;
+  price_display: PriceDisplay;
+  bedrooms: number | null;
+  bathrooms: number | null;
+  area_value: number | null;
+  area_unit: AreaUnit | null;
+  is_featured: boolean;
   city_name: string | null;
   locality_name: string | null;
   cover_key: string | null;
   cover_alt: string | null;
-};
+}
 
 export function ListingCard({ listing, locale }: { listing: CardListing; locale: string }) {
   const place = [listing.locality_name, listing.city_name].filter(Boolean).join(", ");
