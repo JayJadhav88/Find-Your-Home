@@ -16,11 +16,18 @@
     "db:reset": "supabase db reset",
     "db:test": "supabase test db",
     "db:types": "supabase gen types typescript --local --schema public > packages/shared/src/database.types.ts",
-    "admin:bootstrap": "node scripts/admin-bootstrap.mjs"
+    "admin:bootstrap": "node scripts/admin-bootstrap.mjs",
+    "workers": "node scripts/run-workers.mjs",
+    "test:functions": "vitest run supabase/functions",
+    "smoke": "node scripts/local-smoke-test.mjs"
   },
   "devDependencies": {
+    "@types/pngjs": "^6.0.5",
+    "jpeg-js": "^0.4.4",
+    "pngjs": "^7.0.0",
     "supabase": "^2.121.0",
     "turbo": "^2.11.9",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
   }
 }
