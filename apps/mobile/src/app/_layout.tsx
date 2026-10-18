@@ -31,6 +31,8 @@ export default function RootLayout() {
           <Stack.Screen name="enquiries/[id]" options={{ title: "Enquiry" }} />
           <Stack.Screen name="notifications" options={{ title: "Notifications" }} />
           <Stack.Screen name="notification-settings" options={{ title: "Notification settings" }} />
+          <Stack.Screen name="saved-searches" options={{ title: "Saved searches" }} />
+          <Stack.Screen name="auth/callback" options={{ headerShown: false }} />
         </Stack>
         </InboxProvider>
       </SessionProvider>

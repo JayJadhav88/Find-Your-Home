@@ -3,10 +3,10 @@
 // is allowed; nothing here grants extra rights.
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "./database.types";
+import type { Database, Json } from "./database.types";
 import type { ListingStatus } from "./domain";
 import { notificationPreferencesSchema, type NotificationPreferencesInput } from "./notifications";
-import { listingFormToRow, listingFormVideos, searchFiltersToRpcArgs, type ListingFormValues, type SearchFilters } from "./schemas";
+import { listingFormToRow, listingFormVideos, searchFiltersToQuery, searchFiltersToRpcArgs, type ListingFormValues, type SearchFilters } from "./schemas";
 
 export type Client = SupabaseClient<Database>;
 
@@ -248,7 +248,7 @@ export async function myListings(client: Client, userId: string) {
   return check(
     await client
       .from("listings")
-      .select("id, title, reference_code, status, category, updated_at")
+      .select("id, title, reference_code, status, category, updated_at, expired_at")
       .or(`owner_id.eq.${userId},agent_id.eq.${userId}`)
       .order("updated_at", { ascending: false }),
   );
@@ -405,4 +405,68 @@ export async function updateTeamAlerts(client: Client, userId: string, alerts: {
       .update({ enquiry_alerts: alerts.enquiry, review_alerts: alerts.review })
       .eq("user_id", userId),
   );
+}
+
+// Saved searches
+const SAVED_FILTER_KEYS = [
+  "p_q", "p_purpose", "p_category", "p_property_type_ids", "p_location_id", "p_currency", "p_min_price", "p_max_price",
+  "p_min_bedrooms", "p_min_bathrooms", "p_min_area", "p_max_area", "p_area_unit", "p_amenity_ids", "p_furnishing",
+] as const;
+
+/** Search arguments worth saving: the filters, without paging, sorting, "featured" or "recent". */
+export function savedSearchFilters(filters: SearchFilters, currency: string | null): { [key: string]: Json } {
+  const args = searchFiltersToRpcArgs(filters, { currency });
+  return Object.fromEntries(
+    SAVED_FILTER_KEYS.map((key) => [key, args[key] as Json | undefined]).filter(([, value]) => value !== undefined && value !== null),
+  );
+}
+
+export async function saveSearch(client: Client, name: string, filters: SearchFilters, currency: string | null) {
+  check(
+    await client.from("saved_searches").insert({
+      name: name.trim().slice(0, 80) || "My search",
+      filters: savedSearchFilters(filters, currency),
+      query_string: searchFiltersToQuery({ ...filters, cursor: undefined }),
+    }),
+  );
+}
+
+export async function listSavedSearches(client: Client) {
+  return check(await client.from("saved_searches").select("*").order("created_at", { ascending: false }));
+}
+
+export async function setSavedSearchAlerts(client: Client, id: string, alerts: boolean) {
+  check(await client.from("saved_searches").update({ alerts }).eq("id", id));
+}
+
+export async function deleteSavedSearch(client: Client, id: string) {
+  check(await client.from("saved_searches").delete().eq("id", id));
+}
+
+// Reports, views, insights, renewal
+export const REPORT_REASONS = ["fraud", "wrong_info", "unavailable", "duplicate", "offensive", "other"] as const;
+export type ReportReason = (typeof REPORT_REASONS)[number];
+export const REPORT_REASON_LABEL: Record<ReportReason, string> = {
+  fraud: "Looks like a scam",
+  wrong_info: "Wrong details or photos",
+  unavailable: "No longer available",
+  duplicate: "Listed more than once",
+  offensive: "Offensive content",
+  other: "Something else",
+};
+
+export async function reportListing(client: Client, listingId: string, reason: ReportReason, details?: string) {
+  check(await client.rpc("report_listing", { p_listing_id: listingId, p_reason: reason, p_details: details?.trim() || undefined }));
+}
+
+export async function recordListingView(client: Client, listingId: string, visitor?: string) {
+  await client.rpc("record_listing_view", { p_listing_id: listingId, p_visitor: visitor });
+}
+
+export async function myListingStats(client: Client) {
+  return check(await client.rpc("my_listing_stats"));
+}
+
+export async function renewListing(client: Client, listingId: string) {
+  return check(await client.rpc("renew_listing", { p_listing_id: listingId }));
 }

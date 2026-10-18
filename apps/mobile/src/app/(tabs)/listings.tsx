@@ -1,4 +1,4 @@
-import { becomeOwner, getSettings, myListings, tokens, viewerCanList } from "@fyh/shared";
+import { becomeOwner, formatDateTime, getSettings, myListings, myListingStats, renewListing, tokens, viewerCanList } from "@fyh/shared";
 import { Link, useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
@@ -10,6 +10,12 @@ import { supabase } from "@/lib/supabase";
 import { useResource } from "@/lib/use-resource";
 
 const { colors, spacing } = tokens;
+const phoneTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+/** Renewing is offered in the last two weeks before a listing expires. */
+function expiresWithinTwoWeeks(expiresAt: string | null): boolean {
+  return Boolean(expiresAt) && Date.parse(expiresAt!) < Date.now() + 14 * 86_400_000;
+}
 
 export default function MyListingsScreen() {
   const router = useRouter();
@@ -17,8 +23,11 @@ export default function MyListingsScreen() {
   const [notice, setNotice] = useState<string | null>(null);
   const [enabling, setEnabling] = useState(false);
   const { data, error, loading, reload } = useResource(async () => {
-    if (!viewer || !viewerCanList(viewer)) return { listings: [], selfService: (await getSettings(supabase)).self_service_owner };
-    return { listings: await myListings(supabase, viewer.id), selfService: true };
+    if (!viewer || !viewerCanList(viewer)) {
+      return { listings: [], stats: new Map(), selfService: (await getSettings(supabase)).self_service_owner };
+    }
+    const [listings, stats] = await Promise.all([myListings(supabase, viewer.id), myListingStats(supabase)]);
+    return { listings, stats: new Map(stats.map((row) => [row.listing_id, row])), selfService: true };
   }, [viewer?.id, viewer?.roles.join(",")]);
 
   useFocusEffect(
@@ -80,25 +89,54 @@ export default function MyListingsScreen() {
         <View style={{ gap: spacing.sm, marginBottom: spacing.md }}>
           <Button label="New listing" onPress={() => router.push({ pathname: "/editor/[id]", params: { id: "new" } })} />
           <Button label="Enquiries" variant="secondary" onPress={() => router.push("/enquiries")} />
+          {notice ? <Notice tone="danger">{notice}</Notice> : null}
         </View>
       }
       ListEmptyComponent={<EmptyState title="No listings yet" message="Listings are reviewed by our team before they appear in search." />}
       ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
-      renderItem={({ item }) => (
-        <Link href={{ pathname: "/editor/[id]", params: { id: item.id } }} asChild>
-          <Pressable accessibilityRole="link" style={styles.row}>
-            <View style={{ flex: 1, gap: 2 }}>
-              <Text style={text.body} numberOfLines={2}>
-                {item.title}
-              </Text>
-              <Text style={text.muted}>
-                {item.reference_code} · {CATEGORY_BADGE[item.category]}
-              </Text>
+      renderItem={({ item }) => {
+        const stat = data.stats.get(item.id);
+        const expired = item.status === "archived" && Boolean(item.expired_at);
+        const canRenew = expired || expiresWithinTwoWeeks(stat?.expires_at ?? null);
+        return (
+          <View style={styles.row}>
+            <Link href={{ pathname: "/editor/[id]", params: { id: item.id } }} asChild>
+              <Pressable accessibilityRole="link" style={{ flex: 1, gap: 2 }}>
+                <Text style={text.body} numberOfLines={2}>
+                  {item.title}
+                </Text>
+                <Text style={text.muted}>
+                  {item.reference_code} · {CATEGORY_BADGE[item.category]}
+                </Text>
+                {stat ? (
+                  <Text style={text.muted}>
+                    {stat.views_30d} views · {stat.enquiries_30d} enquiries (30 days) · {stat.saves} saved
+                    {stat.expires_at ? ` · until ${formatDateTime(stat.expires_at, { locale: "en", timeZone: phoneTimeZone }).split(",")[0]}` : ""}
+                  </Text>
+                ) : null}
+              </Pressable>
+            </Link>
+            <View style={{ alignItems: "flex-end", gap: spacing.xs }}>
+              <Badge label={expired ? "Expired" : (STATUS_LABEL[item.status] ?? item.status)} tone={expired ? "warning" : (STATUS_TONE[item.status] ?? "muted")} />
+              {canRenew ? (
+                <Button
+                  label="Renew"
+                  variant="secondary"
+                  onPress={async () => {
+                    try {
+                      await renewListing(supabase, item.id);
+                      setNotice(null);
+                      void reload();
+                    } catch (failure) {
+                      setNotice(failure instanceof Error ? failure.message : "Could not renew.");
+                    }
+                  }}
+                />
+              ) : null}
             </View>
-            <Badge label={STATUS_LABEL[item.status] ?? item.status} tone={STATUS_TONE[item.status] ?? "muted"} />
-          </Pressable>
-        </Link>
-      )}
+          </View>
+        );
+      }}
     />
   );
 }

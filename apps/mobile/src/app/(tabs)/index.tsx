@@ -1,16 +1,21 @@
 import {
+  CATEGORY_LABEL,
   getSettings,
   getTaxonomy,
+  parseSearchParams,
+  saveSearch,
   searchListings,
   tokens,
   type ListingCategory,
   type SearchFilters,
   type SearchResultItem,
 } from "@fyh/shared";
+import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { ListingCard } from "@/components/listing-card";
-import { Button, EmptyState, ErrorState, Field, Loading, Segmented } from "@/components/ui";
+import { Button, EmptyState, ErrorState, Field, Loading, Notice, Segmented } from "@/components/ui";
+import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { useResource } from "@/lib/use-resource";
 
@@ -49,6 +54,24 @@ export default function ExploreScreen() {
   const [maxPrice, setMaxPrice] = useState("");
   const [sort, setSort] = useState<"newest" | "price_asc" | "price_desc">("newest");
   const [showFilters, setShowFilters] = useState(false);
+
+  // Opening a saved search passes its query string; apply it once per value.
+  const { viewer } = useSession();
+  const params = useLocalSearchParams<{ query?: string }>();
+  const incoming = typeof params.query === "string" ? params.query : null;
+  const [appliedQuery, setAppliedQuery] = useState<string | null>(null);
+  if (incoming !== null && incoming !== appliedQuery) {
+    setAppliedQuery(incoming);
+    const saved = parseSearchParams(Object.fromEntries(new URLSearchParams(incoming)));
+    setCategory(saved.category ?? "");
+    setQuery(saved.q ?? "");
+    setSubmittedQuery(saved.q ?? "");
+    setCityId(saved.location ?? "");
+    setBeds(saved.beds ? String(saved.beds) : "");
+    setMaxPrice(saved.maxPrice ? String(saved.maxPrice) : "");
+    setSort(saved.sort === "price_asc" || saved.sort === "price_desc" ? saved.sort : "newest");
+  }
+  const [saveNotice, setSaveNotice] = useState<{ tone: "success" | "danger"; text: string } | null>(null);
 
   const [items, setItems] = useState<SearchResultItem[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -130,6 +153,25 @@ export default function ExploreScreen() {
     }
   }
 
+  async function saveThisSearch() {
+    const city = (reference.data?.taxonomy.locations ?? []).find((location) => location.id === cityId)?.name;
+    const name = [
+      category ? CATEGORY_LABEL[category] : "All homes",
+      city ? `in ${city}` : "",
+      beds ? `${beds}+ beds` : "",
+      maxPrice ? `up to ${maxPrice}` : "",
+      submittedQuery ? `“${submittedQuery}”` : "",
+    ]
+      .filter(Boolean)
+      .join(" ");
+    try {
+      await saveSearch(supabase, name, filters(), currency);
+      setSaveNotice({ tone: "success", text: `Saved “${name}”. We'll tell you when new homes match.` });
+    } catch (failure) {
+      setSaveNotice({ tone: "danger", text: failure instanceof Error ? failure.message : "Could not save the search." });
+    }
+  }
+
   if (reference.loading && !reference.data) return <Loading label="Loading homes…" />;
   if (reference.error) return <ErrorState message={reference.error} onRetry={reference.reload} />;
 
@@ -181,6 +223,8 @@ export default function ExploreScreen() {
               <Segmented label="Sort by" value={sort} options={[...SORTS]} onChange={(value) => setSort((value || "newest") as typeof sort)} />
             </View>
           ) : null}
+          {viewer ? <Button label="Save this search & get alerts" variant="ghost" onPress={saveThisSearch} /> : null}
+          {saveNotice ? <Notice tone={saveNotice.tone}>{saveNotice.text}</Notice> : null}
           {error ? <ErrorState message={error} onRetry={load} /> : null}
           {!error && !loading ? (
             <Text style={styles.count} accessibilityLiveRegion="polite">

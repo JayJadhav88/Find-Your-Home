@@ -1,6 +1,6 @@
 "use server";
 
-import { parseSearchParams, searchFiltersToQuery, searchFiltersToRpcArgs } from "@fyh/shared";
+import { parseSearchParams, savedSearchFilters, searchFiltersToQuery } from "@fyh/shared";
 import { refresh, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -12,11 +12,6 @@ import { friendlyDbError, type FormState } from "./types";
 // ---------------------------------------------------------------------------
 // Saved searches
 // ---------------------------------------------------------------------------
-const SAVED_FILTER_KEYS = [
-  "p_q", "p_purpose", "p_category", "p_property_type_ids", "p_location_id", "p_currency", "p_min_price", "p_max_price",
-  "p_min_bedrooms", "p_min_bathrooms", "p_min_area", "p_max_area", "p_area_unit", "p_amenity_ids", "p_furnishing",
-] as const;
-
 export async function saveSearch(_previous: FormState, formData: FormData): Promise<FormState> {
   const query = typeof formData.get("query") === "string" ? String(formData.get("query")) : "";
   const viewer = await getViewer();
@@ -26,11 +21,7 @@ export async function saveSearch(_previous: FormState, formData: FormData): Prom
   if (name.length > 80) return { fieldErrors: { name: "Keep the name under 80 characters." } };
   const filters = parseSearchParams(Object.fromEntries(new URLSearchParams(query)));
   const settings = await getSiteSettings();
-  // Only the filters; paging, sorting and "recent/featured" don't apply to alerts.
-  const args = searchFiltersToRpcArgs(filters, { currency: settings.default_currency });
-  const cleanArgs = Object.fromEntries(
-    SAVED_FILTER_KEYS.map((key) => [key, args[key]]).filter(([, value]) => value !== undefined && value !== null),
-  );
+  const cleanArgs = savedSearchFilters(filters, settings.default_currency);
 
   const supabase = await createUserClient();
   const { error } = await supabase

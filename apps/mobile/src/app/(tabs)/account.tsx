@@ -85,6 +85,7 @@ export default function AccountScreen() {
         onPress={() => router.push("/notifications")}
       />
       <Button label="Enquiries" variant="secondary" onPress={() => router.push("/enquiries")} />
+      <Button label="Saved searches" variant="secondary" onPress={() => router.push("/saved-searches")} />
       {isTeam ? (
         <Button
           label="Admin panel"

@@ -1,10 +1,11 @@
-import { getPublicListing, getSettings, isFavorite, publicImageUrl, setFavorite, tokens } from "@fyh/shared";
+import { getPublicListing, getSettings, isFavorite, publicImageUrl, recordListingView, setFavorite, tokens } from "@fyh/shared";
 import { Image } from "expo-image";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
 import { Linking, Pressable, ScrollView, Share, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { EnquiryForm } from "@/components/enquiry-form";
+import { ReportListing } from "@/components/report-listing";
 import { Badge, Button, Card, ErrorState, Loading, Notice, text } from "@/components/ui";
 import { VideoPlayer } from "@/components/video-player";
 import { CATEGORY_BADGE, displayArea, displayPrice } from "@/lib/format";
@@ -34,6 +35,11 @@ export default function ListingScreen() {
   useEffect(() => {
     if (viewer && listing) void isFavorite(supabase, viewer.id, listing.id).then(setSaved);
   }, [viewer, listing]);
+  // One view per visitor per day for the owner's insights.
+  const listingId = listing?.id;
+  useEffect(() => {
+    if (listingId) void recordListingView(supabase, listingId);
+  }, [listingId]);
 
   if (loading && !data) return <Loading label="Loading property…" />;
   if (error) return <ErrorState message={error} onRetry={reload} />;
@@ -224,6 +230,7 @@ export default function ListingScreen() {
             <Notice>This lister prefers to be contacted directly.</Notice>
           )}
         </Card>
+        <ReportListing listingId={listing.id} />
       </View>
     </ScrollView>
   );
