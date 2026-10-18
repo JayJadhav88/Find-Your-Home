@@ -291,6 +291,9 @@ importers:
       '@fyh/config':
         specifier: workspace:*
         version: link:../config
+      '@supabase/supabase-js':
+        specifier: ^2.118.0
+        version: 2.118.0
       typescript:
         specifier: ^7.0.2
         version: 7.0.2
