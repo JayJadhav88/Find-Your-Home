@@ -84,7 +84,7 @@ The service-role key exists only in Edge Functions, the Next.js server environme
 ## 5. Media
 
 - Uploads go to a **private** `listing-uploads` bucket under random keys (`{listing_id}/{uuid}.{ext}`), never the user's filename. Storage RLS: only the listing owner and staff can read/write objects under their listing's folder; size and MIME allowlist enforced by bucket config and re-checked server-side (magic-byte sniffing in the publishing function).
-- When a listing is **approved**, an Edge Function copies the approved images (re-encoded to strip metadata such as GPS EXIF) into a **public** `listing-public` bucket served via CDN. When it is unpublished, those copies are removed. Drafts and rejected photos are therefore never publicly reachable, while published pages stay cacheable and SEO-friendly.
+- When a listing is **approved**, the `process-jobs` Edge Function copies the approved images into a **public** `listing-public` bucket served via CDN, after checking each file's real type and stripping metadata (GPS EXIF, XMP, comments) without re-encoding; orientation is kept. When it is unpublished, those copies are removed. Drafts and rejected photos are therefore never publicly reachable, while published pages stay cacheable and SEO-friendly. See [07-operations.md](07-operations.md).
 - Listing documents (floor plans, title papers) stay in a private `listing-documents` bucket and are served only through short-lived signed URLs after a permission check.
 
 ## 6. Search

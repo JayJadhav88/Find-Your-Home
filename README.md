@@ -2,7 +2,7 @@
 
 Real estate listing platform: public website, web app with admin panel, and iOS/Android apps on one shared Supabase backend.
 
-**Current status: Phase 1 (secure platform foundation) — database, permissions, auth rules, storage rules, admin bootstrap and demo data are done and tested. Not yet built: the media publishing worker and email sender (Edge Functions), and every user-facing screen (Phase 2 web, Phase 3 mobile).**
+**Current status: Phase 1 (secure platform foundation) complete — database, permissions, auth rules, storage, photo-publishing and email workers, admin bootstrap and demo data are built and tested locally. Not yet built: every user-facing screen (Phase 2 web, Phase 3 mobile). Nothing is deployed.**
 
 | Document | Contents |
 | --- | --- |
@@ -12,6 +12,7 @@ Real estate listing platform: public website, web app with admin panel, and iOS/
 | [docs/04-delivery-plan.md](docs/04-delivery-plan.md) | Phases 1–5 broken into verifiable milestones, with progress |
 | [docs/05-environments-and-costs.md](docs/05-environments-and-costs.md) | Environments and cost assumptions |
 | [docs/06-open-questions.md](docs/06-open-questions.md) | Assumptions, defaults, and open questions |
+| [docs/07-operations.md](docs/07-operations.md) | Photo-publishing and email workers, Resend setup, hosted scheduling |
 
 ## Requirements
 
@@ -26,6 +27,9 @@ pnpm install
 pnpm db:start        # first run downloads the Supabase images (several GB)
 pnpm db:test         # database permission and workflow tests (pgTAP)
 pnpm test            # shared package unit tests
+pnpm test:functions  # Edge Function unit tests (image sanitizer, email)
+pnpm workers         # run the photo + email workers once (needs supabase/functions/.env)
+pnpm smoke           # end-to-end flow against the local stack (demo accounts)
 pnpm typecheck && pnpm lint && pnpm build
 ```
 
@@ -73,13 +77,15 @@ The script calls `bootstrap_admin`, which only the service role can execute, and
 | `…0800_rls_policies` | Row Level Security for every table |
 | `…0900_storage` | Buckets and object policies |
 | `…1000_default_taxonomy` | Starter property types and amenities (admin-editable) |
+| `…1100_workers` | Claim/finish functions for the job queue and email outbox; HEIC removed from uploads |
 
 Rule of thumb: clients read and write content through RLS-protected tables; anything that changes status, roles or ownership goes through a workflow function. Workflow errors use `42501` (not allowed), `PT409` (wrong state), `22023` (invalid input) and `PT429` (rate limited), which the API returns as 401/403, 409, 400 and 429.
 
 ## Troubleshooting
 
 - **`supabase start` times out with "kong container is not ready"** and Kong restarts with exit code 0: a Docker image was corrupted by an interrupted download (seen after a sudden shutdown). Check with `docker run --rm --entrypoint sh public.ecr.aws/supabase/kong:2.8.1 -c "wc -c /docker-entrypoint.sh"`. If it prints `0`, run `pnpm db:stop`, `docker rmi public.ecr.aws/supabase/kong:2.8.1`, then `pnpm db:start`. The same fix applies to any other image that misbehaves silently.
-- **Low memory:** Realtime, Studio, Edge Runtime, vector storage and log analytics are switched off in `supabase/config.toml` to keep the local stack light. Turn Studio (`[studio] enabled = true`) back on if you want the database UI at http://127.0.0.1:54323.
+- **`supabase_edge_runtime` exits (code 255) after `pnpm db:reset`:** run `docker start supabase_edge_runtime_find-your-home` (or `pnpm db:stop && pnpm db:start`).
+- **Low memory:** Realtime, Studio, vector storage and log analytics are switched off in `supabase/config.toml` to keep the local stack light. Turn Studio (`[studio] enabled = true`) back on if you want the database UI at http://127.0.0.1:54323.
 - **`permission denied for function …`** from the API: the function is deliberately not callable by that role (for example `bootstrap_admin` for anyone but the service role).
 
 Deployment, backups and production configuration are documented in Phase 4.

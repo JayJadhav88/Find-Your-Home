@@ -98,4 +98,4 @@ MVP material-change policy: editing a configured material field (price, purpose,
 | `listing-documents` | No | Signed URL after permission check | Listing owner, staff |
 | `avatars` | Yes | Everyone | The profile's own user |
 
-Allowed image types (configurable): JPEG, PNG, WebP, HEIC → converted to WebP/JPEG on publish. Default max 10 MB per image, 30 images per listing.
+Allowed image types (configurable): JPEG, PNG, WebP. HEIC is converted to JPEG on the device before upload; files are type-checked by content and metadata-stripped on publish. Default max 10 MB per image, 30 images per listing.
