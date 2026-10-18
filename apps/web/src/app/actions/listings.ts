@@ -1,10 +1,10 @@
 "use server";
 
-import { fieldErrors, listingFormSchema, listingFormToRow } from "@fyh/shared";
+import { fieldErrors, listingFormSchema, listingFormToRow, listingFormVideos, type ListingFormValues } from "@fyh/shared";
 import { refresh, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { canList, getViewer } from "@/lib/auth";
+import { canList, getViewer, hasRole } from "@/lib/auth";
 import { createUserClient } from "@/lib/supabase";
 import { formValues, friendlyDbError, type FormState } from "./types";
 
@@ -29,6 +29,9 @@ export async function createListing(_previous: FormState, formData: FormData): P
 
   const parsed = parseListingForm(formData);
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error), values: formValues(formData), error: "Please check the highlighted fields." };
+  if (parsed.data.category === "new_project" && !hasRole(viewer, "builder", "administrator")) {
+    return { fieldErrors: { category: "Only verified builders can list new projects" }, values: formValues(formData) };
+  }
 
   const supabase = await createUserClient();
   const { data, error } = await supabase
@@ -39,7 +42,7 @@ export async function createListing(_previous: FormState, formData: FormData): P
     .single();
   if (error || !data) return { error: friendlyDbError(error), values: formValues(formData) };
 
-  await saveExtras(data.id, parsed.data.amenityIds, parsed.data.streetAddress);
+  await saveExtras(data.id, parsed.data);
   redirect(`/account/listings/${data.id}?notice=created`);
 }
 
@@ -55,7 +58,10 @@ export async function updateListing(_previous: FormState, formData: FormData): P
   const supabase = await createUserClient();
   // Amenities and address first: a material change below can move the listing back to
   // review, after which it is no longer editable.
-  const extrasError = await saveExtras(listingId.data, parsed.data.amenityIds, parsed.data.streetAddress);
+  if (parsed.data.category === "new_project" && !hasRole(viewer, "builder", "administrator")) {
+    return { fieldErrors: { category: "Only verified builders can list new projects" }, values: formValues(formData) };
+  }
+  const extrasError = await saveExtras(listingId.data, parsed.data);
   if (extrasError) return { error: extrasError, values: formValues(formData) };
 
   const { data, error } = await supabase
@@ -78,7 +84,8 @@ export async function updateListing(_previous: FormState, formData: FormData): P
   };
 }
 
-async function saveExtras(listingId: string, amenityIds: string[], streetAddress: string | undefined): Promise<string | null> {
+async function saveExtras(listingId: string, values: ListingFormValues): Promise<string | null> {
+  const { amenityIds, streetAddress } = values;
   const supabase = await createUserClient();
   const { data: current } = await supabase.from("listing_amenities").select("amenity_id").eq("listing_id", listingId);
   const existing = new Set((current ?? []).map((row) => row.amenity_id));
@@ -97,7 +104,17 @@ async function saveExtras(listingId: string, amenityIds: string[], streetAddress
   const { error } = await supabase
     .from("listing_private_details")
     .upsert({ listing_id: listingId, street_address: streetAddress ?? null }, { onConflict: "listing_id" });
-  return error ? friendlyDbError(error) : null;
+  if (error) return friendlyDbError(error);
+
+  // Videos: replace the list with what the form now contains.
+  const videos = listingFormVideos(values);
+  const removed = await supabase.from("listing_videos").delete().eq("listing_id", listingId);
+  if (removed.error) return friendlyDbError(removed.error);
+  if (videos.length) {
+    const added = await supabase.from("listing_videos").insert(videos.map((video) => ({ ...video, listing_id: listingId })));
+    if (added.error) return friendlyDbError(added.error);
+  }
+  return null;
 }
 
 const workflowInput = z.object({

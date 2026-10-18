@@ -4,6 +4,7 @@ import {
   fieldErrors,
   listingFormSchema,
   listingFormToRow,
+  listingFormVideos,
   parseSearchParams,
   searchFiltersToQuery,
   searchFiltersToRpcArgs,
@@ -41,7 +42,7 @@ describe("enquirySchema", () => {
 describe("listingFormSchema", () => {
   const form = {
     title: "Sunny flat",
-    purpose: "sale",
+    category: "resale",
     priceAmount: "250000",
     currency: "USD",
     areaValue: "85",
@@ -62,6 +63,26 @@ describe("listingFormSchema", () => {
     expect(values.showEmail).toBe(false);
   });
 
+  it("needs a project name for new projects and collects videos", () => {
+    const result = listingFormSchema.safeParse({ ...form, category: "new_project" });
+    expect(fieldErrors(result.error!).projectName).toBe("Enter the project name");
+    const values = listingFormSchema.parse({
+      ...form,
+      category: "new_project",
+      projectName: "Skyline",
+      videoUrls: [
+        "https://youtu.be/dQw4w9WgXcQ",
+        "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "https://www.instagram.com/reel/C1a2B3c4D5e/",
+      ].join("\n"),
+    });
+    expect(listingFormToRow(values)).toMatchObject({ category: "new_project", purpose: "sale", project_name: "Skyline" });
+    expect(listingFormVideos(values)).toEqual([
+      { provider: "youtube", video_id: "dQw4w9WgXcQ", instagram_kind: null, sort_order: 0 },
+      { provider: "instagram", video_id: "C1a2B3c4D5e", instagram_kind: "reel", sort_order: 1 },
+    ]);
+  });
+
   it("maps to database columns", () => {
     const row = listingFormToRow(listingFormSchema.parse(form));
     expect(row).toMatchObject({ price_amount: 250000, currency: "USD", area_unit: "sq_m", floor_number: null });
@@ -74,12 +95,14 @@ describe("listingFormSchema", () => {
       ...form,
       areaUnit: "",
       currency: "",
-      videoUrl: "http://example.test/video",
+      virtualTourUrl: "http://example.test/tour",
+      videoUrls: "https://vimeo.com/1",
     });
     const errors = fieldErrors(result.error!);
     expect(errors.areaUnit).toBeDefined();
     expect(errors.currency).toBeDefined();
-    expect(errors.videoUrl).toBe("Use a full https:// link");
+    expect(errors.virtualTourUrl).toBe("Use a full https:// link");
+    expect(errors.videoUrls).toContain("Not a YouTube or Instagram video");
   });
 });
 
@@ -102,7 +125,7 @@ describe("search params", () => {
   });
 
   it("round-trips through the query string", () => {
-    const filters = parseSearchParams({ q: "garden", purpose: "sale", type: uuid, sort: "price_asc", maxPrice: "300000" });
+    const filters = parseSearchParams({ q: "garden", category: "new_project", type: uuid, sort: "price_asc", maxPrice: "300000" });
     expect(parseSearchParams(Object.fromEntries(new URLSearchParams(searchFiltersToQuery(filters))))).toEqual(filters);
     expect(searchFiltersToQuery(parseSearchParams({}))).toBe("");
   });

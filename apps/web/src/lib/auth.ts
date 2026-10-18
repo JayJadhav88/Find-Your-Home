@@ -45,7 +45,7 @@ export function hasRole(viewer: Viewer | null, ...roles: AppRole[]): boolean {
 
 export const isStaff = (viewer: Viewer | null) => hasRole(viewer, "moderator", "administrator");
 export const isAdmin = (viewer: Viewer | null) => hasRole(viewer, "administrator");
-export const canList = (viewer: Viewer | null) => hasRole(viewer, "owner", "agent", "administrator");
+export const canList = (viewer: Viewer | null) => hasRole(viewer, "owner", "agent", "builder", "administrator");
 
 export async function requireViewer(next: string): Promise<Viewer> {
   const viewer = await getViewer();

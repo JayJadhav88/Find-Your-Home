@@ -3,7 +3,7 @@ import { BecomeOwnerButton } from "@/components/account-forms";
 import { ListingForm } from "@/components/listing-form";
 import { Loading } from "@/components/loading";
 import { Alert, Card, PageHeader } from "@/components/ui";
-import { canList, requireViewer } from "@/lib/auth";
+import { canList, hasRole, requireViewer } from "@/lib/auth";
 import { getSiteSettings, getTaxonomy } from "@/lib/public-data";
 
 export default function NewListingPage() {
@@ -48,7 +48,8 @@ async function NewListing() {
         taxonomy={taxonomy}
         defaultCurrency={settings.default_currency}
         defaultAreaUnit={settings.default_area_unit}
-        initial={{ contactViaForm: true }}
+        canListNewProjects={hasRole(viewer, "builder", "administrator")}
+        initial={{ contactViaForm: true, category: hasRole(viewer, "builder") ? "new_project" : "resale" }}
       />
     </div>
   );

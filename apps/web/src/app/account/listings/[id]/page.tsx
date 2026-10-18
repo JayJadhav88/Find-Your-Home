@@ -1,4 +1,4 @@
-import { formatDateTime } from "@fyh/shared";
+import { formatDateTime, videoWatchUrl } from "@fyh/shared";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -7,7 +7,7 @@ import { ListingForm, type ListingFormInitial } from "@/components/listing-form"
 import { Loading } from "@/components/loading";
 import { PhotoManager } from "@/components/photo-manager";
 import { Alert, Badge, Card, PageHeader } from "@/components/ui";
-import { requireViewer } from "@/lib/auth";
+import { hasRole, requireViewer } from "@/lib/auth";
 import { listingPath, STATUS_LABEL } from "@/lib/listing-format";
 import { getSiteSettings, getTaxonomy } from "@/lib/public-data";
 import { createUserClient } from "@/lib/supabase";
@@ -38,7 +38,7 @@ async function EditListing({ id, created }: { id: string; created: boolean }) {
   const supabase = await createUserClient();
   const { data: listing } = await supabase
     .from("listings")
-    .select("*, private:listing_private_details(street_address), amenities:listing_amenities(amenity_id), media:listing_media(id, upload_key, alt_text, is_cover, sort_order, kind)")
+    .select("*, private:listing_private_details(street_address), amenities:listing_amenities(amenity_id), media:listing_media(id, upload_key, alt_text, is_cover, sort_order, kind), videos:listing_videos(provider, video_id, instagram_kind, sort_order)")
     .eq("id", id)
     .maybeSingle();
   if (!listing || (listing.owner_id !== viewer.id && listing.agent_id !== viewer.id)) notFound();
@@ -55,7 +55,13 @@ async function EditListing({ id, created }: { id: string; created: boolean }) {
   const initial: ListingFormInitial = {
     title: listing.title,
     description: listing.description,
-    purpose: listing.purpose,
+    category: listing.category,
+    projectName: listing.project_name ?? undefined,
+    projectRegistrationNumber: listing.project_registration_number ?? undefined,
+    videoUrls: [...listing.videos]
+      .sort((a, b) => a.sort_order - b.sort_order)
+      .map((video) => videoWatchUrl(video))
+      .join("\n"),
     propertyTypeId: listing.property_type_id ?? undefined,
     priceAmount: listing.price_amount?.toString(),
     currency: listing.currency ?? undefined,
@@ -84,7 +90,6 @@ async function EditListing({ id, created }: { id: string; created: boolean }) {
     furnishing: listing.furnishing ?? undefined,
     possessionStatus: listing.possession_status ?? undefined,
     availableFrom: listing.available_from ?? undefined,
-    videoUrl: listing.video_url ?? undefined,
     virtualTourUrl: listing.virtual_tour_url ?? undefined,
     contactViaForm: listing.contact_via_form,
     showPhone: listing.show_phone,
@@ -147,6 +152,7 @@ async function EditListing({ id, created }: { id: string; created: boolean }) {
           initial={initial}
           defaultCurrency={settings.default_currency}
           defaultAreaUnit={settings.default_area_unit}
+          canListNewProjects={hasRole(viewer, "builder", "administrator")}
         />
       ) : (
         <Alert tone="info">Details can’t be edited in this state.</Alert>

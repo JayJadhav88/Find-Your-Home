@@ -21,12 +21,15 @@ export function ListingForm({
   listingId,
   defaultCurrency,
   defaultAreaUnit,
+  canListNewProjects = false,
 }: {
   taxonomy: Taxonomy;
   initial?: ListingFormInitial;
   listingId?: string;
   defaultCurrency: string | null;
   defaultAreaUnit: string;
+  /** Only verified builders (and administrators) may list new projects. */
+  canListNewProjects?: boolean;
 }) {
   const [state, action, pending] = useActionState(listingId ? updateListing : createListing, initialFormState);
   const errors = state.fieldErrors ?? {};
@@ -43,7 +46,8 @@ export function ListingForm({
   const [regionId, setRegionId] = useState(value("regionId"));
   const [cityId, setCityId] = useState(value("cityId"));
   const [priceDisplay, setPriceDisplay] = useState(value("priceDisplay") || "show");
-  const [purpose, setPurpose] = useState(value("purpose") || "sale");
+  const [category, setCategory] = useState(value("category") || "resale");
+  const purpose = category === "rental" ? "rent" : "sale";
 
   const locations = taxonomy.locations;
   const countries = locations.filter((location) => location.level === "country");
@@ -72,10 +76,17 @@ export function ListingForm({
           <TextInput name="title" defaultValue={value("title")} error={errors.title} maxLength={140} required />
         </Field>
         <div className={grid}>
-          <Field label="Listing for" name="purpose" error={errors.purpose} required>
-            <Select name="purpose" value={purpose} onChange={(event) => setPurpose(event.target.value)} error={errors.purpose}>
-              <option value="sale">Sale</option>
-              <option value="rent">Rent</option>
+          <Field
+            label="Category"
+            name="category"
+            error={errors.category}
+            hint={canListNewProjects ? undefined : "New projects can only be listed by verified builders."}
+            required
+          >
+            <Select name="category" value={category} onChange={(event) => setCategory(event.target.value)} error={errors.category}>
+              <option value="rental">Rental</option>
+              <option value="resale">Resale</option>
+              {canListNewProjects || category === "new_project" ? <option value="new_project">New project (builder)</option> : null}
             </Select>
           </Field>
           <Field label="Property type" name="propertyTypeId" error={errors.propertyTypeId}>
@@ -87,6 +98,16 @@ export function ListingForm({
             </Select>
           </Field>
         </div>
+        {category === "new_project" ? (
+          <div className={grid}>
+            <Field label="Project name" name="projectName" error={errors.projectName} required>
+              <TextInput name="projectName" defaultValue={value("projectName")} error={errors.projectName} maxLength={140} />
+            </Field>
+            <Field label="Project registration number" name="projectRegistrationNumber" error={errors.projectRegistrationNumber} hint="Optional, for example a regulator's registration number.">
+              <TextInput name="projectRegistrationNumber" defaultValue={value("projectRegistrationNumber")} error={errors.projectRegistrationNumber} maxLength={60} />
+            </Field>
+          </div>
+        ) : null}
         <Field label="Description" name="description" error={errors.description} hint="At least 30 characters before you can submit. Describe the layout, condition and neighbourhood.">
           <TextArea name="description" defaultValue={value("description")} error={errors.description} rows={8} maxLength={10000} />
         </Field>
@@ -243,15 +264,18 @@ export function ListingForm({
       </fieldset>
 
       <fieldset className={section}>
-        <legend className="px-1 text-lg font-semibold">Video and virtual tour (optional)</legend>
-        <div className={grid}>
-          <Field label="Video link" name="videoUrl" error={errors.videoUrl}>
-            <TextInput name="videoUrl" type="url" placeholder="https://" defaultValue={value("videoUrl")} error={errors.videoUrl} />
-          </Field>
-          <Field label="Virtual tour link" name="virtualTourUrl" error={errors.virtualTourUrl}>
-            <TextInput name="virtualTourUrl" type="url" placeholder="https://" defaultValue={value("virtualTourUrl")} error={errors.virtualTourUrl} />
-          </Field>
-        </div>
+        <legend className="px-1 text-lg font-semibold">Videos and virtual tour (optional)</legend>
+        <Field
+          label="YouTube or Instagram video links"
+          name="videoUrls"
+          error={errors.videoUrls}
+          hint="One link per line, up to 10. For example https://www.youtube.com/watch?v=… or https://www.instagram.com/reel/…"
+        >
+          <TextArea name="videoUrls" rows={3} defaultValue={value("videoUrls")} error={errors.videoUrls} />
+        </Field>
+        <Field label="Virtual tour link" name="virtualTourUrl" error={errors.virtualTourUrl}>
+          <TextInput name="virtualTourUrl" type="url" placeholder="https://" defaultValue={value("virtualTourUrl")} error={errors.virtualTourUrl} />
+        </Field>
       </fieldset>
 
       <div className="flex flex-wrap gap-3">

@@ -1,9 +1,11 @@
 import { z } from "zod";
+import { parseVideoUrl, splitLinks } from "./videos";
 import {
   ADDRESS_VISIBILITIES,
   AREA_UNITS,
   ENQUIRY_KINDS,
   FURNISHINGS,
+  LISTING_CATEGORIES,
   LISTING_PURPOSES,
   POSSESSION_STATUSES,
   PRICE_DISPLAYS,
@@ -96,7 +98,9 @@ export const listingFormSchema = z
   .object({
     title: z.string().trim().min(3, "Use at least 3 characters").max(140),
     description: z.preprocess((value) => value ?? "", z.string().trim().max(10000)),
-    purpose: z.enum(LISTING_PURPOSES),
+    category: z.enum(LISTING_CATEGORIES),
+    projectName: optionalText(140),
+    projectRegistrationNumber: optionalText(60),
     propertyTypeId: optionalUuid,
     priceAmount: optionalNumber(0, 999_999_999_999),
     currency: z.preprocess(blankToUndefined, z.string().regex(/^[A-Z]{3}$/).optional()),
@@ -125,7 +129,8 @@ export const listingFormSchema = z
     furnishing: z.preprocess(blankToUndefined, z.enum(FURNISHINGS).optional()),
     possessionStatus: z.preprocess(blankToUndefined, z.enum(POSSESSION_STATUSES).optional()),
     availableFrom: z.preprocess(blankToUndefined, z.iso.date().optional()),
-    videoUrl: optionalHttpsUrl,
+    /** YouTube / Instagram links, one per line (or comma-separated). */
+    videoUrls: z.preprocess((value) => (typeof value === "string" ? value : ""), z.string().max(5000)),
     virtualTourUrl: optionalHttpsUrl,
     contactViaForm: checkbox,
     showPhone: checkbox,
@@ -144,6 +149,15 @@ export const listingFormSchema = z
     if (value.priceAmount !== undefined && !value.currency) {
       ctx.addIssue({ code: "custom", path: ["currency"], message: "Choose a currency" });
     }
+    if (value.category === "new_project" && !value.projectName) {
+      ctx.addIssue({ code: "custom", path: ["projectName"], message: "Enter the project name" });
+    }
+    const links = splitLinks(value.videoUrls);
+    const bad = links.filter((link) => !parseVideoUrl(link));
+    if (bad.length) {
+      ctx.addIssue({ code: "custom", path: ["videoUrls"], message: `Not a YouTube or Instagram video: ${bad[0]!.slice(0, 60)}` });
+    }
+    if (links.length > 10) ctx.addIssue({ code: "custom", path: ["videoUrls"], message: "Add at most 10 videos" });
     if (value.floorNumber !== undefined && value.totalFloors !== undefined && value.floorNumber > value.totalFloors) {
       ctx.addIssue({ code: "custom", path: ["floorNumber"], message: "The floor cannot be above the top floor" });
     }
@@ -151,12 +165,31 @@ export const listingFormSchema = z
 
 export type ListingFormValues = z.infer<typeof listingFormSchema>;
 
+/** Parsed, de-duplicated videos from the form's videoUrls field. */
+export function listingFormVideos(values: ListingFormValues) {
+  const seen = new Set<string>();
+  return splitLinks(values.videoUrls)
+    .map(parseVideoUrl)
+    .filter((video): video is NonNullable<typeof video> => video !== null)
+    .filter((video) => {
+      const key = `${video.provider}:${video.videoId}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .map((video, index) => ({ provider: video.provider, video_id: video.videoId, instagram_kind: video.instagramKind, sort_order: index }));
+}
+
 /** Maps validated form values to `listings` table columns (snake_case). */
 export function listingFormToRow(values: ListingFormValues) {
   return {
     title: values.title,
     description: values.description,
-    purpose: values.purpose,
+    category: values.category,
+    // Kept in sync by the database; sent for older type definitions.
+    purpose: (values.category === "rental" ? "rent" : "sale") as (typeof LISTING_PURPOSES)[number],
+    project_name: values.category === "new_project" ? (values.projectName ?? null) : null,
+    project_registration_number: values.category === "new_project" ? (values.projectRegistrationNumber ?? null) : null,
     property_type_id: values.propertyTypeId ?? null,
     price_amount: values.priceAmount ?? null,
     currency: values.currency ?? null,
@@ -184,7 +217,6 @@ export function listingFormToRow(values: ListingFormValues) {
     furnishing: values.furnishing ?? null,
     possession_status: values.possessionStatus ?? null,
     available_from: values.availableFrom ?? null,
-    video_url: values.videoUrl ?? null,
     virtual_tour_url: values.virtualTourUrl ?? null,
     contact_via_form: values.contactViaForm,
     show_phone: values.showPhone,
@@ -201,6 +233,7 @@ export const SEARCH_SORTS = ["newest", "price_asc", "price_desc", "relevance"] a
 export const searchParamsSchema = z.object({
   q: optionalText(120),
   purpose: z.preprocess(blankToUndefined, z.enum(LISTING_PURPOSES).optional()).catch(undefined),
+  category: z.preprocess(blankToUndefined, z.enum(LISTING_CATEGORIES).optional()).catch(undefined),
   type: z
     .preprocess((value) => (typeof value === "string" ? value.split(",").filter(Boolean) : value), z.array(z.uuid()).max(20))
     .optional()
@@ -242,6 +275,7 @@ export function searchFiltersToRpcArgs(filters: SearchFilters, defaults: { curre
   return {
     p_q: filters.q ?? undefined,
     p_purpose: filters.purpose ?? undefined,
+    p_category: filters.category ?? undefined,
     p_property_type_ids: filters.type?.length ? filters.type : undefined,
     p_location_id: filters.location ?? undefined,
     p_currency: filters.currency ?? (hasPrice ? (defaults.currency ?? undefined) : undefined),
@@ -275,6 +309,7 @@ export function searchFiltersToQuery(filters: Partial<SearchFilters>): string {
   };
   set("q", filters.q);
   set("purpose", filters.purpose);
+  set("category", filters.category);
   set("type", filters.type);
   set("location", filters.location);
   set("currency", filters.currency);
