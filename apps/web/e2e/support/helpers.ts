@@ -48,7 +48,7 @@ export async function emailLink(to: string, subject: string): Promise<string> {
 export async function runWorkers() {
   const { apiUrl, workerSecret } = stack();
   if (!workerSecret) throw new Error("WORKER_SECRET missing: create supabase/functions/.env (see .env.example)");
-  for (const name of ["process-jobs", "send-emails"]) {
+  for (const name of ["process-jobs", "send-emails", "deliver-notifications"]) {
     const response = await fetch(`${apiUrl}/functions/v1/${name}`, {
       method: "POST",
       headers: { "x-worker-secret": workerSecret, "Content-Type": "application/json" },

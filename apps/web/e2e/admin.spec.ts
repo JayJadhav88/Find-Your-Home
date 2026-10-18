@@ -55,7 +55,7 @@ test.describe("administration and permissions", () => {
     await signIn(page, DEMO.moderator, DEMO.password, "/admin");
     await page.goto("/admin/settings");
     await expect(page).toHaveURL(/\/admin\?denied=admin-only/);
-    await expect(page.getByText("That section is for administrators only.")).toBeVisible();
+    await expect(page.getByText(/Your team role doesn.t include that section/)).toBeVisible();
     const status = await page.evaluate(async () => (await fetch("/admin/export/enquiries")).status);
     expect(status).toBe(403);
   });

@@ -80,7 +80,7 @@ Owner decisions: WhatsApp through **Meta WhatsApp Cloud API**; enquiries to Goog
 
 Checks run: database tests 9 files / 271 passing on a clean rebuild; shared unit tests 73; Edge Function unit tests 82; app typecheck, lint and Jest (10); website typecheck and lint; app bundle build for iOS and Android; all three workers run against the local stack (a real browser-push request reached Google's push service). Also fixed: the website now forwards the visitor's IP so per-visitor limits (enquiries, reports) no longer apply to all visitors together.
 
-Not done in this session: clicking through the new website pages in a browser and re-running the Playwright suite (held back to keep the laptop's load low); real provider delivery. Setup steps: [10-notifications-and-team.md](10-notifications-and-team.md).
+Browser check (2026-10-19, production build): saved searches, notification settings with WhatsApp consent, report a listing, Reports and fraud warnings, Integrations with a test email, Send a message to the team, enquiries dashboard and detail (status, owner, note). Found and fixed: forms cleared what people typed after an error; the bell count stayed stale after opening a notification; call links contained spaces. Playwright: 45/45 passing (6 new tests for this phase). Not done: real provider delivery. Setup steps: [10-notifications-and-team.md](10-notifications-and-team.md).
 
 Not testable locally without the owner's accounts: real WhatsApp delivery (Meta Business account, approved templates), push to phones (EAS build with an Expo account), Google sign-in (OAuth client). Each is built behind an adapter with a log-only mode for local development.
 

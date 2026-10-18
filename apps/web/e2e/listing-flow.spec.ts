@@ -44,7 +44,7 @@ test("owner creates a draft, uploads a photo and submits it", async ({ page }) =
   await expect(page.getByText(/virus\.exe: use JPEG, PNG or WebP/)).toBeVisible();
 
   await page.getByRole("button", { name: "Submit for review" }).click();
-  await expect(page.getByText("Submitted. A moderator will review it")).toBeVisible();
+  await expect(page.getByText(/Submitted\. Listings are usually reviewed within \d+ (hours|days)/)).toBeVisible();
   await expect(page.getByText("Awaiting review", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Withdraw to edit" })).toBeVisible();
   await signOut(page);

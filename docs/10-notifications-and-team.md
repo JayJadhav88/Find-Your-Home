@@ -111,4 +111,4 @@ Locally: set `SUPABASE_AUTH_EXTERNAL_GOOGLE_CLIENT_ID` and `SUPABASE_AUTH_EXTERN
 
 - Real delivery through Resend, Meta WhatsApp, Expo push, Apple/Google push and Google Sheets (needs your accounts). Request formats follow the providers' documentation and are covered by unit tests with fake responses. Browser push was checked to the point of Google's push service accepting the signed request.
 - Phone push and Google sign-in in a real app build (Expo Go on Android can't receive push).
-- The new website pages were type-checked and linted, and the database rules tested, but not clicked through in a browser in this session.
+- Browser notifications could not be switched on in the test browser (it blocks permission prompts); the page's "blocked" message was checked instead.
