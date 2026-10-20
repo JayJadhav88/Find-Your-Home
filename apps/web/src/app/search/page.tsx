@@ -4,10 +4,11 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { Suspense } from "react";
 import { ListingCard, ListingGrid } from "@/components/listing-card";
+import { NearField } from "@/components/near-field";
 import { SaveSearch } from "@/components/save-search";
 import { Alert, Button, ButtonLink, EmptyState, Select, TextInput } from "@/components/ui";
 import { AREA_UNIT_LABEL, FURNISHING_LABEL } from "@/lib/listing-format";
-import { getSiteSettings, getTaxonomy, type Taxonomy } from "@/lib/public-data";
+import { getBuilders, getSiteSettings, getTaxonomy, type Taxonomy } from "@/lib/public-data";
 import { createPublicClient } from "@/lib/supabase";
 import { daysAgoMs } from "@/lib/time";
 
@@ -35,7 +36,7 @@ export default function SearchPage({ searchParams }: PageProps<"/search">) {
 async function SearchContent({ filters }: { filters: SearchFilters }) {
   // Results and "New" badges depend on the current time: always render per request.
   await connection();
-  const [settings, taxonomy] = await Promise.all([getSiteSettings(), getTaxonomy()]);
+  const [settings, taxonomy, builders] = await Promise.all([getSiteSettings(), getTaxonomy(), getBuilders()]);
   const currency = filters.currency ?? settings.default_currency ?? taxonomy.currencies[0]?.code ?? null;
   const { data, error } = await createPublicClient().rpc(
     "search_listings",
@@ -49,7 +50,7 @@ async function SearchContent({ filters }: { filters: SearchFilters }) {
 
   return (
     <div className="mt-6 grid gap-8 lg:grid-cols-[18rem_1fr]">
-      <FilterForm filters={filters} taxonomy={taxonomy} currency={currency} />
+      <FilterForm filters={filters} taxonomy={taxonomy} currency={currency} builders={builders} radiusOptions={settings.radius_options} />
       <section aria-labelledby="results-heading" aria-live="polite">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 id="results-heading" className="text-lg font-semibold">
@@ -109,10 +110,11 @@ const SORTS = [
   ["price_asc", "Price: low to high"],
   ["price_desc", "Price: high to low"],
   ["relevance", "Best match"],
+  ["distance", "Nearest"],
 ] as const;
 
 function SortLinks({ filters }: { filters: SearchFilters }) {
-  const available = SORTS.filter(([value]) => value !== "relevance" || filters.q);
+  const available = SORTS.filter(([value]) => (value !== "relevance" || filters.q) && (value !== "distance" || filters.lat !== undefined));
   return (
     <nav aria-label="Sort" className="flex flex-wrap gap-1 text-sm">
       {available.map(([value, label]) => {
@@ -132,7 +134,19 @@ function SortLinks({ filters }: { filters: SearchFilters }) {
   );
 }
 
-function FilterForm({ filters, taxonomy, currency }: { filters: SearchFilters; taxonomy: Taxonomy; currency: string | null }) {
+function FilterForm({
+  filters,
+  taxonomy,
+  currency,
+  builders,
+  radiusOptions,
+}: {
+  filters: SearchFilters;
+  taxonomy: Taxonomy;
+  currency: string | null;
+  builders: Array<{ id: string; name: string }>;
+  radiusOptions: number[];
+}) {
   const places = taxonomy.locations.filter((location) => location.level !== "country" || taxonomy.locations.length < 50);
   const field = "flex flex-col gap-1 text-sm font-medium";
   return (
@@ -151,6 +165,11 @@ function FilterForm({ filters, taxonomy, currency }: { filters: SearchFilters; t
         </Select>
       </label>
       {filters.purpose ? <input type="hidden" name="purpose" value={filters.purpose} /> : null}
+      <NearField radiusOptions={radiusOptions} initial={{ lat: filters.lat, lng: filters.lng, radius: filters.radius, near: filters.near }} />
+      <label className={field}>
+        PIN code
+        <TextInput bare name="pin" defaultValue={filters.pin} inputMode="numeric" maxLength={10} placeholder="e.g. 411045" />
+      </label>
       <label className={field}>
         Area
         <Select bare name="location" defaultValue={filters.location ?? ""}>
@@ -227,6 +246,26 @@ function FilterForm({ filters, taxonomy, currency }: { filters: SearchFilters; t
           ))}
         </Select>
       </fieldset>
+      {builders.length ? (
+        <label className={field}>
+          Builder
+          <Select bare name="builder" defaultValue={filters.builder ?? ""}>
+            <option value="">Any builder</option>
+            {builders.map((builder) => (
+              <option key={builder.id} value={builder.id}>{builder.name}</option>
+            ))}
+          </Select>
+        </label>
+      ) : null}
+      <label className={field}>
+        Construction
+        <Select bare name="construction" defaultValue={filters.construction ?? ""}>
+          <option value="">Any</option>
+          <option value="upcoming">Upcoming launch</option>
+          <option value="under_construction">Under construction</option>
+          <option value="ready">Ready to move</option>
+        </Select>
+      </label>
       <label className={field}>
         Furnishing
         <Select bare name="furnishing" defaultValue={filters.furnishing ?? ""}>

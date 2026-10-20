@@ -23,6 +23,7 @@ export function displayPrice(
     currency: string | null;
     price_period: PricePeriod;
     price_display: PriceDisplay;
+    price_max?: number | null;
   },
   locale: string,
 ): string {
@@ -30,7 +31,12 @@ export function displayPrice(
     return "Price on request";
   }
   const suffix = pricePeriodSuffix(listing.price_period);
-  return `${formatPrice(Number(listing.price_amount), listing.currency, { locale })}${suffix ? ` ${suffix}` : ""}`;
+  const from = formatPrice(Number(listing.price_amount), listing.currency, { locale });
+  // New projects can show a range: "₹50,00,000 – ₹90,00,000".
+  if (listing.price_max != null && Number(listing.price_max) > Number(listing.price_amount)) {
+    return `${from} – ${formatPrice(Number(listing.price_max), listing.currency, { locale })}`;
+  }
+  return `${from}${suffix ? ` ${suffix}` : ""}`;
 }
 
 export function displayArea(value: number | null, unit: AreaUnit | null, locale: string): string | null {

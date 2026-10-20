@@ -26,6 +26,10 @@ export interface ListingCardData {
   cover_key: string | null;
   cover_alt: string | null;
   is_featured: boolean;
+  availability?: string | null;
+  builder_name?: string | null;
+  price_max?: number | null;
+  distance_km?: number | null;
 }
 
 export function ListingCard({ listing, locale, isNew = false }: { listing: ListingCardData; locale: string; isNew?: boolean }) {
@@ -55,6 +59,7 @@ export function ListingCard({ listing, locale, isNew = false }: { listing: Listi
           <Badge>{listingBadge(listing)}</Badge>
           {listing.is_featured ? <Badge tone="sold">Featured</Badge> : null}
           {isNew ? <Badge tone="published">New</Badge> : null}
+          {listing.availability === "under_negotiation" ? <Badge tone="pending_review">Under negotiation</Badge> : null}
         </div>
       </div>
       <div className="flex flex-1 flex-col gap-1 p-4">
@@ -64,8 +69,18 @@ export function ListingCard({ listing, locale, isNew = false }: { listing: Listi
             {listing.title}
           </Link>
         </h3>
-        {listing.project_name ? <p className="text-sm font-medium text-brand">{listing.project_name}</p> : null}
-        {place ? <p className="text-sm text-text-muted">{place}</p> : null}
+        {listing.project_name ? (
+          <p className="text-sm font-medium text-brand">
+            {listing.project_name}
+            {listing.builder_name ? <span className="font-normal text-text-muted"> by {listing.builder_name}</span> : null}
+          </p>
+        ) : null}
+        {place || listing.distance_km != null ? (
+          <p className="text-sm text-text-muted">
+            {place}
+            {listing.distance_km != null ? `${place ? " · " : ""}${Number(listing.distance_km) < 1 ? "under 1" : Math.round(Number(listing.distance_km) * 10) / 10} km away` : ""}
+          </p>
+        ) : null}
         {facts.length ? <p className="mt-auto pt-2 text-sm text-text-muted">{facts.join(" · ")}</p> : null}
       </div>
     </article>

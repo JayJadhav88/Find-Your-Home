@@ -132,3 +132,24 @@ export async function getSitemapEntries() {
     .limit(45000);
   return data ?? [];
 }
+
+export async function getBuilders() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("builders");
+  const { data } = await createPublicClient().from("builders").select("id, name, slug").eq("is_active", true).order("name");
+  return data ?? [];
+}
+
+export async function getBuilderBySlug(slug: string) {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("builders", `builder:${slug}`);
+  const { data } = await createPublicClient()
+    .from("builders")
+    .select("id, name, slug, description, website, logo_url, contact_email, contact_phone")
+    .eq("slug", slug)
+    .eq("is_active", true)
+    .maybeSingle();
+  return data;
+}
