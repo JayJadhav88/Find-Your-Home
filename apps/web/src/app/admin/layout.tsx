@@ -21,6 +21,7 @@ const LINKS: Array<[string, string, (viewer: Viewer | null) => boolean]> = [
   ["/admin/taxonomy", "Types, amenities & places", isAdmin],
   ["/admin/settings", "Settings", isAdmin],
   ["/admin/content", "Pages", canManageContent],
+  ["/admin/site", "Site content", canManageContent],
   ["/admin/data-requests", "Privacy requests", isAdmin],
   ["/admin/audit", "Audit log", isStaff],
 ];
