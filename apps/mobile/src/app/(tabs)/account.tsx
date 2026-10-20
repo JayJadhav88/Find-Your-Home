@@ -31,7 +31,15 @@ export default function AccountScreen() {
   const [saving, setSaving] = useState(false);
 
   if (loading) return <Loading />;
-  if (!viewer) return <SignInPrompt title="Your account" message="Sign in to manage your profile, enquiries and listings." />;
+  if (!viewer)
+    return (
+      <ScrollView>
+        <SignInPrompt title="Your account" message="Sign in to manage your profile, enquiries and listings." />
+        <View style={{ paddingHorizontal: spacing.md }}>
+          <Button label="Contact us" variant="ghost" onPress={() => router.push("/contact")} />
+        </View>
+      </ScrollView>
+    );
 
   async function save() {
     const parsed = profileSchema.safeParse({ displayName, phone, marketingOptIn: false });
@@ -86,6 +94,7 @@ export default function AccountScreen() {
       />
       <Button label="Enquiries" variant="secondary" onPress={() => router.push("/enquiries")} />
       <Button label="Saved searches" variant="secondary" onPress={() => router.push("/saved-searches")} />
+      <Button label="Contact us" variant="secondary" onPress={() => router.push("/contact")} />
       {isTeam ? (
         <Button
           label="Admin panel"

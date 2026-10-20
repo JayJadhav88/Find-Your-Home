@@ -10,6 +10,7 @@ import {
   listingWorkflow,
   removePhoto,
   setCoverPhoto,
+  setListingAvailability,
   tokens,
   updateListing,
   videoWatchUrl,
@@ -210,6 +211,7 @@ export default function EditorScreen() {
                 ? `A moderator is reviewing this listing. Listings are usually reviewed within ${formatReviewTime(reviewHours)}; we'll notify you. Withdraw it if you need to make changes.`
                 : HELP[status]}
             </Text>
+            {status === "published" && listing ? <AvailabilityControl listingId={listing.id} value={listing.availability} onChanged={existing.reload} onError={(message) => setNotice({ tone: "danger", text: message })} /> : null}
             {lastReason && (status === "rejected" || status === "suspended") ? <Notice tone="warning" title="Note from our moderators">{lastReason}</Notice> : null}
             {actions.map((item) => (
               <Button
@@ -260,7 +262,9 @@ export default function EditorScreen() {
               {v("category") === "new_project" ? (
                 <>
                   <Field label="Project name" required value={v("projectName")} onChangeText={set("projectName")} error={errors.projectName} />
-                  <Field label="Project registration number" value={v("projectRegistrationNumber")} onChangeText={set("projectRegistrationNumber")} hint="Optional" />
+                  <Field label="Project registration number" value={v("projectRegistrationNumber")} onChangeText={set("projectRegistrationNumber")} hint="Optional. Our team checks it before showing it as checked." />
+                  <Field label="Configurations" value={v("configurations")} onChangeText={set("configurations")} error={errors.configurations} hint="Comma-separated, e.g. 2 BHK, 3 BHK, 4 BHK penthouse." maxLength={400} />
+                  <Field label="Launch date" value={v("launchDate")} onChangeText={set("launchDate")} error={errors.launchDate} hint="Optional, as YYYY-MM-DD." keyboardType="numbers-and-punctuation" maxLength={10} />
                 </>
               ) : null}
               <Segmented
@@ -288,6 +292,9 @@ export default function EditorScreen() {
                 ]}
                 onChange={set("pricePeriod")}
               />
+              {v("category") === "new_project" ? (
+                <Field label="Price up to" keyboardType="decimal-pad" value={v("priceMax")} onChangeText={set("priceMax")} error={errors.priceMax} hint="Optional: top of the price range. The price above is the starting price." />
+              ) : null}
               <ToggleRow label="Price is negotiable" value={values.priceNegotiable === true} onChange={set("priceNegotiable")} />
             </Card>
 
@@ -303,6 +310,10 @@ export default function EditorScreen() {
               {places.localities.length ? (
                 <Segmented label="Neighbourhood" value={v("localityId")} options={[{ value: "", label: "None" }, ...places.localities.map((p) => ({ value: p.id, label: p.name }))]} onChange={set("localityId")} />
               ) : null}
+              <View style={styles.row}>
+                <View style={{ flex: 1 }}><Field label="PIN code" keyboardType="number-pad" value={v("postalCode")} onChangeText={set("postalCode")} error={errors.postalCode} maxLength={20} /></View>
+                <View style={{ flex: 2 }}><Field label="Nearby landmark" value={v("landmark")} onChangeText={set("landmark")} error={errors.landmark} hint="Optional, e.g. near City Mall. Shown to visitors." maxLength={120} /></View>
+              </View>
               <Field label="Street address" value={v("streetAddress")} onChangeText={set("streetAddress")} hint="Private: never shown publicly." autoComplete="street-address" />
               <Segmented
                 label="Location shown to visitors"
@@ -412,6 +423,10 @@ function valuesFromListing(listing: NonNullable<Awaited<ReturnType<typeof getOwn
     cityId: str(listing.city_id),
     localityId: str(listing.locality_id),
     postalCode: str(listing.postal_code),
+    landmark: str(listing.landmark),
+    priceMax: str(listing.price_max),
+    launchDate: str(listing.launch_date),
+    configurations: (listing.configurations ?? []).join(", "),
     streetAddress: str(listing.private?.street_address),
     addressVisibility: listing.address_visibility,
     areaUnit: str(listing.area_unit),
@@ -431,6 +446,40 @@ function valuesFromListing(listing: NonNullable<Awaited<ReturnType<typeof getOwn
     amenityIds: listing.amenities.map((row) => row.amenity_id),
     videoUrls: [...listing.videos].sort((a, b) => a.sort_order - b.sort_order).map(videoWatchUrl).join("\n"),
   };
+}
+
+type Availability = "available" | "under_negotiation" | "unavailable";
+
+/** Live listings stay published while an offer is discussed or the home is briefly off the market. */
+function AvailabilityControl({ listingId, value, onChanged, onError }: { listingId: string; value: string; onChanged: () => Promise<void>; onError: (message: string) => void }) {
+  const [saving, setSaving] = useState(false);
+  async function change(next: string) {
+    if (next === value || saving) return;
+    setSaving(true);
+    try {
+      await setListingAvailability(supabase, listingId, next as Availability);
+      await onChanged();
+    } catch (failure) {
+      onError(failure instanceof Error ? failure.message : "Could not update availability.");
+    } finally {
+      setSaving(false);
+    }
+  }
+  return (
+    <View style={{ gap: spacing.xs }}>
+      <Segmented
+        label="Availability"
+        value={value}
+        options={[
+          { value: "available", label: "Available" },
+          { value: "under_negotiation", label: "Negotiating" },
+          { value: "unavailable", label: "Unavailable" },
+        ]}
+        onChange={change}
+      />
+      <Text style={text.muted}>{value === "unavailable" ? "Hidden from search until you set it back to available." : "Visitors see this on the listing. No review needed."}</Text>
+    </View>
+  );
 }
 
 function ToggleRow({ label, value, onChange }: { label: string; value: boolean; onChange: (value: boolean) => void }) {
