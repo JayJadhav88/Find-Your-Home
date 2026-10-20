@@ -4,6 +4,9 @@
 //   Create a new admin account with a one-time password (recommended for the first admin):
 //     SUPABASE_URL=... SUPABASE_SECRET_KEY=... node scripts/admin-bootstrap.mjs --create --email you@example.com
 //
+//   Give an existing admin a new one-time password (e.g. the first one was lost):
+//     SUPABASE_URL=... SUPABASE_SECRET_KEY=... node scripts/admin-bootstrap.mjs --reset --email you@example.com
+//
 //   Promote an account that already signed up and confirmed its email:
 //     SUPABASE_URL=... SUPABASE_SECRET_KEY=... node scripts/admin-bootstrap.mjs --email you@example.com
 //
@@ -20,6 +23,7 @@ const args = process.argv.slice(2);
 const emailIndex = args.indexOf("--email");
 const email = emailIndex >= 0 ? args[emailIndex + 1]?.trim().toLowerCase() : undefined;
 const create = args.includes("--create");
+const reset = args.includes("--reset");
 const fileIndex = args.indexOf("--file");
 const fileName = fileIndex >= 0 ? args[fileIndex + 1] : "first-admin.txt";
 if (!/^[A-Za-z0-9._-]+\.txt$/.test(fileName ?? "")) {
@@ -44,22 +48,36 @@ if (!url || !secretKey) {
 
 const headers = { apikey: secretKey, Authorization: `Bearer ${secretKey}`, "Content-Type": "application/json" };
 
-async function call(path, body) {
-  const response = await fetch(`${url}${path}`, { method: "POST", headers, body: JSON.stringify(body) });
+async function call(path, body, method = "POST") {
+  const response = await fetch(`${url}${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
   const data = await response.json().catch(() => null);
   if (!response.ok) fail(data?.msg ?? data?.message ?? data?.error_description ?? `request to ${path} failed with HTTP ${response.status}`);
   return data;
 }
 
-if (create) {
+if (create && reset) fail("use either --create or --reset, not both");
+
+async function findUser() {
+  for (let page = 1; page <= 50; page++) {
+    const data = await call(`/auth/v1/admin/users?page=${page}&per_page=200`, undefined, "GET");
+    const found = (data?.users ?? []).find((user) => user.email?.toLowerCase() === email);
+    if (found) return found;
+    if ((data?.users ?? []).length < 200) break;
+  }
+  fail(`no account with the email ${email}; use --create instead`);
+}
+
+if (create || reset) {
   // 24 random bytes → 32 URL-safe characters, plus a digit and symbol for password rules.
   const password = `${randomBytes(24).toString("base64url")}9!`;
-  const user = await call("/auth/v1/admin/users", {
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: { display_name: email.split("@")[0] },
-  });
+  const user = create
+    ? await call("/auth/v1/admin/users", {
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { display_name: email.split("@")[0] },
+      })
+    : await call(`/auth/v1/admin/users/${(await findUser()).id}`, { password }, "PUT");
   await call("/rest/v1/rpc/require_password_change", { p_user_id: user.id });
 
   const folder = new URL("../.secrets/", import.meta.url);
@@ -83,7 +101,7 @@ if (create) {
   } catch {
     // Windows keeps the default per-user permissions on the user's own folder.
   }
-  console.log(`admin-bootstrap: created ${email} (user id ${user.id}).`);
+  console.log(`admin-bootstrap: ${create ? "created" : "gave a new one-time password to"} ${email} (user id ${user.id}).`);
   console.log(`admin-bootstrap: one-time password saved to .secrets/${fileName} (not printed).`);
 }
 
