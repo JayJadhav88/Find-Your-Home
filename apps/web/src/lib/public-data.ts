@@ -100,8 +100,8 @@ export async function getPublicListing(reference: string) {
 
   const [{ data: contact }, { data: builder }] = await Promise.all([
     db.rpc("get_listing_contact", { p_listing_id: listing.id }).maybeSingle(),
-    listing.category === "new_project"
-      ? db.from("builder_profiles").select("company_name, registration_number, website").eq("user_id", listing.owner_id).maybeSingle()
+    listing.category === "new_project" && listing.builder_id
+      ? db.from("builders").select("name, slug, website").eq("id", listing.builder_id).maybeSingle()
       : Promise.resolve({ data: null }),
   ]);
   return { ...listing, contact: contact ?? null, builder: builder ?? null };

@@ -160,6 +160,11 @@ async function ListingDetail({ reference, slug }: { reference: string; slug?: st
         </div>
         <div className="sm:text-right">
           <p className="text-2xl font-semibold">{displayPrice(listing, locale)}</p>
+          {listing.availability === "under_negotiation" ? (
+            <p><Badge tone="pending_review">Under negotiation</Badge> <span className="text-sm text-text-muted">An offer is being discussed; you can still enquire.</span></p>
+          ) : listing.availability === "unavailable" ? (
+            <p><Badge tone="archived">Not available</Badge> <span className="text-sm text-text-muted">This home is not available at the moment.</span></p>
+          ) : null}
           {listing.price_negotiable ? <p className="text-sm text-text-muted">Negotiable</p> : null}
           <Suspense fallback={null}>
             <FavoriteButton listingId={listing.id} returnTo={listingPath(listing)} />
@@ -185,7 +190,7 @@ async function ListingDetail({ reference, slug }: { reference: string; slug?: st
             </dl>
           </section>
 
-          {listing.category === "new_project" ? <ProjectDetails listing={listing} /> : null}
+          {listing.category === "new_project" ? <ProjectDetails listing={listing} locale={settings.default_locale} /> : null}
 
           {listing.description ? (
             <section aria-labelledby="description-heading">
@@ -281,29 +286,45 @@ async function ListingDetail({ reference, slug }: { reference: string; slug?: st
 
 function ProjectDetails({
   listing,
+  locale,
 }: {
   listing: {
     project_name: string | null;
     project_registration_number: string | null;
+    registration_verified: boolean;
     possession_status: keyof typeof POSSESSION_LABEL | null;
     available_from: string | null;
-    builder: { company_name: string; registration_number: string | null; website: string | null } | null;
+    launch_date: string | null;
+    configurations: string[];
+    builder: { name: string; slug: string; website: string | null } | null;
   };
+  locale: string;
 }) {
   const rows: Array<[string, React.ReactNode]> = [];
   if (listing.project_name) rows.push(["Project", listing.project_name]);
   if (listing.builder) {
     rows.push([
       "Builder",
-      <>
-        {listing.builder.company_name} <Badge tone="published">Verified builder</Badge>
-      </>,
+      <Link key="builder" href={`/builders/${listing.builder.slug}`} className="text-brand underline">
+        {listing.builder.name}
+      </Link>,
     ]);
   }
-  if (listing.project_registration_number) rows.push(["Registration number", listing.project_registration_number]);
-  if (listing.builder?.registration_number) rows.push(["Builder registration", listing.builder.registration_number]);
+  if (listing.configurations.length) rows.push(["Configurations", listing.configurations.join(", ")]);
   if (listing.possession_status) {
-    rows.push(["Possession", `${POSSESSION_LABEL[listing.possession_status]}${listing.available_from ? ` (${listing.available_from})` : ""}`]);
+    rows.push(["Construction", `${POSSESSION_LABEL[listing.possession_status]}${listing.available_from ? ` (${listing.available_from})` : ""}`]);
+  }
+  if (listing.launch_date) {
+    rows.push(["Launch date", new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" }).format(new Date(listing.launch_date))]);
+  }
+  if (listing.project_registration_number) {
+    rows.push([
+      "Registration (e.g. RERA)",
+      <>
+        {listing.project_registration_number}{" "}
+        {listing.registration_verified ? <Badge tone="published">Checked by our team</Badge> : <span className="text-text-muted">(not yet checked by us)</span>}
+      </>,
+    ]);
   }
   if (listing.builder?.website) {
     rows.push([
@@ -324,6 +345,9 @@ function ProjectDetails({
           </div>
         ))}
       </dl>
+      <p className="mt-3 text-xs text-text-muted">
+        Details come from the builder and can change. Confirm prices, approvals and registration details before deciding.
+      </p>
     </section>
   );
 }
