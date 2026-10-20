@@ -21,7 +21,8 @@ export function NearField({
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
     initial.lat !== undefined && initial.lng !== undefined ? { lat: initial.lat, lng: initial.lng } : null,
   );
-  const [resolvedFor, setResolvedFor] = useState(initial.near ?? "");
+  // A place only counts as looked up when its coordinates came with it (a link may carry just the name).
+  const [resolvedFor, setResolvedFor] = useState(coords ? (initial.near ?? "") : "");
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const wrapper = useRef<HTMLDivElement>(null);
