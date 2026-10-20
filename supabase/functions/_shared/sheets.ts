@@ -7,7 +7,7 @@ export interface SheetEnquiry {
   status: string;
   kind: string;
   name: string;
-  email: string;
+  email: string | null;
   phone: string | null;
   message: string;
   requested_visit_at: string | null;
@@ -18,6 +18,10 @@ export interface SheetEnquiry {
   category: string | null;
   city: string | null;
   team_owner: string | null;
+  lead_type?: string | null;
+  interest?: string | null;
+  source?: string | null;
+  lost_reason?: string | null;
 }
 
 export const SHEET_WEBHOOK = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]{10,200}\/exec$/;
@@ -37,7 +41,9 @@ export function sheetRow(enquiry: SheetEnquiry, siteUrl: string): Record<string,
     "Enquiry ID": enquiry.id,
     Received: enquiry.created_at,
     Status: enquiry.status.replace(/_/g, " "),
-    Type: enquiry.kind === "visit_request" ? "Visit request" : "Enquiry",
+    Type: enquiry.lead_type === "owner" ? "Owner lead" : enquiry.kind === "visit_request" ? "Visit request" : "Enquiry",
+    Interest: (enquiry.interest ?? "").replace(/_/g, " "),
+    Source: (enquiry.source ?? "").replace(/_/g, " "),
     Name: sheetText(enquiry.name),
     Email: sheetText(enquiry.email),
     Phone: sheetText(enquiry.phone),
@@ -49,6 +55,7 @@ export function sheetRow(enquiry: SheetEnquiry, siteUrl: string): Record<string,
     City: sheetText(enquiry.city),
     "Team owner": sheetText(enquiry.team_owner),
     "Follow-up": enquiry.follow_up_at ?? "",
+    "Lost reason": sheetText(enquiry.lost_reason),
     "Admin link": new URL(`/admin/enquiries/${enquiry.id}`, siteUrl).toString(),
   };
 }
