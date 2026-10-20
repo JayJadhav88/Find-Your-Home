@@ -20,7 +20,9 @@ Every notification is always kept in the in-app inbox. Email, push and WhatsApp 
 
 ## For the team
 
-### Roles (Admin → Users & team)
+### Roles (Admin → Team & roles)
+
+Batch 1 added CRM manager, Sales agent and Content manager, and split members into Admin → Customers. The current table is in [11-feature-scope-batch1.md](11-feature-scope-batch1.md).
 
 | Role | Can do |
 | --- | --- |

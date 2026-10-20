@@ -84,6 +84,21 @@ Browser check (2026-10-19, production build): saved searches, notification setti
 
 Not testable locally without the owner's accounts: real WhatsApp delivery (Meta Business account, approved templates), push to phones (EAS build with an Expo account), Google sign-in (OAuth client). Each is built behind an adapter with a log-only mode for local development.
 
+## Phase 3c — Partner feature scope, Batch 1 (2026-10-20)
+
+From `Real_Estate_App_Master_Feature_Scope.xlsx`. Owner decisions: a temporary first admin from the owner's Gmail (one-time password, forced change, removable later); roles and customers as separate screens; free OpenStreetMap for places.
+
+| Milestone | Scope | Status |
+| --- | --- | --- |
+| A. Admin access | Bootstrap script, forced password change, Team & roles, Customers | Built; pgTAP; Playwright |
+| B. Roles | CRM manager, Sales agent (own leads only), Content manager | Built; pgTAP |
+| C. Leads | Lead pipeline with reasons, sources and campaign tags, call log, history, duplicates, manual leads, Contact us (web and app) | Built; pgTAP; browser check |
+| D. Projects | Builders with public pages and merge, configurations, price range, launch date, checked registration, availability | Built; pgTAP |
+| E. Location | PIN code, near a place, near me, radius, nearest first (OpenStreetMap, cached, rate limited) | Built; pgTAP; unit tests; browser check |
+| F. Site content | Home banners, floating button, click counts, feature switches | Built; pgTAP |
+
+Details, checks run and the decisions needed for later batches: [11-feature-scope-batch1.md](11-feature-scope-batch1.md).
+
 ## Phase 4 — Hardening and launch readiness
 
 RLS/authorization review, cross-platform flow verification, accessibility and responsive review, query plans for search, image performance, production Supabase project with backups/PITR decision, monitoring (Sentry or similar), spend alerts, email sender domain (SPF/DKIM/DMARC), restore drill, privacy and store disclosure docs, launch checklist with what was and was not exercised.

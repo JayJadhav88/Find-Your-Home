@@ -40,6 +40,8 @@ Builders (role `builder`, granted only by an administrator) have the same rights
 
 `support` (enquiries: read all, assign, status, internal notes) and `marketing` (broadcasts) can open the admin panel but cannot review listings or change settings. Moderators also handle enquiries and reports. Only administrators manage integrations, users, roles and settings. See [10-notifications-and-team.md](10-notifications-and-team.md).
 
+Added in Batch 1 (2026-10-20): `crm_manager` (all leads, like support, plus adding leads), `sales_agent` (only leads assigned to them; cannot reassign) and `content_manager` (pages, banners, floating button). Full table: [11-feature-scope-batch1.md](11-feature-scope-batch1.md).
+
 ## Rules that apply to every row above
 
 1. Identity comes from `auth.uid()` on the server. Any `user_id`, `owner_id`, `role` or `status` in a client payload is ignored or rejected by triggers.
