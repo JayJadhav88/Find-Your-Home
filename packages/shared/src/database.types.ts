@@ -59,6 +59,20 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"banners": {
+                  Row: {
+                    "audience": string,"created_at": string,"cta_label": string | null,"ends_at": string | null,"id": string,"image_url": string | null,"is_active": boolean,"sort_order": number,"starts_at": string | null,"subtitle": string | null,"target_url": string | null,"title": string,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "audience"?: string,"created_at"?: string,"cta_label"?: string | null,"ends_at"?: string | null,"id"?: string,"image_url"?: string | null,"is_active"?: boolean,"sort_order"?: number,"starts_at"?: string | null,"subtitle"?: string | null,"target_url"?: string | null,"title": string,"updated_at"?: string
+                  }
+                  Update: {
+                    "audience"?: string,"created_at"?: string,"cta_label"?: string | null,"ends_at"?: string | null,"id"?: string,"image_url"?: string | null,"is_active"?: boolean,"sort_order"?: number,"starts_at"?: string | null,"subtitle"?: string | null,"target_url"?: string | null,"title"?: string,"updated_at"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"broadcasts": {
                   Row: {
                     "audience": string,"body": string,"channels": (Database["public"]['Enums']["notification_channel"])[],"city_id": string | null,"created_at": string,"created_by": string | null,"id": number,"recipients": number | null,"scheduled_at": string,"sent_at": string | null,"status": Database["public"]['Enums']["broadcast_status"],"title": string,"url": string | null
@@ -333,6 +347,46 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"feature_flags": {
+                  Row: {
+                    "description": string,"enabled": boolean,"key": string,"label": string,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "description"?: string,"enabled"?: boolean,"key": string,"label": string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "description"?: string,"enabled"?: boolean,"key"?: string,"label"?: string,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "feature_flags_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"floating_action": {
+                  Row: {
+                    "icon": string,"id": boolean,"is_active": boolean,"label": string,"position": string,"target_url": string | null,"updated_at": string,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "icon"?: string,"id"?: boolean,"is_active"?: boolean,"label"?: string,"position"?: string,"target_url"?: string | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "icon"?: string,"id"?: boolean,"is_active"?: boolean,"label"?: string,"position"?: string,"target_url"?: string | null,"updated_at"?: string,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "floating_action_updated_by_fkey"
+      columns: ["updated_by"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"homepage_sections": {
                   Row: {
                     "body": string | null,"id": string,"is_active": boolean,"kind": string,"sort_order": number,"title": string | null,"updated_at": string
@@ -432,6 +486,20 @@ isOneToOne: false
       referencedRelation: "property_types"
       referencedColumns: ["id"]
     }
+                  ]
+                },"link_clicks": {
+                  Row: {
+                    "clicks": number,"day": string,"link_key": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "clicks"?: number,"day": string,"link_key": string
+                  }
+                  Update: {
+                    "clicks"?: number,"day"?: string,"link_key"?: string
+                  }
+                  Relationships: [
+                    
                   ]
                 },"listing_amenities": {
                   Row: {
@@ -1024,6 +1092,9 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: {
               "display_name": string,"id": string
             }[]
+                           },
+"follow_site_link":
+{ Args: { "p_key": string,"p_visitor"?: string }; Returns: string
                            },
 "geocode_cache_get":
 { Args: { "p_query": string }; Returns: {
