@@ -11,6 +11,8 @@ export interface Viewer {
   displayName: string;
   status: "active" | "suspended" | "deletion_requested";
   roles: AppRole[];
+  /** Signed in with a one-time password (first admin): must choose a new one first. */
+  mustChangePassword: boolean;
 }
 
 /**
@@ -23,9 +25,10 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) return null;
 
-  const [{ data: profile }, { data: roles }] = await Promise.all([
+  const [{ data: profile }, { data: roles }, { data: mustChange }] = await Promise.all([
     supabase.from("profiles").select("display_name, status").eq("id", data.user.id).maybeSingle(),
     supabase.from("user_roles").select("role").eq("user_id", data.user.id),
+    supabase.rpc("must_change_password"),
   ]);
   if (!profile) return null;
 
@@ -36,6 +39,7 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
     displayName: profile.display_name,
     status: profile.status,
     roles: (roles ?? []).map((row) => row.role),
+    mustChangePassword: mustChange === true,
   };
 });
 
@@ -54,6 +58,7 @@ export const canList = (viewer: Viewer | null) => hasRole(viewer, "owner", "agen
 export async function requireViewer(next: string): Promise<Viewer> {
   const viewer = await getViewer();
   if (!viewer) redirect(`/sign-in?next=${encodeURIComponent(next)}`);
+  if (viewer.mustChangePassword) redirect("/reset-password?required=1");
   return viewer;
 }
 

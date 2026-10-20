@@ -2,11 +2,29 @@ import { expect, test } from "@playwright/test";
 import { DEMO, signIn } from "./support/helpers";
 
 test.describe("administration and permissions", () => {
-  test("administrator sees users with emails and roles", async ({ page }) => {
+  test("administrator sees customers and the team on separate pages", async ({ page }) => {
     await signIn(page, DEMO.admin, DEMO.password, "/admin/users");
+    await expect(page).toHaveURL(/\/admin\/customers/);
     await expect(page.getByText(DEMO.owner, { exact: false })).toBeVisible();
-    await expect(page.getByText("Demo Admin (you)")).toBeVisible();
     await expect(page.getByRole("button", { name: "Suspend Demo Buyer" })).toBeVisible();
+    await expect(page.getByText(DEMO.admin, { exact: false })).toHaveCount(0);
+
+    await page.goto("/admin/team");
+    await expect(page.getByText("Demo Admin (you)")).toBeVisible();
+    await expect(page.getByText(DEMO.moderator, { exact: false })).toBeVisible();
+    await expect(page.getByText(DEMO.buyer, { exact: false })).toHaveCount(0);
+  });
+
+  test("administrator adds a customer to the team and removes them again", async ({ page }) => {
+    await signIn(page, DEMO.admin, DEMO.password, "/admin/team");
+    await page.getByLabel("Their account email").fill(DEMO.buyer);
+    await page.getByLabel("Role", { exact: true }).first().selectOption("support");
+    await page.getByRole("button", { name: "Add to team" }).click();
+    await expect(page.getByText(`${DEMO.buyer} now has the`)).toBeVisible();
+
+    page.once("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: "Remove Demo Buyer from the team" }).click();
+    await expect(page.getByText("Removed from the team.")).toBeVisible();
   });
 
   test("administrator saves settings and invalid values are explained", async ({ page }) => {

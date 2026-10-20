@@ -35,3 +35,6 @@ supabase/.temp/
 e2e-report/
 test-results/
 playwright/.cache/
+
+# One-time credentials written by scripts/admin-bootstrap.mjs
+.secrets/

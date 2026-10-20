@@ -1,16 +1,26 @@
 #!/usr/bin/env node
-// Grants the administrator role to an existing, email-verified account.
+// Creates the first administrator, or promotes an existing verified account.
 //
-// Usage (run from a trusted terminal, never from a browser or CI log):
-//   SUPABASE_URL=... SUPABASE_SECRET_KEY=... node scripts/admin-bootstrap.mjs --email you@example.com
+//   Create a new admin account with a one-time password (recommended for the first admin):
+//     SUPABASE_URL=... SUPABASE_SECRET_KEY=... node scripts/admin-bootstrap.mjs --create --email you@example.com
 //
-// The secret key is read from the environment only; it is never written to disk.
+//   Promote an account that already signed up and confirmed its email:
+//     SUPABASE_URL=... SUPABASE_SECRET_KEY=... node scripts/admin-bootstrap.mjs --email you@example.com
+//
+// With --create, a long random one-time password is written to .secrets/first-admin.txt
+// (git-ignored, readable only on this computer) and is never printed. The account must choose
+// its own password at first sign-in before it can use the site. Delete the file afterwards.
+// Run from a trusted terminal only. The secret key is read from the environment, never saved.
+
+import { randomBytes } from "node:crypto";
+import { chmodSync, mkdirSync, writeFileSync } from "node:fs";
 
 const args = process.argv.slice(2);
 const emailIndex = args.indexOf("--email");
-const email = emailIndex >= 0 ? args[emailIndex + 1] : undefined;
+const email = emailIndex >= 0 ? args[emailIndex + 1]?.trim().toLowerCase() : undefined;
+const create = args.includes("--create");
 
-const url = process.env.SUPABASE_URL;
+const url = process.env.SUPABASE_URL?.replace(/\/$/, "");
 const secretKey = process.env.SUPABASE_SECRET_KEY;
 
 function fail(message) {
@@ -25,20 +35,50 @@ if (!url || !secretKey) {
   fail("set SUPABASE_URL and SUPABASE_SECRET_KEY in the environment (see README → Admin bootstrap)");
 }
 
-const response = await fetch(`${url.replace(/\/$/, "")}/rest/v1/rpc/bootstrap_admin`, {
-  method: "POST",
-  headers: {
-    apikey: secretKey,
-    Authorization: `Bearer ${secretKey}`,
-    "Content-Type": "application/json",
-  },
-  body: JSON.stringify({ p_email: email }),
-});
+const headers = { apikey: secretKey, Authorization: `Bearer ${secretKey}`, "Content-Type": "application/json" };
 
-const body = await response.json().catch(() => null);
-
-if (!response.ok) {
-  fail(body?.message ?? `request failed with HTTP ${response.status}`);
+async function call(path, body) {
+  const response = await fetch(`${url}${path}`, { method: "POST", headers, body: JSON.stringify(body) });
+  const data = await response.json().catch(() => null);
+  if (!response.ok) fail(data?.msg ?? data?.message ?? data?.error_description ?? `request to ${path} failed with HTTP ${response.status}`);
+  return data;
 }
 
-console.log(`admin-bootstrap: ${email} is now an administrator (user id ${body}).`);
+if (create) {
+  // 24 random bytes → 32 URL-safe characters, plus a digit and symbol for password rules.
+  const password = `${randomBytes(24).toString("base64url")}9!`;
+  const user = await call("/auth/v1/admin/users", {
+    email,
+    password,
+    email_confirm: true,
+    user_metadata: { display_name: email.split("@")[0] },
+  });
+  await call("/rest/v1/rpc/require_password_change", { p_user_id: user.id });
+
+  const folder = new URL("../.secrets/", import.meta.url);
+  mkdirSync(folder, { recursive: true });
+  const file = new URL("first-admin.txt", folder);
+  writeFileSync(
+    file,
+    [
+      "First administrator — one-time sign-in details. Do not share or commit this file.",
+      `Site:     ${process.env.SITE_URL ?? "http://localhost:3000"}/sign-in`,
+      `Email:    ${email}`,
+      `Password: ${password}`,
+      "",
+      "You must choose a new password straight after signing in. Then delete this file.",
+      "",
+    ].join("\n"),
+    { mode: 0o600 },
+  );
+  try {
+    chmodSync(file, 0o600);
+  } catch {
+    // Windows keeps the default per-user permissions on the user's own folder.
+  }
+  console.log(`admin-bootstrap: created ${email} (user id ${user.id}).`);
+  console.log("admin-bootstrap: one-time password saved to .secrets/first-admin.txt (not printed).");
+}
+
+const id = await call("/rest/v1/rpc/bootstrap_admin", { p_email: email });
+console.log(`admin-bootstrap: ${email} is now a super admin (user id ${id}).`);

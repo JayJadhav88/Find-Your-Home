@@ -284,3 +284,30 @@ export async function handleReport(_previous: FormState, formData: FormData): Pr
   if (error) return { error: friendlyDbError(error) };
   return done(input.data.status === "open" ? "Reopened." : `Marked ${input.data.status}.`);
 }
+
+// ---------------------------------------------------------------------------
+// Team
+// ---------------------------------------------------------------------------
+const TEAM_ROLE_INPUT = z.enum(["administrator", "moderator", "support", "marketing"]);
+
+export async function addTeamMember(_previous: FormState, formData: FormData): Promise<FormState> {
+  const ctx = await adminClient();
+  if (!ctx) return NOT_ALLOWED;
+  const input = z
+    .object({ email: z.email("Enter their account email."), role: TEAM_ROLE_INPUT })
+    .safeParse({ email: text(formData, "email"), role: formData.get("role") });
+  if (!input.success) return { error: input.error.issues[0]?.message ?? "Check the email and role." };
+  const { error } = await ctx.supabase.rpc("admin_add_team_member", { p_email: input.data.email, p_role: input.data.role });
+  if (error) return { error: friendlyDbError(error) };
+  return done(`${input.data.email} now has the ${ROLE_LABEL[input.data.role]} role.`);
+}
+
+export async function removeFromTeam(_previous: FormState, formData: FormData): Promise<FormState> {
+  const ctx = await adminClient();
+  if (!ctx) return NOT_ALLOWED;
+  const id = z.uuid().safeParse(formData.get("userId"));
+  if (!id.success) return { error: "Invalid request." };
+  const { error } = await ctx.supabase.rpc("admin_remove_from_team", { p_user_id: id.data });
+  if (error) return { error: friendlyDbError(error) };
+  return done("Removed from the team. Their customer account stays.");
+}

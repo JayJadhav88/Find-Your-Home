@@ -42,7 +42,7 @@ async function Dashboard({ denied }: { denied: boolean }) {
     ["Live listings", published, "/admin/listings?status=published"],
     ["Enquiries this week", enquiriesWeek, "/admin/enquiries"],
     ["Unhandled enquiries", newEnquiries, "/admin/enquiries?status=new"],
-    ["Members", users, "/admin/users"],
+    ["Members", users, "/admin/customers"],
     ["Open privacy requests", openRequests, "/admin/data-requests"],
   ];
 
