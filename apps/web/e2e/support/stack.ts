@@ -49,7 +49,7 @@ export function stack(): Stack {
     apiUrl,
     publishableKey: status.PUBLISHABLE_KEY ?? status.ANON_KEY ?? "",
     secretKey: status.SECRET_KEY ?? status.SERVICE_ROLE_KEY ?? "",
-    mailpitUrl: status.INBUCKET_URL ?? status.MAILPIT_URL ?? "http://127.0.0.1:54324",
+    mailpitUrl: status.INBUCKET_URL ?? status.MAILPIT_URL ?? "http://127.0.0.1:44324",
     workerSecret: readEnvFile("supabase/functions/.env").WORKER_SECRET,
     revalidateSecret: readEnvFile("apps/web/.env.local").REVALIDATE_SECRET,
   };

@@ -51,7 +51,7 @@ pnpm typecheck && pnpm lint && pnpm build
 | `pnpm --filter @fyh/web build && pnpm --filter @fyh/web start` | Production build of the website on http://localhost:3000 |
 | `pnpm --filter @fyh/mobile start` | Expo dev server |
 
-Local auth emails (confirmation, password reset) are caught by Mailpit at http://127.0.0.1:54324.
+Local auth emails (confirmation, password reset) are caught by Mailpit at http://127.0.0.1:44324.
 
 ### Demo data (local only)
 
@@ -59,16 +59,17 @@ Local auth emails (confirmation, password reset) are caught by Mailpit at http:/
 
 ## Admin bootstrap
 
-There is no public "make me admin" path. To create the first administrator:
-
-1. Sign up normally with the email you want to use and confirm it.
-2. From a trusted terminal, with that environment's API URL and secret key in the shell (not in a file):
+There is no public "make me admin" path, no shared master password and no hard-coded account. To create the first administrator, run this once per environment from a trusted terminal, with that environment's API URL and secret key in the shell (not in a file):
 
 ```bash
-SUPABASE_URL=https://<project>.supabase.co SUPABASE_SECRET_KEY=<secret key> pnpm admin:bootstrap --email you@example.com
+SUPABASE_URL=https://<project>.supabase.co SUPABASE_SECRET_KEY=<secret key> pnpm admin:bootstrap --create --email you@example.com
 ```
 
-The script calls `bootstrap_admin`, which only the service role can execute, and writes an audit-log entry. After that, administrators grant roles from the admin panel (`admin_set_role`).
+This creates the account with a long random one-time password, saved to `.secrets/first-admin.txt` (git-ignored, never printed). Sign in with it; the site sends you straight to "Choose a new password" and nothing else opens until you do. The one-time password then stops working (enforced by the database). Delete the file afterwards.
+
+Without `--create`, the script promotes an account that already signed up and confirmed its email. Either way it calls `bootstrap_admin`, which only the service role can execute, and writes an audit-log entry. After that, administrators manage people in the admin panel: **Team & roles** (staff and their roles) and **Customers** (members). To retire a temporary admin, take away the role or suspend the account there.
+
+Locally the stack listens on ports 44321–44329 (not Supabase's default 543xx), because Windows with Hyper-V/WSL often reserves the 54xxx range after a restart.
 
 ## Database layout
 
@@ -94,7 +95,7 @@ Rule of thumb: clients read and write content through RLS-protected tables; anyt
 - **`supabase_edge_runtime` exits (code 255) after `pnpm db:reset`:** run `docker start supabase_edge_runtime_find-your-home` (or `pnpm db:stop && pnpm db:start`).
 - **A signed-in page stays on “Loading…”** under Next.js 16: anything that reads the session must go through `createUserClient()` (it calls `connection()`), and any clock read must happen after it. Check `next start` output for `blocking-prerender-current-time`.
 - **New photos or listings don't appear after a local rebuild:** `next build` can reuse cached data from an earlier build. Restart, then refresh the listing cache: `curl -X POST http://localhost:3000/api/revalidate -H "x-revalidate-secret: <REVALIDATE_SECRET>"`. The photo worker calls this automatically when `REVALIDATE_URL`/`REVALIDATE_SECRET` are set.
-- **Low memory:** Realtime, Studio, vector storage and log analytics are switched off in `supabase/config.toml` to keep the local stack light. Turn Studio (`[studio] enabled = true`) back on if you want the database UI at http://127.0.0.1:54323.
+- **Low memory:** Realtime, Studio, vector storage and log analytics are switched off in `supabase/config.toml` to keep the local stack light. Turn Studio (`[studio] enabled = true`) back on if you want the database UI at http://127.0.0.1:44323.
 - **`permission denied for function …`** from the API: the function is deliberately not callable by that role (for example `bootstrap_admin` for anyone but the service role).
 
 Deployment, backups and production configuration are documented in Phase 4.

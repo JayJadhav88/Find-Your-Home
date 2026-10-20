@@ -108,26 +108,27 @@ select is(
 -- Report and cancellation
 select tests.as_user('b.marketing@example.test');
 select is(
-  (select total from public.admin_broadcast_report((select min(id) from public.broadcasts)) where channel = 'email' and status = 'pending'),
+  (select total from public.admin_broadcast_report((select min(id) from public.broadcasts where title = 'New projects this week')) where channel = 'email' and status = 'pending'),
   1, 'the report counts queued emails'
 );
 select ok(
-  (select total >= 6 from public.admin_broadcast_report((select min(id) from public.broadcasts)) where channel = 'in_app' and status = 'delivered'),
+  (select total >= 6 from public.admin_broadcast_report((select min(id) from public.broadcasts where title = 'New projects this week')) where channel = 'in_app' and status = 'delivered'),
   'the report counts in-app deliveries'
 );
 select public.admin_create_broadcast('Later', 'Tomorrow.', null, 'team', null, array[]::public.notification_channel[], now() + interval '1 day');
 select lives_ok(
-  $$ select public.admin_cancel_broadcast((select max(id) from public.broadcasts)) $$,
+  $$ select public.admin_cancel_broadcast((select max(id) from public.broadcasts where title = 'Later')) $$,
   'a scheduled broadcast can be cancelled'
 );
 select throws_ok(
-  $$ select public.admin_cancel_broadcast((select min(id) from public.broadcasts)) $$,
+  $$ select public.admin_cancel_broadcast((select min(id) from public.broadcasts where title = 'New projects this week')) $$,
   'PT409', null, 'a sent broadcast cannot be cancelled'
 );
 select tests.as_postgres();
 select is((select public.worker_send_due_broadcasts()), 0, 'cancelled broadcasts are not sent');
 select is(
-  (select count(*)::int from public.audit_log where entity_type = 'broadcast'),
+  (select count(*)::int from public.audit_log where entity_type = 'broadcast'
+   and entity_id in (select id::text from public.broadcasts where title in ('New projects this week', 'Second', 'Later'))),
   4, 'broadcast actions are audited'
 );
 
@@ -143,11 +144,12 @@ select tests.as_user('b.admin@example.test');
 select lives_ok($$ select public.admin_send_test_notification('email') $$, 'administrator sends a test email');
 select tests.as_postgres();
 select is(
-  (select count(*)::int from public.notification_outbox where template = 'integration_test' and channel = 'email'),
+  (select count(*)::int from public.notification_outbox where template = 'integration_test' and channel = 'email'
+   and recipient_user_id = (select id from fx where key = 'admin')),
   1, 'the test email is queued'
 );
 select is(
-  (select count(*)::int from public.notifications where kind = 'integration_test'),
+  (select count(*)::int from public.notifications where kind = 'integration_test' and user_id = (select id from fx where key = 'admin')),
   0, 'test messages do not fill the inbox'
 );
 

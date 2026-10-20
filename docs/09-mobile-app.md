@@ -22,7 +22,7 @@ Security: the session is stored encrypted (key in the iOS Keychain / Android Key
 3. Put that address in `apps/mobile/.env.local` (not committed):
 
 ```
-EXPO_PUBLIC_SUPABASE_URL=http://192.168.1.106:54321
+EXPO_PUBLIC_SUPABASE_URL=http://192.168.1.106:44321
 EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<publishable key from `pnpm exec supabase status`>
 EXPO_PUBLIC_SITE_URL=http://192.168.1.106:3000
 ```

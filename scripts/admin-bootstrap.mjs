@@ -7,7 +7,8 @@
 //   Promote an account that already signed up and confirmed its email:
 //     SUPABASE_URL=... SUPABASE_SECRET_KEY=... node scripts/admin-bootstrap.mjs --email you@example.com
 //
-// With --create, a long random one-time password is written to .secrets/first-admin.txt
+// With --create, a long random one-time password is written to .secrets/first-admin.txt (or
+// the name given with --file)
 // (git-ignored, readable only on this computer) and is never printed. The account must choose
 // its own password at first sign-in before it can use the site. Delete the file afterwards.
 // Run from a trusted terminal only. The secret key is read from the environment, never saved.
@@ -19,6 +20,12 @@ const args = process.argv.slice(2);
 const emailIndex = args.indexOf("--email");
 const email = emailIndex >= 0 ? args[emailIndex + 1]?.trim().toLowerCase() : undefined;
 const create = args.includes("--create");
+const fileIndex = args.indexOf("--file");
+const fileName = fileIndex >= 0 ? args[fileIndex + 1] : "first-admin.txt";
+if (!/^[A-Za-z0-9._-]+\.txt$/.test(fileName ?? "")) {
+  console.error("admin-bootstrap: --file must be a plain file name ending in .txt");
+  process.exit(1);
+}
 
 const url = process.env.SUPABASE_URL?.replace(/\/$/, "");
 const secretKey = process.env.SUPABASE_SECRET_KEY;
@@ -57,7 +64,7 @@ if (create) {
 
   const folder = new URL("../.secrets/", import.meta.url);
   mkdirSync(folder, { recursive: true });
-  const file = new URL("first-admin.txt", folder);
+  const file = new URL(fileName, folder);
   writeFileSync(
     file,
     [
@@ -77,7 +84,7 @@ if (create) {
     // Windows keeps the default per-user permissions on the user's own folder.
   }
   console.log(`admin-bootstrap: created ${email} (user id ${user.id}).`);
-  console.log("admin-bootstrap: one-time password saved to .secrets/first-admin.txt (not printed).");
+  console.log(`admin-bootstrap: one-time password saved to .secrets/${fileName} (not printed).`);
 }
 
 const id = await call("/rest/v1/rpc/bootstrap_admin", { p_email: email });

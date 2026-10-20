@@ -872,6 +872,9 @@ isOneToOne: false
             "add_enquiry_note":
 { Args: { "p_body": string,"p_enquiry_id": string }; Returns: number
                            },
+"admin_add_team_member":
+{ Args: { "p_email": string,"p_role": Database["public"]['Enums']["app_role"] }; Returns: string
+                           },
 "admin_broadcast_audience_size":
 { Args: { "p_audience": string,"p_city"?: string }; Returns: {
               "accepts_news": number,"total": number
@@ -900,8 +903,8 @@ isOneToOne: false
             }[]
                            },
 "admin_list_users":
-{ Args: { "p_limit"?: number,"p_offset"?: number,"p_query"?: string }; Returns: {
-              "created_at": string,"display_name": string,"email": string,"email_confirmed": boolean,"id": string,"listings_count": number,"roles": (Database["public"]['Enums']["app_role"])[],"status": Database["public"]['Enums']["account_status"]
+{ Args: { "p_kind"?: string,"p_limit"?: number,"p_offset"?: number,"p_query"?: string }; Returns: {
+              "created_at": string,"display_name": string,"email": string,"email_confirmed": boolean,"enquiries_count": number,"id": string,"last_sign_in_at": string,"listings_count": number,"roles": (Database["public"]['Enums']["app_role"])[],"status": Database["public"]['Enums']["account_status"]
             }[]
                            },
 "admin_listing_flags":
@@ -914,6 +917,9 @@ isOneToOne: false
                            },
 "admin_record_export":
 { Args: { "p_kind": string,"p_rows": number }; Returns: undefined
+                           },
+"admin_remove_from_team":
+{ Args: { "p_user_id": string }; Returns: undefined
                            },
 "admin_send_test_notification":
 { Args: { "p_channel": Database["public"]['Enums']["notification_channel"] }; Returns: undefined
@@ -969,6 +975,9 @@ isOneToOne: false
 "moderate_listing":
 { Args: { "p_decision": string,"p_listing_id": string,"p_reason"?: string,"p_reason_visible_to_owner"?: boolean }; Returns: Database["public"]['Enums']["listing_status"]
                            },
+"must_change_password":
+{ Args: Record<PropertyKey, never>; Returns: boolean
+                           },
 "my_listing_stats":
 { Args: Record<PropertyKey, never>; Returns: {
               "enquiries_30d": number,"enquiries_total": number,"expires_at": string,"listing_id": string,"saves": number,"views_30d": number
@@ -994,6 +1003,9 @@ isOneToOne: false
                            },
 "request_data_export":
 { Args: Record<PropertyKey, never>; Returns: string
+                           },
+"require_password_change":
+{ Args: { "p_user_id": string }; Returns: undefined
                            },
 "respond_to_visit":
 { Args: { "p_confirm": boolean,"p_enquiry_id": string }; Returns: Database["public"]['Enums']["visit_status"]

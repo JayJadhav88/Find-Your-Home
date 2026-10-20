@@ -7,7 +7,7 @@ function fakeJwt(payload: object): string {
 }
 
 const valid = {
-  supabaseUrl: "http://127.0.0.1:54321",
+  supabaseUrl: "http://127.0.0.1:44321",
   supabasePublishableKey: "sb_publishable_0123456789abcdefghij",
   siteUrl: "http://localhost:3000",
 };

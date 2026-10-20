@@ -25,7 +25,7 @@ const publishableKey = z
   });
 
 export const publicEnvSchema = z.object({
-  supabaseUrl: z.url("Supabase URL must be a full URL, e.g. http://127.0.0.1:54321"),
+  supabaseUrl: z.url("Supabase URL must be a full URL, e.g. http://127.0.0.1:44321"),
   supabasePublishableKey: publishableKey,
   siteUrl: z.url("Site URL must be a full URL, e.g. http://localhost:3000"),
 });

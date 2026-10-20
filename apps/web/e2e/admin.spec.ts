@@ -24,7 +24,10 @@ test.describe("administration and permissions", () => {
 
     page.once("dialog", (dialog) => dialog.accept());
     await page.getByRole("button", { name: "Remove Demo Buyer from the team" }).click();
-    await expect(page.getByText("Removed from the team.")).toBeVisible();
+    // They leave the team list (and stay a customer).
+    await expect(page.getByRole("button", { name: "Remove Demo Buyer from the team" })).toHaveCount(0);
+    await page.goto("/admin/customers");
+    await expect(page.getByRole("button", { name: "Suspend Demo Buyer" })).toBeVisible();
   });
 
   test("administrator saves settings and invalid values are explained", async ({ page }) => {

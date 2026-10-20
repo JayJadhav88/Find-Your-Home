@@ -95,7 +95,7 @@ Each enquiry is one row (updated when its status or owner changes). The sheet co
 ### Google sign-in
 
 1. Google Cloud Console → APIs & Services → Credentials → Create OAuth client ID → Web application.
-2. Authorized redirect URI: `https://<your-project>.supabase.co/auth/v1/callback` (locally `http://127.0.0.1:54321/auth/v1/callback`).
+2. Authorized redirect URI: `https://<your-project>.supabase.co/auth/v1/callback` (locally `http://127.0.0.1:44321/auth/v1/callback`).
 3. Supabase Dashboard → Authentication → Providers → Google: paste client ID and secret, enable. Authentication → URL configuration: add your site URL and `findyourhome://**` to redirect URLs.
 4. Set `NEXT_PUBLIC_GOOGLE_SIGN_IN=true` (website) and `EXPO_PUBLIC_GOOGLE_SIGN_IN=true` (app build) to show the button.
 

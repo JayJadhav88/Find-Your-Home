@@ -115,7 +115,8 @@ select is(
   2, 'the sheet row is refreshed after the change'
 );
 select is(
-  (select count(*)::int from public.audit_log where action = 'enquiry.update'),
+  (select count(*)::int from public.audit_log where action = 'enquiry.update'
+   and entity_id = (select id from fx where key = 'enquiry')::text),
   1, 'team changes are audited'
 );
 
@@ -127,7 +128,7 @@ select lives_ok(
   $$ select public.add_enquiry_note((select id from fx where key = 'enquiry'), 'Called, visit on Saturday.') $$,
   'support adds a note'
 );
-select is((select count(*)::int from public.enquiry_notes), 1, 'support reads notes');
+select is((select count(*)::int from public.enquiry_notes where enquiry_id = (select id from fx where key = 'enquiry')), 1, 'support reads notes');
 select tests.as_user('c.owner@example.test');
 select is((select count(*)::int from public.enquiry_notes), 0, 'notes are internal: listers cannot read them');
 select throws_ok(

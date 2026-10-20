@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 // Listing photos are served from the Supabase "listing-public" bucket.
-const supabaseUrl = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:54321");
+const supabaseUrl = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "http://127.0.0.1:44321");
 const isLocalSupabase = ["127.0.0.1", "localhost"].includes(supabaseUrl.hostname);
 
 const securityHeaders = [

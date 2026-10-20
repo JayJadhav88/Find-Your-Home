@@ -25,7 +25,7 @@ if (!secret) {
   process.exit(1);
 }
 
-const base = (process.env.FUNCTIONS_URL ?? "http://127.0.0.1:54321/functions/v1").replace(/\/$/, "");
+const base = (process.env.FUNCTIONS_URL ?? "http://127.0.0.1:44321/functions/v1").replace(/\/$/, "");
 
 async function call(name) {
   try {
