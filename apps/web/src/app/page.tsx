@@ -1,12 +1,14 @@
+import { BannerCarousel } from "@/components/banner-carousel";
 import { ListingCard, ListingGrid } from "@/components/listing-card";
 import { Button, EmptyState, Select, TextInput } from "@/components/ui";
-import { getHomeListings, getSiteSettings, getTaxonomy } from "@/lib/public-data";
+import { getBanners, getHomeListings, getSiteSettings, getTaxonomy } from "@/lib/public-data";
 
 export default async function HomePage() {
-  const [settings, taxonomy, { featured, recent, newProjects }] = await Promise.all([
+  const [settings, taxonomy, { featured, recent, newProjects }, banners] = await Promise.all([
     getSiteSettings(),
     getTaxonomy(),
     getHomeListings(),
+    getBanners("web"),
   ]);
   const cities = taxonomy.locations.filter((location) => location.level === "city");
 
@@ -48,6 +50,7 @@ export default async function HomePage() {
           </form>
         </div>
       </section>
+      <BannerCarousel banners={banners} />
 
       <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12">
         {featured.length ? (

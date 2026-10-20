@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
+import { Suspense } from "react";
 import { SiteFooter } from "@/components/site-footer";
+import { FloatingAction } from "@/components/floating-action";
 import { SiteHeader } from "@/components/site-header";
 import { env } from "@/lib/env";
 import { getSiteSettings } from "@/lib/public-data";
@@ -37,6 +39,9 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           {children}
         </main>
         <SiteFooter />
+        <Suspense fallback={null}>
+          <FloatingAction />
+        </Suspense>
       </body>
     </html>
   );

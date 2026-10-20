@@ -153,3 +153,25 @@ export async function getBuilderBySlug(slug: string) {
     .maybeSingle();
   return data;
 }
+
+export async function getBanners(audience: "web" | "app" = "web") {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("banners");
+  const { data } = await createPublicClient()
+    .from("banners")
+    .select("id, title, subtitle, image_url, cta_label, target_url, audience")
+    .in("audience", ["all", audience])
+    .order("sort_order")
+    .order("created_at", { ascending: false })
+    .limit(8);
+  return data ?? [];
+}
+
+export async function getFloatingAction() {
+  "use cache";
+  cacheLife("minutes");
+  cacheTag("floating-action");
+  const { data } = await createPublicClient().from("floating_action").select("is_active, icon, label, target_url, position").maybeSingle();
+  return data?.is_active && data.target_url ? data : null;
+}
