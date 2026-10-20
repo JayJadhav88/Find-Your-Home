@@ -153,7 +153,9 @@ select tests.as_anon();
 select public.submit_contact_lead('Ravi K', null, '090000-00001', 'list_property', 'Second message', null, null, null, 'v1');
 select tests.as_user('l.crm@example.test');
 select is(
-  (select count(*)::int from public.admin_enquiry_duplicates((select id from fx where key = 'owner_lead'))),
+  -- Counts only this test's leads: the local database may hold other leads with the same test number.
+  (select count(*)::int from public.admin_enquiry_duplicates((select id from fx where key = 'owner_lead')) d
+   join public.enquiries e on e.id = d.id where e.name = 'Ravi K'),
   1, 'the same phone number in another format is flagged as a likely duplicate'
 );
 select lives_ok(

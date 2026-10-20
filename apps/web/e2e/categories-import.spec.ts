@@ -153,8 +153,8 @@ test("imported new project shows photo, builder and click-to-play videos", async
   await page.getByRole("link", { name: projectTitle }).click();
   await expect(page.getByRole("heading", { level: 1, name: projectTitle })).toBeVisible();
   await expect(page.getByText("E2E Import Towers").first()).toBeVisible();
-  await expect(page.getByText("Verified builder")).toBeVisible();
-  await expect(page.getByText("[DEMO] Example Builders Ltd")).toBeVisible();
+  // Imported for a builder account, so the project links to that builder's page.
+  await expect(page.getByRole("link", { name: "[DEMO] Example Builders Ltd" })).toHaveAttribute("href", /^\/builders\//);
 
   const photo = page.locator("section[aria-label=Photos] img").first();
   await expect.poll(() => photo.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);

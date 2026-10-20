@@ -15,6 +15,7 @@ const PUBLIC_BUCKET = "listing-public";
 interface Job {
   id: number;
   kind: "publish_listing_media" | "unpublish_listing_media" | "import_listing_images" | "sync_enquiry_sheet" | "geocode_listing";
+  // Every listing job has one (a database check); Google Sheets jobs may not.
   listing_id: string;
   attempts: number;
   payload: { urls?: string[]; publish?: boolean; enquiry_id?: string };
@@ -244,7 +245,7 @@ async function syncEnquirySheet(db: SupabaseClient, job: Job) {
     .from("enquiries")
     .select(
       "id, created_at, status, kind, name, email, phone, message, requested_visit_at, requested_timezone, follow_up_at, " +
-        "lead_type, interest, source, lost_reason, " +
+        "lead_type, interest, source, lost_reason, city, " +
         "listing:listings(title, reference_code, category, city:locations!listings_city_id_fkey(name)), " +
         "owner:profiles!enquiries_team_assignee_fkey(display_name)",
     )
@@ -255,7 +256,7 @@ async function syncEnquirySheet(db: SupabaseClient, job: Job) {
 
   type Loaded = {
     id: string; created_at: string; status: string; kind: string; name: string; email: string | null; phone: string | null;
-    lead_type: string; interest: string | null; source: string; lost_reason: string | null;
+    lead_type: string; interest: string | null; source: string; lost_reason: string | null; city: string | null;
     message: string; requested_visit_at: string | null; requested_timezone: string | null; follow_up_at: string | null;
     listing: { title: string; reference_code: string; category: string; city: { name: string } | null } | null;
     owner: { display_name: string } | null;
@@ -270,7 +271,8 @@ async function syncEnquirySheet(db: SupabaseClient, job: Job) {
         listing_title: row.listing?.title ?? null,
         reference: row.listing?.reference_code ?? null,
         category: row.listing?.category ?? null,
-        city: row.listing?.city?.name ?? null,
+        // A lead without a property (e.g. Contact us) carries the city the person typed.
+        city: row.listing?.city?.name ?? row.city,
         team_owner: row.owner?.display_name ?? null,
       },
       siteUrl,

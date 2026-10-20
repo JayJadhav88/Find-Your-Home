@@ -7,6 +7,11 @@
 --   demo.owner@example.test  (owner)
 --   demo.buyer@example.test  (buyer)
 --   demo.builder@example.test (builder: can list new projects)
+--   demo.crm@example.test    (CRM manager: all leads)
+--   demo.sales@example.test  (sales agent: only leads assigned to them)
+--   demo.support@example.test (support: all leads)
+--   demo.content@example.test (content manager: pages, banners, floating button)
+--   demo.marketing@example.test (marketing: messages to members)
 
 -- Currency and defaults for the demo. Real deployments choose these in admin settings.
 update public.currencies set is_enabled = true where code = 'USD';
@@ -28,7 +33,12 @@ from (values
   ('d0000000-0000-4000-8000-000000000002'::uuid, 'demo.moderator@example.test', 'Demo Moderator'),
   ('d0000000-0000-4000-8000-000000000003'::uuid, 'demo.owner@example.test', 'Demo Owner'),
   ('d0000000-0000-4000-8000-000000000004'::uuid, 'demo.buyer@example.test', 'Demo Buyer'),
-  ('d0000000-0000-4000-8000-000000000005'::uuid, 'demo.builder@example.test', 'Demo Builder')
+  ('d0000000-0000-4000-8000-000000000005'::uuid, 'demo.builder@example.test', 'Demo Builder'),
+  ('d0000000-0000-4000-8000-000000000006'::uuid, 'demo.crm@example.test', 'Demo CRM Manager'),
+  ('d0000000-0000-4000-8000-000000000007'::uuid, 'demo.sales@example.test', 'Demo Sales Agent'),
+  ('d0000000-0000-4000-8000-000000000008'::uuid, 'demo.support@example.test', 'Demo Support'),
+  ('d0000000-0000-4000-8000-000000000009'::uuid, 'demo.content@example.test', 'Demo Content Manager'),
+  ('d0000000-0000-4000-8000-000000000010'::uuid, 'demo.marketing@example.test', 'Demo Marketing')
 ) as u (id, email, display_name);
 
 insert into auth.identities (id, user_id, provider_id, provider, identity_data, last_sign_in_at, created_at, updated_at)
@@ -40,7 +50,12 @@ insert into public.user_roles (user_id, role) values
   ('d0000000-0000-4000-8000-000000000001', 'administrator'),
   ('d0000000-0000-4000-8000-000000000002', 'moderator'),
   ('d0000000-0000-4000-8000-000000000003', 'owner'),
-  ('d0000000-0000-4000-8000-000000000005', 'builder');
+  ('d0000000-0000-4000-8000-000000000005', 'builder'),
+  ('d0000000-0000-4000-8000-000000000006', 'crm_manager'),
+  ('d0000000-0000-4000-8000-000000000007', 'sales_agent'),
+  ('d0000000-0000-4000-8000-000000000008', 'support'),
+  ('d0000000-0000-4000-8000-000000000009', 'content_manager'),
+  ('d0000000-0000-4000-8000-000000000010', 'marketing');
 
 insert into public.builder_profiles (user_id, company_name, registration_number)
 values ('d0000000-0000-4000-8000-000000000005', '[DEMO] Example Builders Ltd', 'DEMO-REG-001');

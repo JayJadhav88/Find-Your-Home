@@ -150,5 +150,12 @@ select ok(
   'new listings with a PIN code are queued for map coordinates'
 );
 
+-- Projects the team adds for a builder account (e.g. the Excel import) link to that builder.
+select tests.as_postgres();
+insert into public.listings (title, category, purpose, owner_id)
+values ('Imported Skyline Heights', 'new_project', 'sale', (select id from fx where key = 'builder_user'));
+select is((select builder_id from public.listings where title = 'Imported Skyline Heights'),
+  (select id from fx where key = 'skyline'), 'a project added by the team for a builder account links to that builder');
+
 select * from finish();
 rollback;
