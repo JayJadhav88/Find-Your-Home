@@ -64,6 +64,7 @@ export const STATUS_LABEL: Record<string, string> = {
 export const FURNISHING_LABEL = { unfurnished: "Unfurnished", semi_furnished: "Semi-furnished", furnished: "Furnished" } as const;
 
 export const POSSESSION_LABEL = {
+  upcoming: "Upcoming launch",
   ready: "Ready to move in",
   under_construction: "Under construction",
   available_from_date: "Available from a date",

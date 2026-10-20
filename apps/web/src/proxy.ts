@@ -7,6 +7,21 @@ import { type NextRequest, NextResponse } from "next/server";
 
 const PRIVATE_PREFIXES = ["/account", "/admin"];
 
+// Where a visitor came from (campaign links, QR codes, referral codes). First touch wins for
+// 30 days; the enquiry and contact forms attach it to the lead. Not personal data.
+const ATTRIBUTION_COOKIE = "fyh_src";
+const ATTRIBUTION_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "ref"] as const;
+
+function attributionFrom(request: NextRequest): string | null {
+  if (request.cookies.has(ATTRIBUTION_COOKIE)) return null;
+  const found: Record<string, string> = {};
+  for (const key of ATTRIBUTION_KEYS) {
+    const value = request.nextUrl.searchParams.get(key)?.trim();
+    if (value) found[key] = value.replace(/[^\w .:/@+-]/g, "").slice(0, 100);
+  }
+  return Object.keys(found).length ? JSON.stringify(found) : null;
+}
+
 export async function proxy(request: NextRequest) {
   let response = NextResponse.next({ request });
 
@@ -36,6 +51,10 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  const attribution = attributionFrom(request);
+  if (attribution) {
+    response.cookies.set(ATTRIBUTION_COOKIE, attribution, { maxAge: 60 * 60 * 24 * 30, sameSite: "lax", path: "/" });
+  }
   return response;
 }
 

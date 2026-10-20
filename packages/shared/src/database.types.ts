@@ -193,14 +193,14 @@ isOneToOne: false
                   ]
                 },"enquiries": {
                   Row: {
-                    "assigned_to": string | null,"consent_text_version": string | null,"created_at": string,"email": string,"follow_up_at": string | null,"handled_at": string | null,"handled_by": string | null,"id": string,"ip_hash": string | null,"kind": Database["public"]['Enums']["enquiry_kind"],"listing_id": string,"message": string,"name": string,"phone": string | null,"requested_timezone": string | null,"requested_visit_at": string | null,"sender_user_id": string | null,"status": Database["public"]['Enums']["enquiry_status"],"team_assignee": string | null,"updated_at": string,"visit_status": Database["public"]['Enums']["visit_status"] | null
+                    "assigned_to": string | null,"city": string | null,"consent_text_version": string | null,"created_at": string,"email": string | null,"first_response_at": string | null,"follow_up_at": string | null,"handled_at": string | null,"handled_by": string | null,"id": string,"interest": string | null,"ip_hash": string | null,"kind": Database["public"]['Enums']["enquiry_kind"],"lead_type": string,"listing_id": string | null,"lost_reason": string | null,"message": string,"name": string,"phone": string | null,"preferred_contact": string | null,"property_reference": string | null,"requested_timezone": string | null,"requested_visit_at": string | null,"sender_user_id": string | null,"source": string,"status": Database["public"]['Enums']["enquiry_status"],"team_assignee": string | null,"updated_at": string,"utm": NonNullable<Json>,"visit_status": Database["public"]['Enums']["visit_status"] | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "assigned_to"?: string | null,"consent_text_version"?: string | null,"created_at"?: string,"email": string,"follow_up_at"?: string | null,"handled_at"?: string | null,"handled_by"?: string | null,"id"?: string,"ip_hash"?: string | null,"kind"?: Database["public"]['Enums']["enquiry_kind"],"listing_id": string,"message": string,"name": string,"phone"?: string | null,"requested_timezone"?: string | null,"requested_visit_at"?: string | null,"sender_user_id"?: string | null,"status"?: Database["public"]['Enums']["enquiry_status"],"team_assignee"?: string | null,"updated_at"?: string,"visit_status"?: Database["public"]['Enums']["visit_status"] | null
+                    "assigned_to"?: string | null,"city"?: string | null,"consent_text_version"?: string | null,"created_at"?: string,"email"?: string | null,"first_response_at"?: string | null,"follow_up_at"?: string | null,"handled_at"?: string | null,"handled_by"?: string | null,"id"?: string,"interest"?: string | null,"ip_hash"?: string | null,"kind"?: Database["public"]['Enums']["enquiry_kind"],"lead_type"?: string,"listing_id"?: string | null,"lost_reason"?: string | null,"message": string,"name": string,"phone"?: string | null,"preferred_contact"?: string | null,"property_reference"?: string | null,"requested_timezone"?: string | null,"requested_visit_at"?: string | null,"sender_user_id"?: string | null,"source"?: string,"status"?: Database["public"]['Enums']["enquiry_status"],"team_assignee"?: string | null,"updated_at"?: string,"utm"?: NonNullable<Json>,"visit_status"?: Database["public"]['Enums']["visit_status"] | null
                   }
                   Update: {
-                    "assigned_to"?: string | null,"consent_text_version"?: string | null,"created_at"?: string,"email"?: string,"follow_up_at"?: string | null,"handled_at"?: string | null,"handled_by"?: string | null,"id"?: string,"ip_hash"?: string | null,"kind"?: Database["public"]['Enums']["enquiry_kind"],"listing_id"?: string,"message"?: string,"name"?: string,"phone"?: string | null,"requested_timezone"?: string | null,"requested_visit_at"?: string | null,"sender_user_id"?: string | null,"status"?: Database["public"]['Enums']["enquiry_status"],"team_assignee"?: string | null,"updated_at"?: string,"visit_status"?: Database["public"]['Enums']["visit_status"] | null
+                    "assigned_to"?: string | null,"city"?: string | null,"consent_text_version"?: string | null,"created_at"?: string,"email"?: string | null,"first_response_at"?: string | null,"follow_up_at"?: string | null,"handled_at"?: string | null,"handled_by"?: string | null,"id"?: string,"interest"?: string | null,"ip_hash"?: string | null,"kind"?: Database["public"]['Enums']["enquiry_kind"],"lead_type"?: string,"listing_id"?: string | null,"lost_reason"?: string | null,"message"?: string,"name"?: string,"phone"?: string | null,"preferred_contact"?: string | null,"property_reference"?: string | null,"requested_timezone"?: string | null,"requested_visit_at"?: string | null,"sender_user_id"?: string | null,"source"?: string,"status"?: Database["public"]['Enums']["enquiry_status"],"team_assignee"?: string | null,"updated_at"?: string,"utm"?: NonNullable<Json>,"visit_status"?: Database["public"]['Enums']["visit_status"] | null
                   }
                   Relationships: [
                     {
@@ -232,6 +232,32 @@ isOneToOne: false
       columns: ["team_assignee"]
 isOneToOne: false
       referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"enquiry_events": {
+                  Row: {
+                    "actor_id": string | null,"created_at": string,"enquiry_id": string,"from_value": string | null,"id": number,"kind": string,"note": string | null,"to_value": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "actor_id"?: string | null,"created_at"?: string,"enquiry_id": string,"from_value"?: string | null,"id"?: never,"kind": string,"note"?: string | null,"to_value"?: string | null
+                  }
+                  Update: {
+                    "actor_id"?: string | null,"created_at"?: string,"enquiry_id"?: string,"from_value"?: string | null,"id"?: never,"kind"?: string,"note"?: string | null,"to_value"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "enquiry_events_actor_id_fkey"
+      columns: ["actor_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "enquiry_events_enquiry_id_fkey"
+      columns: ["enquiry_id"]
+isOneToOne: false
+      referencedRelation: "enquiries"
       referencedColumns: ["id"]
     }
                   ]
@@ -891,6 +917,14 @@ isOneToOne: false
 "admin_create_broadcast":
 { Args: { "p_audience": string,"p_body": string,"p_channels": (Database["public"]['Enums']["notification_channel"])[],"p_city": string,"p_scheduled_at"?: string,"p_title": string,"p_url": string }; Returns: number
                            },
+"admin_create_lead":
+{ Args: { "p_city"?: string,"p_email": string,"p_interest": string,"p_listing_id"?: string,"p_message": string,"p_name": string,"p_phone": string,"p_source"?: string }; Returns: string
+                           },
+"admin_enquiry_duplicates":
+{ Args: { "p_enquiry_id": string }; Returns: {
+              "created_at": string,"id": string,"listing_title": string,"source": string,"status": Database["public"]['Enums']["enquiry_status"]
+            }[]
+                           },
 "admin_handle_report":
 { Args: { "p_report_id": number,"p_status": string }; Returns: undefined
                            },
@@ -940,7 +974,7 @@ isOneToOne: false
 { Args: { "p_id": string,"p_notes"?: string,"p_status": Database["public"]['Enums']["data_request_status"] }; Returns: undefined
                            },
 "admin_update_enquiry":
-{ Args: { "p_enquiry_id": string,"p_follow_up_at": string,"p_status": Database["public"]['Enums']["enquiry_status"],"p_team_assignee": string }; Returns: undefined
+{ Args: { "p_enquiry_id": string,"p_follow_up_at": string,"p_lost_reason"?: string,"p_status": Database["public"]['Enums']["enquiry_status"],"p_team_assignee": string }; Returns: undefined
                            },
 "assign_listing_agent":
 { Args: { "p_agent_id": string,"p_listing_id": string }; Returns: undefined
@@ -968,6 +1002,9 @@ isOneToOne: false
 { Args: { "p_listing_id": string }; Returns: {
               "created_at": string,"from_status": Database["public"]['Enums']["listing_status"],"reason": string,"to_status": Database["public"]['Enums']["listing_status"]
             }[]
+                           },
+"log_contact_attempt":
+{ Args: { "p_enquiry_id": string,"p_note"?: string,"p_outcome": string }; Returns: undefined
                            },
 "mark_notifications_read":
 { Args: { "p_ids"?: (number)[] }; Returns: number
@@ -1024,8 +1061,11 @@ isOneToOne: false
 "set_listing_outcome":
 { Args: { "p_listing_id": string,"p_outcome": Database["public"]['Enums']["listing_status"] }; Returns: Database["public"]['Enums']["listing_status"]
                            },
+"submit_contact_lead":
+{ Args: { "p_city"?: string,"p_consent_text_version"?: string,"p_email": string,"p_interest": string,"p_message": string,"p_name": string,"p_phone": string,"p_preferred_contact"?: string,"p_property_reference"?: string,"p_source"?: string,"p_utm"?: Json }; Returns: string
+                           },
 "submit_enquiry":
-{ Args: { "p_consent_text_version"?: string,"p_email": string,"p_kind"?: Database["public"]['Enums']["enquiry_kind"],"p_listing_id": string,"p_message": string,"p_name": string,"p_phone"?: string,"p_requested_timezone"?: string,"p_requested_visit_at"?: string }; Returns: string
+{ Args: { "p_consent_text_version"?: string,"p_email": string,"p_kind"?: Database["public"]['Enums']["enquiry_kind"],"p_listing_id": string,"p_message": string,"p_name": string,"p_phone"?: string,"p_requested_timezone"?: string,"p_requested_visit_at"?: string,"p_source"?: string,"p_utm"?: Json }; Returns: string
                            },
 "submit_listing":
 { Args: { "p_listing_id": string }; Returns: Database["public"]['Enums']["listing_status"]
@@ -1098,7 +1138,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "account_status": "active"|"suspended"|"deletion_requested","address_visibility": "exact"|"approximate"|"hidden","app_role": "buyer"|"owner"|"agent"|"moderator"|"administrator"|"builder"|"support"|"marketing","area_unit": "sq_m"|"sq_ft"|"acre"|"hectare","broadcast_status": "scheduled"|"sending"|"sent"|"cancelled","data_request_kind": "export"|"deletion","data_request_status": "pending"|"in_progress"|"completed"|"rejected","enquiry_kind": "enquiry"|"visit_request","enquiry_status": "new"|"in_progress"|"visit_scheduled"|"responded"|"closed"|"spam","furnishing": "unfurnished"|"semi_furnished"|"furnished","listing_category": "rental"|"resale"|"new_project","listing_purpose": "sale"|"rent","listing_status": "draft"|"pending_review"|"published"|"rejected"|"suspended"|"archived"|"sold"|"rented","location_level": "country"|"region"|"city"|"locality","media_kind": "image"|"document","notification_channel": "email"|"whatsapp"|"push","outbox_status": "pending"|"sent"|"failed"|"skipped_not_configured"|"skipped_preference","possession_status": "ready"|"under_construction"|"available_from_date","price_display": "show"|"on_request","price_period": "total"|"per_month"|"per_year"|"per_week"|"per_day","video_provider": "youtube"|"instagram","visit_status": "requested"|"confirmed"|"declined"|"cancelled"
+            "account_status": "active"|"suspended"|"deletion_requested","address_visibility": "exact"|"approximate"|"hidden","app_role": "buyer"|"owner"|"agent"|"moderator"|"administrator"|"builder"|"support"|"marketing"|"crm_manager"|"sales_agent"|"content_manager","area_unit": "sq_m"|"sq_ft"|"acre"|"hectare","broadcast_status": "scheduled"|"sending"|"sent"|"cancelled","data_request_kind": "export"|"deletion","data_request_status": "pending"|"in_progress"|"completed"|"rejected","enquiry_kind": "enquiry"|"visit_request","enquiry_status": "new"|"assigned"|"in_progress"|"qualified"|"visit_scheduled"|"negotiation"|"won"|"lost"|"unqualified"|"responded"|"closed"|"spam","furnishing": "unfurnished"|"semi_furnished"|"furnished","listing_category": "rental"|"resale"|"new_project","listing_purpose": "sale"|"rent","listing_status": "draft"|"pending_review"|"published"|"rejected"|"suspended"|"archived"|"sold"|"rented","location_level": "country"|"region"|"city"|"locality","media_kind": "image"|"document","notification_channel": "email"|"whatsapp"|"push","outbox_status": "pending"|"sent"|"failed"|"skipped_not_configured"|"skipped_preference","possession_status": "upcoming"|"ready"|"under_construction"|"available_from_date","price_display": "show"|"on_request","price_period": "total"|"per_month"|"per_year"|"per_week"|"per_day","video_provider": "youtube"|"instagram","visit_status": "requested"|"confirmed"|"declined"|"cancelled"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -1214,7 +1254,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "account_status": ["active", "suspended", "deletion_requested"],"address_visibility": ["exact", "approximate", "hidden"],"app_role": ["buyer", "owner", "agent", "moderator", "administrator", "builder", "support", "marketing"],"area_unit": ["sq_m", "sq_ft", "acre", "hectare"],"broadcast_status": ["scheduled", "sending", "sent", "cancelled"],"data_request_kind": ["export", "deletion"],"data_request_status": ["pending", "in_progress", "completed", "rejected"],"enquiry_kind": ["enquiry", "visit_request"],"enquiry_status": ["new", "in_progress", "visit_scheduled", "responded", "closed", "spam"],"furnishing": ["unfurnished", "semi_furnished", "furnished"],"listing_category": ["rental", "resale", "new_project"],"listing_purpose": ["sale", "rent"],"listing_status": ["draft", "pending_review", "published", "rejected", "suspended", "archived", "sold", "rented"],"location_level": ["country", "region", "city", "locality"],"media_kind": ["image", "document"],"notification_channel": ["email", "whatsapp", "push"],"outbox_status": ["pending", "sent", "failed", "skipped_not_configured", "skipped_preference"],"possession_status": ["ready", "under_construction", "available_from_date"],"price_display": ["show", "on_request"],"price_period": ["total", "per_month", "per_year", "per_week", "per_day"],"video_provider": ["youtube", "instagram"],"visit_status": ["requested", "confirmed", "declined", "cancelled"]
+            "account_status": ["active", "suspended", "deletion_requested"],"address_visibility": ["exact", "approximate", "hidden"],"app_role": ["buyer", "owner", "agent", "moderator", "administrator", "builder", "support", "marketing", "crm_manager", "sales_agent", "content_manager"],"area_unit": ["sq_m", "sq_ft", "acre", "hectare"],"broadcast_status": ["scheduled", "sending", "sent", "cancelled"],"data_request_kind": ["export", "deletion"],"data_request_status": ["pending", "in_progress", "completed", "rejected"],"enquiry_kind": ["enquiry", "visit_request"],"enquiry_status": ["new", "assigned", "in_progress", "qualified", "visit_scheduled", "negotiation", "won", "lost", "unqualified", "responded", "closed", "spam"],"furnishing": ["unfurnished", "semi_furnished", "furnished"],"listing_category": ["rental", "resale", "new_project"],"listing_purpose": ["sale", "rent"],"listing_status": ["draft", "pending_review", "published", "rejected", "suspended", "archived", "sold", "rented"],"location_level": ["country", "region", "city", "locality"],"media_kind": ["image", "document"],"notification_channel": ["email", "whatsapp", "push"],"outbox_status": ["pending", "sent", "failed", "skipped_not_configured", "skipped_preference"],"possession_status": ["upcoming", "ready", "under_construction", "available_from_date"],"price_display": ["show", "on_request"],"price_period": ["total", "per_month", "per_year", "per_week", "per_day"],"video_provider": ["youtube", "instagram"],"visit_status": ["requested", "confirmed", "declined", "cancelled"]
           }
         }
 } as const

@@ -16,7 +16,7 @@ import { useResource } from "@/lib/use-resource";
 const { colors, spacing, fontSize, radius } = tokens;
 
 const FURNISHING = { unfurnished: "Unfurnished", semi_furnished: "Semi-furnished", furnished: "Furnished" } as const;
-const POSSESSION = { ready: "Ready to move in", under_construction: "Under construction", available_from_date: "Available from a date" } as const;
+const POSSESSION = { upcoming: "Upcoming launch", ready: "Ready to move in", under_construction: "Under construction", available_from_date: "Available from a date" } as const;
 
 export default function ListingScreen() {
   const params = useLocalSearchParams<"/listing/[reference]">();

@@ -2,6 +2,7 @@
 
 import { enquirySchema, fieldErrors, zonedLocalToUtc } from "@fyh/shared";
 import { useState, useSyncExternalStore, useTransition } from "react";
+import { readAttribution } from "@/lib/attribution";
 import { getBrowserClient } from "@/lib/supabase-browser";
 import { Alert, Button, Checkbox, Field, TextArea, TextInput } from "./ui";
 
@@ -63,6 +64,8 @@ export function EnquiryForm({
         p_requested_visit_at: visitAt ?? undefined,
         p_requested_timezone: values.kind === "visit_request" ? values.timeZone : undefined,
         p_consent_text_version: CONSENT_VERSION,
+        p_source: readAttribution().source,
+        p_utm: readAttribution().utm,
       });
       if (error) {
         setResult({

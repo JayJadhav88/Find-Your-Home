@@ -157,6 +157,7 @@ const FURNISHING_VALUES: Record<string, string> = {
   "fully furnished": "furnished",
 };
 const POSSESSION_VALUES: Record<string, string> = {
+  upcoming: "upcoming", "upcoming launch": "upcoming", "pre launch": "upcoming", "pre-launch": "upcoming",
   ready: "ready", "ready to move": "ready", "ready to move in": "ready",
   "under construction": "under_construction", "available from date": "available_from_date",
   "available from": "available_from_date",

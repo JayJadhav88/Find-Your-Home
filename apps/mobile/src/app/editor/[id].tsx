@@ -329,7 +329,7 @@ export default function EditorScreen() {
                 <View style={{ flex: 1 }}><Field label="Parking" keyboardType="number-pad" value={v("parkingSpaces")} onChangeText={set("parkingSpaces")} error={errors.parkingSpaces} /></View>
               </View>
               <Segmented label="Furnishing" value={v("furnishing")} options={[{ value: "", label: "—" }, { value: "unfurnished", label: "Unfurnished" }, { value: "semi_furnished", label: "Semi" }, { value: "furnished", label: "Furnished" }]} onChange={set("furnishing")} />
-              <Segmented label="Availability" value={v("possessionStatus")} options={[{ value: "", label: "—" }, { value: "ready", label: "Ready" }, { value: "under_construction", label: "Under construction" }]} onChange={set("possessionStatus")} />
+              <Segmented label="Availability" value={v("possessionStatus")} options={[{ value: "", label: "—" }, { value: "upcoming", label: "Upcoming" }, { value: "under_construction", label: "Under construction" }, { value: "ready", label: "Ready" }]} onChange={set("possessionStatus")} />
             </Card>
 
             {taxonomy.amenities.length ? (
