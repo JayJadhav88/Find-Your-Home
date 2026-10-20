@@ -411,6 +411,7 @@ export async function updateTeamAlerts(client: Client, userId: string, alerts: {
 const SAVED_FILTER_KEYS = [
   "p_q", "p_purpose", "p_category", "p_property_type_ids", "p_location_id", "p_currency", "p_min_price", "p_max_price",
   "p_min_bedrooms", "p_min_bathrooms", "p_min_area", "p_max_area", "p_area_unit", "p_amenity_ids", "p_furnishing",
+  "p_builder_id", "p_construction", "p_postal_code", "p_near_lat", "p_near_lng", "p_radius_km",
 ] as const;
 
 /** Search arguments worth saving: the filters, without paging, sorting, "featured" or "recent". */
@@ -469,4 +470,55 @@ export async function myListingStats(client: Client) {
 
 export async function renewListing(client: Client, listingId: string) {
   return check(await client.rpc("renew_listing", { p_listing_id: listingId }));
+}
+
+// Places ("near a place" search), through the cached OpenStreetMap lookup function.
+export async function lookupPlace(supabaseUrl: string, publishableKey: string, query: string) {
+  const response = await fetch(`${supabaseUrl.replace(/\/$/, "")}/functions/v1/geocode?q=${encodeURIComponent(query.trim())}`, {
+    headers: { apikey: publishableKey },
+  });
+  const body = (await response.json().catch(() => ({}))) as { found?: boolean; lat?: number; lng?: number; label?: string; error?: string };
+  if (!response.ok) throw new ApiError(body.error ?? "Location search is busy. Please try again shortly.");
+  return body.found && typeof body.lat === "number" && typeof body.lng === "number"
+    ? { lat: body.lat, lng: body.lng, label: body.label ?? query }
+    : null;
+}
+
+export async function setListingAvailability(client: Client, listingId: string, availability: "available" | "under_negotiation" | "unavailable") {
+  check(await client.rpc("set_listing_availability", { p_listing_id: listingId, p_availability: availability }));
+}
+
+export async function listBuilders(client: Client) {
+  return check(await client.from("builders").select("id, name, slug").eq("is_active", true).order("name"));
+}
+
+export async function submitContactLead(
+  client: Client,
+  values: {
+    name: string;
+    email: string;
+    phone: string;
+    interest: string;
+    message: string;
+    city?: string;
+    preferredContact?: string;
+    propertyReference?: string;
+    consentVersion: string;
+    source?: "contact_form" | "app" | "qr";
+  },
+) {
+  return check(
+    await client.rpc("submit_contact_lead", {
+      p_name: values.name,
+      p_email: values.email,
+      p_phone: values.phone,
+      p_interest: values.interest,
+      p_message: values.message,
+      p_city: values.city || undefined,
+      p_preferred_contact: values.preferredContact || undefined,
+      p_property_reference: values.propertyReference || undefined,
+      p_consent_text_version: values.consentVersion,
+      p_source: values.source ?? "contact_form",
+    }),
+  );
 }

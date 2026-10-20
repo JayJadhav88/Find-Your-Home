@@ -101,6 +101,11 @@ export const listingFormSchema = z
     category: z.enum(LISTING_CATEGORIES),
     projectName: optionalText(140),
     projectRegistrationNumber: optionalText(60),
+    /** New projects: top of the price range ("from X to Y"). */
+    priceMax: optionalNumber(0, 999_999_999_999),
+    launchDate: z.preprocess(blankToUndefined, z.iso.date().optional()),
+    /** e.g. "2 BHK, 3 BHK", comma-separated. */
+    configurations: z.preprocess((value) => (typeof value === "string" ? value : ""), z.string().max(400)),
     propertyTypeId: optionalUuid,
     priceAmount: optionalNumber(0, 999_999_999_999),
     currency: z.preprocess(blankToUndefined, z.string().regex(/^[A-Z]{3}$/).optional()),
@@ -112,6 +117,7 @@ export const listingFormSchema = z
     cityId: optionalUuid,
     localityId: optionalUuid,
     postalCode: optionalText(20),
+    landmark: optionalText(120),
     addressVisibility: z.enum(ADDRESS_VISIBILITIES).default("approximate"),
     streetAddress: optionalText(300),
     areaUnit: z.preprocess(blankToUndefined, z.enum(AREA_UNITS).optional()),
@@ -152,6 +158,9 @@ export const listingFormSchema = z
     if (value.category === "new_project" && !value.projectName) {
       ctx.addIssue({ code: "custom", path: ["projectName"], message: "Enter the project name" });
     }
+    if (value.priceMax !== undefined && value.priceAmount !== undefined && value.priceMax < value.priceAmount) {
+      ctx.addIssue({ code: "custom", path: ["priceMax"], message: "The top of the range must be at least the starting price" });
+    }
     const links = splitLinks(value.videoUrls);
     const bad = links.filter((link) => !parseVideoUrl(link));
     if (bad.length) {
@@ -190,6 +199,12 @@ export function listingFormToRow(values: ListingFormValues) {
     purpose: (values.category === "rental" ? "rent" : "sale") as (typeof LISTING_PURPOSES)[number],
     project_name: values.category === "new_project" ? (values.projectName ?? null) : null,
     project_registration_number: values.category === "new_project" ? (values.projectRegistrationNumber ?? null) : null,
+    price_max: values.category === "new_project" ? (values.priceMax ?? null) : null,
+    launch_date: values.category === "new_project" ? (values.launchDate ?? null) : null,
+    configurations:
+      values.category === "new_project"
+        ? (values.configurations ?? "").split(/[,\n]/).map((item) => item.trim()).filter(Boolean).slice(0, 12)
+        : [],
     property_type_id: values.propertyTypeId ?? null,
     price_amount: values.priceAmount ?? null,
     currency: values.currency ?? null,
@@ -201,6 +216,7 @@ export function listingFormToRow(values: ListingFormValues) {
     city_id: values.cityId ?? null,
     locality_id: values.localityId ?? null,
     postal_code: values.postalCode ?? null,
+    landmark: values.landmark ?? null,
     address_visibility: values.addressVisibility,
     area_unit: values.areaUnit ?? null,
     area_value: values.areaValue ?? null,
@@ -228,7 +244,7 @@ export function listingFormToRow(values: ListingFormValues) {
 // ---------------------------------------------------------------------------
 // Search filters (URL query string <-> search_listings RPC)
 // ---------------------------------------------------------------------------
-export const SEARCH_SORTS = ["newest", "price_asc", "price_desc", "relevance"] as const;
+export const SEARCH_SORTS = ["newest", "price_asc", "price_desc", "relevance", "distance"] as const;
 
 export const searchParamsSchema = z.object({
   q: optionalText(120),
@@ -256,6 +272,14 @@ export const searchParamsSchema = z.object({
   recent: optionalNumber(1, 365, { integer: true }).catch(undefined),
   sort: z.preprocess(blankToUndefined, z.enum(SEARCH_SORTS).default("newest")).catch("newest"),
   cursor: optionalText(200).catch(undefined),
+  builder: optionalUuid.catch(undefined),
+  construction: z.preprocess(blankToUndefined, z.enum(POSSESSION_STATUSES).optional()).catch(undefined),
+  pin: z.preprocess(blankToUndefined, z.string().trim().regex(/^[A-Za-z0-9 -]{3,10}$/).optional()).catch(undefined),
+  // "Near me" / "near a place": coordinates rounded to ~100 m, radius in km, and the place name.
+  lat: optionalNumber(-90, 90).catch(undefined),
+  lng: optionalNumber(-180, 180).catch(undefined),
+  radius: optionalNumber(0.5, 100).catch(undefined),
+  near: optionalText(120).catch(undefined),
 });
 
 export type SearchFilters = z.infer<typeof searchParamsSchema>;
@@ -293,6 +317,12 @@ export function searchFiltersToRpcArgs(filters: SearchFilters, defaults: { curre
     p_sort: filters.sort,
     p_cursor: filters.cursor ?? undefined,
     p_limit: defaults.pageSize ?? 24,
+    p_builder_id: filters.builder ?? undefined,
+    p_construction: filters.construction ?? undefined,
+    p_postal_code: filters.pin ?? undefined,
+    p_near_lat: filters.lat !== undefined && filters.lng !== undefined ? filters.lat : undefined,
+    p_near_lng: filters.lat !== undefined && filters.lng !== undefined ? filters.lng : undefined,
+    p_radius_km: filters.lat !== undefined && filters.lng !== undefined ? (filters.radius ?? 10) : undefined,
   };
 }
 
@@ -324,6 +354,13 @@ export function searchFiltersToQuery(filters: Partial<SearchFilters>): string {
   set("furnishing", filters.furnishing);
   set("featured", filters.featured);
   set("recent", filters.recent);
+  set("builder", filters.builder);
+  set("construction", filters.construction);
+  set("pin", filters.pin);
+  set("lat", filters.lat !== undefined ? Math.round(filters.lat * 1000) / 1000 : undefined);
+  set("lng", filters.lng !== undefined ? Math.round(filters.lng * 1000) / 1000 : undefined);
+  set("radius", filters.lat !== undefined ? filters.radius : undefined);
+  set("near", filters.lat !== undefined ? filters.near : undefined);
   if (filters.sort && filters.sort !== "newest") set("sort", filters.sort);
   set("cursor", filters.cursor);
   return params.toString();
