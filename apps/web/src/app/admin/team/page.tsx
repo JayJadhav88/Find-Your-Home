@@ -10,8 +10,11 @@ import { createUserClient } from "@/lib/supabase";
 // What each team role may do. The database enforces the same rules.
 const ROLE_ACCESS: Array<[AppRole, string]> = [
   ["administrator", "Everything: team and roles, customers, integrations, settings, pages, imports, privacy requests."],
+  ["crm_manager", "All leads and enquiries: assign them to sales agents, move them through the pipeline, add leads, notes and follow-ups."],
+  ["sales_agent", "Only the leads assigned to them: call, update status, add notes and follow-ups. Cannot reassign."],
   ["moderator", "Review and publish listings, handle reports and fraud warnings, and handle enquiries."],
   ["support", "Enquiries only: see all, assign, change status, add internal notes."],
+  ["content_manager", "Site content: About, Contact, Terms and Privacy pages, home banners and the floating button. No access to leads."],
   ["marketing", "Send messages to members (broadcasts) and see their delivery reports."],
 ];
 

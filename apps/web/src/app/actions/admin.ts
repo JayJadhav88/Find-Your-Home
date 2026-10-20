@@ -1,9 +1,9 @@
 "use server";
 
-import { APP_ROLES, ROLE_LABEL } from "@fyh/shared";
+import { APP_ROLES, ROLE_LABEL, TEAM_ROLES } from "@fyh/shared";
 import { refresh, updateTag } from "next/cache";
 import { z } from "zod";
-import { getViewer, isAdmin, isStaff } from "@/lib/auth";
+import { canManageContent, getViewer, isAdmin, isStaff } from "@/lib/auth";
 import { createUserClient } from "@/lib/supabase";
 import { friendlyDbError, type FormState } from "./types";
 
@@ -19,6 +19,12 @@ async function staffClient() {
 async function adminClient() {
   const viewer = await getViewer();
   if (!isAdmin(viewer)) return null;
+  return { viewer: viewer!, supabase: await createUserClient() };
+}
+
+async function contentClient() {
+  const viewer = await getViewer();
+  if (!canManageContent(viewer)) return null;
   return { viewer: viewer!, supabase: await createUserClient() };
 }
 
@@ -185,7 +191,7 @@ export async function setCurrencyEnabled(_previous: FormState, formData: FormDat
 }
 
 export async function saveContentPage(_previous: FormState, formData: FormData): Promise<FormState> {
-  const ctx = await adminClient();
+  const ctx = await contentClient();
   if (!ctx) return NOT_ALLOWED;
   const slug = text(formData, "slug");
   const { error } = await ctx.supabase
@@ -288,7 +294,7 @@ export async function handleReport(_previous: FormState, formData: FormData): Pr
 // ---------------------------------------------------------------------------
 // Team
 // ---------------------------------------------------------------------------
-const TEAM_ROLE_INPUT = z.enum(["administrator", "moderator", "support", "marketing"]);
+const TEAM_ROLE_INPUT = z.enum(TEAM_ROLES);
 
 export async function addTeamMember(_previous: FormState, formData: FormData): Promise<FormState> {
   const ctx = await adminClient();

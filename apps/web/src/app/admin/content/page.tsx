@@ -3,7 +3,7 @@ import { saveContentPage } from "@/app/actions/admin";
 import { ActionForm } from "@/components/action-form";
 import { Loading } from "@/components/loading";
 import { Alert, Card, Checkbox, Field, PageHeader, TextArea, TextInput } from "@/components/ui";
-import { requireAdmin } from "@/lib/auth";
+import { requireContentTeam } from "@/lib/auth";
 import { createUserClient } from "@/lib/supabase";
 
 export default function AdminContentPage() {
@@ -15,7 +15,7 @@ export default function AdminContentPage() {
 }
 
 async function Content() {
-  await requireAdmin("/admin/content");
+  await requireContentTeam("/admin/content");
   const supabase = await createUserClient();
   const { data: pages } = await supabase.from("content_pages").select("*").order("slug");
 

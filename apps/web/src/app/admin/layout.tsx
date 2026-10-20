@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
-import { canManageEnquiries, canSendBroadcasts, getViewer, isAdmin, isStaff, isTeam, type Viewer } from "@/lib/auth";
+import { canManageContent, canSeeLeads, canSendBroadcasts, getViewer, isAdmin, isStaff, isTeam, type Viewer } from "@/lib/auth";
 
 export const metadata: Metadata = { title: "Admin", robots: { index: false, follow: false } };
 export const prefetch = "force-disabled";
@@ -12,14 +12,14 @@ const LINKS: Array<[string, string, (viewer: Viewer | null) => boolean]> = [
   ["/admin/listings", "Listings", isStaff],
   ["/admin/reports", "Reports", isStaff],
   ["/admin/import", "Import from Excel", isAdmin],
-  ["/admin/enquiries", "Enquiries", canManageEnquiries],
+  ["/admin/enquiries", "Leads & enquiries", canSeeLeads],
   ["/admin/broadcasts", "Send a message", canSendBroadcasts],
   ["/admin/team", "Team & roles", isAdmin],
   ["/admin/customers", "Customers", isAdmin],
   ["/admin/integrations", "Integrations", isAdmin],
   ["/admin/taxonomy", "Types, amenities & places", isAdmin],
   ["/admin/settings", "Settings", isAdmin],
-  ["/admin/content", "Pages", isAdmin],
+  ["/admin/content", "Pages", canManageContent],
   ["/admin/data-requests", "Privacy requests", isAdmin],
   ["/admin/audit", "Audit log", isStaff],
 ];

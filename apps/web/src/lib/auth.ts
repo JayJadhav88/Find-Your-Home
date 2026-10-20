@@ -50,8 +50,13 @@ export function hasRole(viewer: Viewer | null, ...roles: AppRole[]): boolean {
 export const isStaff = (viewer: Viewer | null) => hasRole(viewer, "moderator", "administrator");
 export const isAdmin = (viewer: Viewer | null) => hasRole(viewer, "administrator");
 /** Anyone who may open the admin panel (each page checks its own permission). */
-export const isTeam = (viewer: Viewer | null) => hasRole(viewer, "administrator", "moderator", "support", "marketing");
-export const canManageEnquiries = (viewer: Viewer | null) => hasRole(viewer, "administrator", "moderator", "support");
+export const isTeam = (viewer: Viewer | null) =>
+  hasRole(viewer, "administrator", "moderator", "support", "marketing", "crm_manager", "sales_agent", "content_manager");
+/** All leads. */
+export const canManageEnquiries = (viewer: Viewer | null) => hasRole(viewer, "administrator", "moderator", "support", "crm_manager");
+/** The leads pages: everyone above, plus sales agents (who only see their own leads). */
+export const canSeeLeads = (viewer: Viewer | null) => canManageEnquiries(viewer) || hasRole(viewer, "sales_agent");
+export const canManageContent = (viewer: Viewer | null) => hasRole(viewer, "administrator", "content_manager");
 export const canSendBroadcasts = (viewer: Viewer | null) => hasRole(viewer, "administrator", "marketing");
 export const canList = (viewer: Viewer | null) => hasRole(viewer, "owner", "agent", "builder", "administrator");
 
@@ -76,7 +81,13 @@ export async function requireTeam(next: string): Promise<Viewer> {
 
 export async function requireEnquiryTeam(next: string): Promise<Viewer> {
   const viewer = await requireViewer(next);
-  if (!canManageEnquiries(viewer)) redirect(isTeam(viewer) ? "/admin?denied=permission" : "/account?denied=admin");
+  if (!canSeeLeads(viewer)) redirect(isTeam(viewer) ? "/admin?denied=permission" : "/account?denied=admin");
+  return viewer;
+}
+
+export async function requireContentTeam(next: string): Promise<Viewer> {
+  const viewer = await requireViewer(next);
+  if (!canManageContent(viewer)) redirect(isTeam(viewer) ? "/admin?denied=permission" : "/account?denied=admin");
   return viewer;
 }
 

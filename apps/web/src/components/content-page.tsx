@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 import { getContentPage, getSiteSettings } from "@/lib/public-data";
 import { SimpleMarkdown } from "./simple-markdown";
 import { Alert } from "./ui";
@@ -9,7 +10,7 @@ export async function contentMetadata(slug: string): Promise<Metadata> {
   return page?.body_markdown ? { title: page.title } : { title: page?.title ?? "Page", robots: { index: false } };
 }
 
-export async function ContentPage({ slug }: { slug: string }) {
+export async function ContentPage({ slug, children }: { slug: string; children?: ReactNode }) {
   const [page, settings] = await Promise.all([getContentPage(slug), getSiteSettings()]);
   if (!page) notFound();
   return (
@@ -29,6 +30,7 @@ export async function ContentPage({ slug }: { slug: string }) {
           </Alert>
         )}
       </div>
+      {children ? <div className="mt-8">{children}</div> : null}
     </div>
   );
 }
