@@ -8,3 +8,6 @@ allowBuilds:
   sharp: false
   supabase: true
   unrs-resolver: false
+
+minimumReleaseAgeExclude:
+  - expo-location@58.0.18

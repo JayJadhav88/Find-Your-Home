@@ -29,12 +29,17 @@ export const STATUS_TONE: Record<string, "brand" | "success" | "warning" | "dang
 };
 
 export function displayPrice(
-  listing: { price_amount: number | null; currency: string | null; price_period: PricePeriod; price_display: PriceDisplay },
+  listing: { price_amount: number | null; currency: string | null; price_period: PricePeriod; price_display: PriceDisplay; price_max?: number | null },
   locale: string,
 ): string {
   if (listing.price_display === "on_request" || listing.price_amount == null || !listing.currency) return "Price on request";
   const suffix = pricePeriodSuffix(listing.price_period);
-  return `${formatPrice(Number(listing.price_amount), listing.currency, { locale })}${suffix ? ` ${suffix}` : ""}`;
+  const from = formatPrice(Number(listing.price_amount), listing.currency, { locale });
+  // New projects can show a range.
+  if (listing.price_max != null && Number(listing.price_max) > Number(listing.price_amount)) {
+    return `${from} – ${formatPrice(Number(listing.price_max), listing.currency, { locale })}`;
+  }
+  return `${from}${suffix ? ` ${suffix}` : ""}`;
 }
 
 export function displayArea(value: number | null, unit: AreaUnit | null, locale: string): string | null {

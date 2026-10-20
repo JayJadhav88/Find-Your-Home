@@ -116,6 +116,8 @@ export default function ListingScreen() {
         {listing.project_name ? <Text style={styles.project}>{listing.project_name}</Text> : null}
         {place ? <Text style={text.muted}>{place}</Text> : null}
         <Text style={styles.price}>{displayPrice(listing, locale)}</Text>
+        {listing.availability === "under_negotiation" ? <Notice tone="warning">Under negotiation: an offer is being discussed. You can still enquire.</Notice> : null}
+        {listing.availability === "unavailable" ? <Notice tone="warning">This home is not available at the moment.</Notice> : null}
         {listing.price_negotiable ? <Text style={text.muted}>Negotiable</Text> : null}
 
         <View style={styles.actions}>
@@ -134,11 +136,23 @@ export default function ListingScreen() {
           <Card style={{ gap: spacing.xs }}>
             <Text style={text.h2}>New project</Text>
             {listing.project_name ? <Fact label="Project" value={listing.project_name} /> : null}
-            {listing.builder ? <Fact label="Builder" value={`${listing.builder.company_name} ✓ Verified builder`} /> : null}
-            {listing.project_registration_number ? <Fact label="Registration" value={listing.project_registration_number} /> : null}
-            {listing.possession_status ? (
-              <Fact label="Possession" value={`${POSSESSION[listing.possession_status]}${listing.available_from ? ` (${listing.available_from})` : ""}`} />
+            {listing.builder ? (
+              <Pressable accessibilityRole="link" onPress={() => WebBrowser.openBrowserAsync(`${env.siteUrl}/builders/${listing.builder!.slug}`)}>
+                <Fact label="Builder" value={`${listing.builder.name} ›`} />
+              </Pressable>
             ) : null}
+            {listing.configurations.length ? <Fact label="Configurations" value={listing.configurations.join(", ")} /> : null}
+            {listing.possession_status ? (
+              <Fact label="Construction" value={`${POSSESSION[listing.possession_status]}${listing.available_from ? ` (${listing.available_from})` : ""}`} />
+            ) : null}
+            {listing.launch_date ? <Fact label="Launch date" value={listing.launch_date} /> : null}
+            {listing.project_registration_number ? (
+              <Fact
+                label="Registration (e.g. RERA)"
+                value={`${listing.project_registration_number}${listing.registration_verified ? " · checked by our team" : " · not yet checked by us"}`}
+              />
+            ) : null}
+            <Text style={text.muted}>Details come from the builder and can change. Confirm prices and approvals before deciding.</Text>
             {listing.builder?.website ? (
               <Pressable accessibilityRole="link" onPress={() => WebBrowser.openBrowserAsync(listing.builder!.website!)}>
                 <Text style={text.link}>Builder website</Text>

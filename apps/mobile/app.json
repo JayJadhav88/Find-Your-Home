@@ -32,6 +32,10 @@
       "expo-web-browser",
       ["expo-notifications", { "color": "#1F5F57" }],
       [
+        "expo-location",
+        { "locationWhenInUsePermission": "Find Your Home uses your location only when you tap Near me, to show homes close to you." }
+      ],
+      [
         "expo-image-picker",
         {
           "photosPermission": "Find Your Home uses your photo library so you can add pictures of a property you are listing.",

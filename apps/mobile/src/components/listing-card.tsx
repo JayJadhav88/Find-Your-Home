@@ -27,6 +27,10 @@ export interface CardListing {
   locality_name: string | null;
   cover_key: string | null;
   cover_alt: string | null;
+  availability?: string | null;
+  builder_name?: string | null;
+  price_max?: number | null;
+  distance_km?: number | null;
 }
 
 export function ListingCard({ listing, locale }: { listing: CardListing; locale: string }) {
@@ -55,6 +59,7 @@ export function ListingCard({ listing, locale }: { listing: CardListing; locale:
           <View style={styles.badges}>
             <Badge label={CATEGORY_BADGE[listing.category]} />
             {listing.is_featured ? <Badge label="Featured" tone="success" /> : null}
+            {listing.availability === "under_negotiation" ? <Badge label="Under negotiation" tone="warning" /> : null}
           </View>
         </View>
         <View style={styles.body}>
@@ -62,8 +67,20 @@ export function ListingCard({ listing, locale }: { listing: CardListing; locale:
           <Text style={styles.title} numberOfLines={2}>
             {listing.title}
           </Text>
-          {listing.project_name ? <Text style={styles.project}>{listing.project_name}</Text> : null}
-          {place ? <Text style={styles.muted}>{place}</Text> : null}
+          {listing.project_name ? (
+            <Text style={styles.project}>
+              {listing.project_name}
+              {listing.builder_name ? <Text style={styles.muted}> by {listing.builder_name}</Text> : null}
+            </Text>
+          ) : null}
+          {place || listing.distance_km != null ? (
+            <Text style={styles.muted}>
+              {place}
+              {listing.distance_km != null
+                ? `${place ? " · " : ""}${Number(listing.distance_km) < 1 ? "under 1" : Math.round(Number(listing.distance_km) * 10) / 10} km away`
+                : ""}
+            </Text>
+          ) : null}
           {facts ? <Text style={styles.muted}>{facts}</Text> : null}
         </View>
       </Pressable>

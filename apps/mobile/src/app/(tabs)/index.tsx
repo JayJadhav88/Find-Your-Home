@@ -2,6 +2,7 @@ import {
   CATEGORY_LABEL,
   getSettings,
   getTaxonomy,
+  listBuilders,
   parseSearchParams,
   saveSearch,
   searchListings,
@@ -14,6 +15,8 @@ import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { ListingCard } from "@/components/listing-card";
+import { NearControls, type NearPlace } from "@/components/near-controls";
+import { FloatingButton, SiteBanners } from "@/components/site-banners";
 import { Button, EmptyState, ErrorState, Field, Loading, Notice, Segmented } from "@/components/ui";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
@@ -42,8 +45,8 @@ const BEDS = [
 
 export default function ExploreScreen() {
   const reference = useResource(async () => {
-    const [settings, taxonomy] = await Promise.all([getSettings(supabase), getTaxonomy(supabase)]);
-    return { settings, taxonomy };
+    const [settings, taxonomy, builders] = await Promise.all([getSettings(supabase), getTaxonomy(supabase), listBuilders(supabase)]);
+    return { settings, taxonomy, builders };
   }, []);
 
   const [category, setCategory] = useState<ListingCategory | "">("");
@@ -52,8 +55,14 @@ export default function ExploreScreen() {
   const [cityId, setCityId] = useState("");
   const [beds, setBeds] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-  const [sort, setSort] = useState<"newest" | "price_asc" | "price_desc">("newest");
+  const [sort, setSort] = useState<"newest" | "price_asc" | "price_desc" | "distance">("newest");
   const [showFilters, setShowFilters] = useState(false);
+  const [pin, setPin] = useState("");
+  const [submittedPin, setSubmittedPin] = useState("");
+  const [builderId, setBuilderId] = useState("");
+  const [construction, setConstruction] = useState("");
+  const [near, setNear] = useState<NearPlace | null>(null);
+  const [radius, setRadius] = useState(10);
 
   // Opening a saved search passes its query string; apply it once per value.
   const { viewer } = useSession();
@@ -101,10 +110,17 @@ export default function ExploreScreen() {
       furnishing: undefined,
       featured: false,
       recent: undefined,
-      sort,
+      sort: sort === "distance" && !near ? "newest" : sort,
       cursor: nextCursor,
+      builder: builderId || undefined,
+      construction: (construction || undefined) as SearchFilters["construction"],
+      pin: submittedPin || undefined,
+      lat: near?.lat,
+      lng: near?.lng,
+      radius: near ? radius : undefined,
+      near: near?.label,
     }),
-    [submittedQuery, category, cityId, maxPrice, beds, sort],
+    [submittedQuery, category, cityId, maxPrice, beds, sort, builderId, construction, submittedPin, near, radius],
   );
 
   const load = useCallback(async () => {
@@ -177,7 +193,12 @@ export default function ExploreScreen() {
 
   const cities = (reference.data?.taxonomy.locations ?? []).filter((location) => location.level === "city");
 
+  const radiusOptions = reference.data?.settings.radius_options ?? [2, 5, 10, 25];
+  const builders = reference.data?.builders ?? [];
+  const sortOptions = near ? [...SORTS, { value: "distance", label: "Nearest" } as const] : [...SORTS];
+
   return (
+    <View style={{ flex: 1 }}>
     <FlatList
       contentInsetAdjustmentBehavior="automatic"
       data={items}
@@ -189,6 +210,7 @@ export default function ExploreScreen() {
       ListHeaderComponent={
         <View style={styles.header}>
           <Text style={styles.heading}>Find a home</Text>
+          <SiteBanners />
           <Segmented label="Category" value={category} options={CATEGORIES} onChange={(value) => setCategory(value as ListingCategory | "")} />
           <Field
             label="Search"
@@ -212,6 +234,25 @@ export default function ExploreScreen() {
                   onChange={setCityId}
                 />
               ) : null}
+              <NearControls
+                value={near}
+                radius={radius}
+                radiusOptions={radiusOptions}
+                onChange={(place) => {
+                  setNear(place);
+                  if (place) setSort("distance");
+                }}
+                onRadiusChange={setRadius}
+              />
+              <Field
+                label="PIN code"
+                keyboardType="numeric"
+                value={pin}
+                onChangeText={(value) => setPin(value.replace(/[^\dA-Za-z -]/g, "").slice(0, 10))}
+                onSubmitEditing={() => setSubmittedPin(pin.trim())}
+                onBlur={() => setSubmittedPin(pin.trim())}
+                placeholder="e.g. 411045"
+              />
               <Segmented label="Bedrooms" value={beds} options={[...BEDS]} onChange={setBeds} />
               <Field
                 label={`Maximum price${currency ? ` (${currency})` : ""}`}
@@ -220,7 +261,26 @@ export default function ExploreScreen() {
                 onChangeText={(value) => setMaxPrice(value.replace(/[^\d]/g, ""))}
                 placeholder="Any"
               />
-              <Segmented label="Sort by" value={sort} options={[...SORTS]} onChange={(value) => setSort((value || "newest") as typeof sort)} />
+              {builders.length ? (
+                <Segmented
+                  label="Builder"
+                  value={builderId}
+                  options={[{ value: "", label: "Any" }, ...builders.map((builder) => ({ value: builder.id, label: builder.name }))]}
+                  onChange={setBuilderId}
+                />
+              ) : null}
+              <Segmented
+                label="Construction"
+                value={construction}
+                options={[
+                  { value: "", label: "Any" },
+                  { value: "upcoming", label: "Upcoming" },
+                  { value: "under_construction", label: "Building" },
+                  { value: "ready", label: "Ready" },
+                ]}
+                onChange={setConstruction}
+              />
+              <Segmented label="Sort by" value={sort} options={sortOptions} onChange={(value) => setSort((value || "newest") as typeof sort)} />
             </View>
           ) : null}
           {viewer ? <Button label="Save this search & get alerts" variant="ghost" onPress={saveThisSearch} /> : null}
@@ -244,6 +304,8 @@ export default function ExploreScreen() {
       }
       ListFooterComponent={loadingMore ? <Loading label="Loading more…" /> : undefined}
     />
+    <FloatingButton />
+    </View>
   );
 }
 

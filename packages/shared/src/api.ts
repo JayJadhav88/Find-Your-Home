@@ -108,8 +108,8 @@ export async function getPublicListing(client: Client, reference: string) {
   if (!listing) return null;
   const [contact, builder] = await Promise.all([
     client.rpc("get_listing_contact", { p_listing_id: listing.id }).maybeSingle(),
-    listing.category === "new_project"
-      ? client.from("builder_profiles").select("company_name, registration_number, website").eq("user_id", listing.owner_id).maybeSingle()
+    listing.category === "new_project" && listing.builder_id
+      ? client.from("builders").select("name, slug, website").eq("id", listing.builder_id).maybeSingle()
       : Promise.resolve({ data: null, error: null }),
   ]);
   return { ...listing, contact: contact.data ?? null, builder: builder.data ?? null };
@@ -521,4 +521,27 @@ export async function submitContactLead(
       p_source: values.source ?? "contact_form",
     }),
   );
+}
+
+// Site content (banners, floating button)
+export async function getAppBanners(client: Client) {
+  return check(
+    await client
+      .from("banners")
+      .select("id, title, subtitle, image_url, cta_label, target_url")
+      .in("audience", ["all", "app"])
+      .order("sort_order")
+      .limit(8),
+  );
+}
+
+export async function getFloatingAction(client: Client) {
+  const row = checkMaybe(await client.from("floating_action").select("is_active, icon, label, target_url, position").maybeSingle());
+  return row?.is_active && row.target_url ? row : null;
+}
+
+/** Counts a banner or floating-button click and returns where it goes (from the database). */
+export async function followSiteLink(client: Client, key: string, visitor?: string): Promise<string | null> {
+  const { data } = await client.rpc("follow_site_link", { p_key: key, p_visitor: visitor });
+  return typeof data === "string" && data ? data : null;
 }
