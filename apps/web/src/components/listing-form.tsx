@@ -106,6 +106,15 @@ export function ListingForm({
             <Field label="Project registration number" name="projectRegistrationNumber" error={errors.projectRegistrationNumber} hint="Optional, for example a regulator's registration number.">
               <TextInput name="projectRegistrationNumber" defaultValue={value("projectRegistrationNumber")} error={errors.projectRegistrationNumber} maxLength={60} />
             </Field>
+            <Field label="Price up to" name="priceMax" error={errors.priceMax} hint="Optional: top of the price range. The price field above is the starting price.">
+              <TextInput name="priceMax" inputMode="decimal" defaultValue={value("priceMax")} error={errors.priceMax} />
+            </Field>
+            <Field label="Launch date" name="launchDate" error={errors.launchDate}>
+              <TextInput name="launchDate" type="date" defaultValue={value("launchDate")} error={errors.launchDate} />
+            </Field>
+            <Field label="Configurations" name="configurations" error={errors.configurations} hint="Comma-separated, e.g. 2 BHK, 3 BHK, 4 BHK penthouse.">
+              <TextInput name="configurations" defaultValue={value("configurations")} error={errors.configurations} maxLength={400} />
+            </Field>
           </div>
         ) : null}
         <Field label="Description" name="description" error={errors.description} hint="At least 30 characters before you can submit. Describe the layout, condition and neighbourhood.">
@@ -177,8 +186,11 @@ export function ListingForm({
           <Field label="Street address" name="streetAddress" error={errors.streetAddress} hint="Private: never shown publicly.">
             <TextInput name="streetAddress" autoComplete="street-address" defaultValue={value("streetAddress")} error={errors.streetAddress} />
           </Field>
-          <Field label="Postal code" name="postalCode" error={errors.postalCode}>
+          <Field label="PIN / postal code" name="postalCode" error={errors.postalCode} hint="Used for PIN code and nearby searches.">
             <TextInput name="postalCode" autoComplete="postal-code" defaultValue={value("postalCode")} error={errors.postalCode} />
+          </Field>
+          <Field label="Nearby landmark" name="landmark" error={errors.landmark} hint="Optional, e.g. near City Mall. Shown to visitors.">
+            <TextInput name="landmark" defaultValue={value("landmark")} error={errors.landmark} maxLength={120} />
           </Field>
         </div>
         <Field label="Location shown to visitors" name="addressVisibility">
@@ -231,7 +243,7 @@ export function ListingForm({
               {Object.entries(FURNISHING_LABEL).map(([key, label]) => <option key={key} value={key}>{label}</option>)}
             </Select>
           </Field>
-          <Field label="Availability" name="possessionStatus">
+          <Field label="Construction / possession" name="possessionStatus">
             <Select name="possessionStatus" defaultValue={value("possessionStatus")}>
               <option value="">Not specified</option>
               {Object.entries(POSSESSION_LABEL).map(([key, label]) => <option key={key} value={key}>{label}</option>)}

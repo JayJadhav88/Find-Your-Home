@@ -166,3 +166,30 @@ export async function mediaChanged(listingId: string): Promise<void> {
   await invalidateListing(data?.reference_code);
   refresh();
 }
+
+/** Live listings: Available, Under negotiation (still shown, labelled) or Not available (hidden from search). */
+export async function setAvailability(_previous: FormState, formData: FormData): Promise<FormState> {
+  const viewer = await getViewer();
+  if (!viewer) redirect("/sign-in?next=/account/listings");
+  const parsed = z
+    .object({ listingId: z.uuid(), availability: z.enum(["available", "under_negotiation", "unavailable"]) })
+    .safeParse({ listingId: formData.get("listingId"), availability: formData.get("availability") });
+  if (!parsed.success) return { error: "Unknown choice." };
+  const supabase = await createUserClient();
+  const { data: listing } = await supabase.from("listings").select("reference_code").eq("id", parsed.data.listingId).maybeSingle();
+  const { error } = await supabase.rpc("set_listing_availability", {
+    p_listing_id: parsed.data.listingId,
+    p_availability: parsed.data.availability,
+  });
+  if (error) return { error: friendlyDbError(error) };
+  await invalidateListing(listing?.reference_code);
+  refresh();
+  return {
+    ok: true,
+    message: {
+      available: "Shown as available.",
+      under_negotiation: "Shown as under negotiation; people can still enquire.",
+      unavailable: "Hidden from search until you mark it available again.",
+    }[parsed.data.availability],
+  };
+}

@@ -2,11 +2,13 @@ import { formatDateTime, formatReviewTime, videoWatchUrl } from "@fyh/shared";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { setAvailability } from "@/app/actions/listings";
 import { WorkflowButtons } from "@/components/account-forms";
+import { ActionForm } from "@/components/action-form";
 import { ListingForm, type ListingFormInitial } from "@/components/listing-form";
 import { Loading } from "@/components/loading";
 import { PhotoManager } from "@/components/photo-manager";
-import { Alert, Badge, Card, PageHeader } from "@/components/ui";
+import { Alert, Badge, Card, PageHeader, Select } from "@/components/ui";
 import { hasRole, requireViewer } from "@/lib/auth";
 import { listingPath, STATUS_LABEL } from "@/lib/listing-format";
 import { getSiteSettings, getTaxonomy } from "@/lib/public-data";
@@ -58,6 +60,9 @@ async function EditListing({ id, created }: { id: string; created: boolean }) {
     category: listing.category,
     projectName: listing.project_name ?? undefined,
     projectRegistrationNumber: listing.project_registration_number ?? undefined,
+    priceMax: listing.price_max?.toString(),
+    launchDate: listing.launch_date ?? undefined,
+    configurations: listing.configurations.join(", "),
     videoUrls: [...listing.videos]
       .sort((a, b) => a.sort_order - b.sort_order)
       .map((video) => videoWatchUrl(video))
@@ -73,6 +78,7 @@ async function EditListing({ id, created }: { id: string; created: boolean }) {
     cityId: listing.city_id ?? undefined,
     localityId: listing.locality_id ?? undefined,
     postalCode: listing.postal_code ?? undefined,
+    landmark: listing.landmark ?? undefined,
     addressVisibility: listing.address_visibility,
     streetAddress: listing.private?.street_address ?? undefined,
     areaUnit: listing.area_unit ?? undefined,
@@ -137,6 +143,19 @@ async function EditListing({ id, created }: { id: string; created: boolean }) {
           <Alert tone="warning" title="Note from our moderators">{lastDecision.reason}</Alert>
         ) : null}
         <WorkflowButtons listingId={listing.id} actions={actions} />
+        {listing.status === "published" ? (
+          <ActionForm action={setAvailability} submitLabel="Update availability" variant="secondary" inline>
+            <input type="hidden" name="listingId" value={listing.id} />
+            <label className="flex flex-col gap-1 text-sm font-medium">
+              Availability
+              <Select bare name="availability" defaultValue={listing.availability}>
+                <option value="available">Available</option>
+                <option value="under_negotiation">Under negotiation</option>
+                <option value="unavailable">Not available (hide from search)</option>
+              </Select>
+            </label>
+          </ActionForm>
+        ) : null}
       </Card>
 
       <PhotoManager
