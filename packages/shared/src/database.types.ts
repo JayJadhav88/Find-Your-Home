@@ -1033,6 +1033,9 @@ isOneToOne: false
 "geocode_cache_put":
 { Args: { "p_label": string,"p_lat": number,"p_lng": number,"p_query": string }; Returns: undefined
                            },
+"geocode_rate_limit":
+{ Args: { "p_key": string }; Returns: undefined
+                           },
 "get_listing_contact":
 { Args: { "p_listing_id": string }; Returns: {
               "agency_name": string,"contact_via_form": boolean,"display_name": string,"email": string,"phone": string,"whatsapp": string

@@ -3,6 +3,7 @@
 // enquiries to the owner's Google Sheet. Invoked by the scheduler.
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { extensionFor, ImageRejectedError, sanitizeImage } from "../_shared/image-sanitize.ts";
+import { countryFromLocale, geocode, placeQuery } from "../_shared/geocode.ts";
 import { loadIntegrationConfig } from "../_shared/integrations.ts";
 import { postToSheet, sheetRow } from "../_shared/sheets.ts";
 import { safeFetch } from "../_shared/safe-fetch.ts";
@@ -13,7 +14,7 @@ const PUBLIC_BUCKET = "listing-public";
 
 interface Job {
   id: number;
-  kind: "publish_listing_media" | "unpublish_listing_media" | "import_listing_images" | "sync_enquiry_sheet";
+  kind: "publish_listing_media" | "unpublish_listing_media" | "import_listing_images" | "sync_enquiry_sheet" | "geocode_listing";
   listing_id: string;
   attempts: number;
   payload: { urls?: string[]; publish?: boolean; enquiry_id?: string };
@@ -39,7 +40,9 @@ Deno.serve(async (request) => {
             ? await importImages(db, job)
             : job.kind === "sync_enquiry_sheet"
               ? await syncEnquirySheet(db, job)
-              : await unpublish(db, job.listing_id);
+              : job.kind === "geocode_listing"
+                ? await geocodeListing(db, job.listing_id)
+                : await unpublish(db, job.listing_id);
       await finish(db, job.id, true);
       results.push({ id: job.id, kind: job.kind, ok: true, ...outcome });
     } catch (failure) {
@@ -50,7 +53,9 @@ Deno.serve(async (request) => {
     }
   }
 
-  if (results.some((result) => result.ok && result.kind !== "sync_enquiry_sheet")) await refreshWebsiteCache();
+  if (results.some((result) => result.ok && result.kind !== "sync_enquiry_sheet" && result.kind !== "geocode_listing")) {
+    await refreshWebsiteCache();
+  }
   return json({ processed: results.length, results });
 });
 
@@ -273,4 +278,42 @@ async function syncEnquirySheet(db: SupabaseClient, job: Job) {
   );
   if (!result.ok) throw new Error(result.error);
   return { synced: row.id };
+}
+
+// ---------------------------------------------------------------------------
+// Map coordinates (OpenStreetMap)
+// ---------------------------------------------------------------------------
+let lastGeocodeAt = 0;
+
+async function geocodeListing(db: SupabaseClient, listingId: string) {
+  const { data, error } = await db.rpc("worker_listing_place", { p_listing_id: listingId }).maybeSingle();
+  if (error) throw new Error(`Could not load the listing's place: ${error.message}`);
+  const place = data as { landmark: string | null; locality: string | null; city: string | null; region: string | null; country_code: string | null; postal_code: string | null } | null;
+  if (!place || (!place.city && !place.postal_code)) return { skipped: "no place to look up" };
+
+  const { data: settings } = await db.from("site_settings").select("default_locale, contact_email").maybeSingle();
+  const userAgent = `FindYourHome/1.0 (${settings?.contact_email ?? Deno.env.get("SITE_URL") ?? "local development"})`;
+  const country = place.country_code?.toLowerCase() ?? countryFromLocale(settings?.default_locale);
+
+  // Nominatim allows about one request per second: space them out.
+  const wait = lastGeocodeAt + 1100 - Date.now();
+  if (wait > 0) await new Promise((resolve) => setTimeout(resolve, wait));
+  // Most specific first; fall back to the PIN code and city alone.
+  const queries = [
+    placeQuery([place.landmark, place.locality, place.city, place.postal_code]),
+    placeQuery([place.locality, place.city, place.postal_code]),
+    placeQuery([place.postal_code, place.city]),
+  ].filter((query, index, all) => query && all.indexOf(query) === index);
+
+  for (const query of queries) {
+    lastGeocodeAt = Date.now();
+    const found = await geocode(query, { userAgent, countryCode: country });
+    if (found) {
+      const { error: saveError } = await db.rpc("worker_set_listing_coordinates", { p_listing_id: listingId, p_lat: found.lat, p_lng: found.lng });
+      if (saveError) throw new Error(saveError.message);
+      return { located: query };
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1100));
+  }
+  return { skipped: "place not found on the map" };
 }

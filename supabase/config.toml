@@ -438,3 +438,7 @@ verify_jwt = false
 
 [functions.deliver-notifications]
 verify_jwt = false
+
+# Public location lookup for "near a place" search (rate-limited and cached inside).
+[functions.geocode]
+verify_jwt = false
