@@ -6,6 +6,7 @@ import { assignAgent, moderateListing, setListingFeatured } from "@/app/actions/
 import { ActionForm } from "@/components/action-form";
 import { VideoGallery } from "@/components/video-gallery";
 import { Loading } from "@/components/loading";
+import { setListingProject } from "@/app/actions/admin-builders";
 import { Alert, Badge, Card, Checkbox, Field, PageHeader, Select, TextArea, TextInput } from "@/components/ui";
 import { isAdmin, requireStaff } from "@/lib/auth";
 import {
@@ -56,6 +57,9 @@ async function Review({ id }: { id: string }) {
       : Promise.resolve({ data: [] as Array<{ user_id: string; profile: { display_name: string } | null }> }),
     supabase.rpc("admin_listing_flags", { p_listing_id: id }),
   ]);
+  const { data: builders } = listing.category === "new_project"
+    ? await supabase.from("builders").select("id, name").order("name")
+    : { data: [] as Array<{ id: string; name: string }> };
 
   const images = listing.media.filter((item) => item.kind === "image").sort((a, b) => Number(b.is_cover) - Number(a.is_cover) || a.sort_order - b.sort_order);
   const { data: signed } = images.length
@@ -143,6 +147,25 @@ async function Review({ id }: { id: string }) {
           <ActionForm action={moderateListing} submitLabel="Reinstate listing">
             <input type="hidden" name="listingId" value={listing.id} />
             <input type="hidden" name="decision" value="reinstate" />
+          </ActionForm>
+        ) : null}
+        {listing.category === "new_project" ? (
+          <ActionForm action={setListingProject} submitLabel="Save project details" variant="secondary" inline>
+            <input type="hidden" name="listingId" value={listing.id} />
+            <label className="flex flex-col gap-1 text-sm font-medium">
+              Builder
+              <Select bare name="builderId" defaultValue={listing.builder_id ?? ""}>
+                <option value="">Not set</option>
+                {(builders ?? []).map((builder) => (
+                  <option key={builder.id} value={builder.id}>{builder.name}</option>
+                ))}
+              </Select>
+            </label>
+            <Checkbox
+              name="verified"
+              label={`Registration number checked${listing.project_registration_number ? ` (${listing.project_registration_number})` : ""}`}
+              defaultChecked={listing.registration_verified}
+            />
           </ActionForm>
         ) : null}
         {isAdmin(viewer) && listing.status === "published" ? (
