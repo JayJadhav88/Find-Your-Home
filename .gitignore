@@ -38,3 +38,7 @@ playwright/.cache/
 
 # One-time credentials written by scripts/admin-bootstrap.mjs
 .secrets/
+
+# Firebase service account keys (FCM V1 push): secret, upload to EAS only
+*firebase-adminsdk*.json
+*service-account*.json
