@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { getContentPage, getSiteSettings } from "@/lib/public-data";
 import { SimpleMarkdown } from "./simple-markdown";
@@ -19,6 +19,8 @@ export async function ContentPage({ slug, fallbackTitle, children }: { slug: str
   const [found, settings] = await Promise.all([getContentPage(slug), getSiteSettings()]);
   const page = found ?? (fallbackTitle ? { title: fallbackTitle, body_markdown: "" } : null);
   if (!page) notFound();
+  // A page the team rebuilt in HTML is shown by the sandboxed HTML page view.
+  if (found?.format === "html") redirect(`/pages/${slug}`);
   return (
     <div className="mx-auto max-w-3xl px-4 py-10">
       <h1 className="text-3xl font-semibold">{page.title}</h1>

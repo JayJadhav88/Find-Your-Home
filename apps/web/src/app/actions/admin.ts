@@ -1,7 +1,8 @@
 "use server";
 
-import { APP_ROLES, ROLE_LABEL, TEAM_ROLES } from "@fyh/shared";
+import { APP_ROLES, ROLE_LABEL, TEAM_ROLES, type Database } from "@fyh/shared";
 import { refresh, updateTag } from "next/cache";
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { canManageContent, getViewer, isAdmin, isStaff } from "@/lib/auth";
 import { createUserClient } from "@/lib/supabase";
@@ -190,21 +191,66 @@ export async function setCurrencyEnabled(_previous: FormState, formData: FormDat
   return done(`${code} updated.`, ["taxonomy", "settings"]);
 }
 
+const PAGE_SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
+export async function createContentPage(_previous: FormState, formData: FormData): Promise<FormState> {
+  const ctx = await contentClient();
+  if (!ctx) return NOT_ALLOWED;
+  const title = text(formData, "title");
+  const slug = (text(formData, "slug") || title)
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 80);
+  const format = text(formData, "format") === "html" ? "html" : "markdown";
+  if (!title) return { fieldErrors: { title: "Give the page a title" } };
+  if (!PAGE_SLUG.test(slug)) return { fieldErrors: { slug: "Use letters, numbers and dashes, e.g. home-loans" } };
+  if (format === "html" && !isAdmin(ctx.viewer)) return { error: "Only super admins can make HTML pages." };
+  const { error } = await ctx.supabase.from("content_pages").insert({ slug, title, format, updated_by: ctx.viewer.id });
+  if (error) return { error: error.code === "23505" ? `A page at /pages/${slug} already exists.` : friendlyDbError(error) };
+  updateTag("content");
+  redirect(`/admin/content/${slug}`);
+}
+
 export async function saveContentPage(_previous: FormState, formData: FormData): Promise<FormState> {
   const ctx = await contentClient();
   if (!ctx) return NOT_ALLOWED;
   const slug = text(formData, "slug");
-  const { error } = await ctx.supabase
-    .from("content_pages")
-    .update({
-      title: text(formData, "title"),
-      body_markdown: text(formData, "body"),
-      is_published: checked(formData, "published"),
-      updated_by: ctx.viewer.id,
-    })
-    .eq("slug", slug);
+  const html = formData.get("bodyHtml");
+  const update: Database["public"]["Tables"]["content_pages"]["Update"] = {
+    title: text(formData, "title"),
+    description: text(formData, "description") || null,
+    body_markdown: text(formData, "body"),
+    is_published: checked(formData, "published"),
+    in_footer: checked(formData, "inFooter"),
+    sort_order: Number.parseInt(text(formData, "sortOrder") || "0", 10) || 0,
+    updated_by: ctx.viewer.id,
+  };
+  // HTML and the page type are only sent (and only accepted by the database) for super admins.
+  if (isAdmin(ctx.viewer)) {
+    if (typeof html === "string") {
+      if (html.length > 500_000) return { fieldErrors: { bodyHtml: "Keep the HTML under 500,000 characters" } };
+      update.body_html = html;
+    }
+    if (formData.has("format")) update.format = text(formData, "format") === "html" ? "html" : "markdown";
+    if (formData.has("fullPageField")) update.full_page = checked(formData, "fullPage");
+  }
+  if (!update.title) return { fieldErrors: { title: "Give the page a title" } };
+  const { error } = await ctx.supabase.from("content_pages").update(update).eq("slug", slug);
   if (error) return { error: friendlyDbError(error) };
   return done("Page saved.", ["content"]);
+}
+
+export async function deleteContentPage(_previous: FormState, formData: FormData): Promise<FormState> {
+  const ctx = await contentClient();
+  if (!ctx) return NOT_ALLOWED;
+  const slug = text(formData, "slug");
+  const { data, error } = await ctx.supabase.from("content_pages").delete().eq("slug", slug).select("slug");
+  if (error) return { error: friendlyDbError(error) };
+  if (!data?.length) return { error: "This page can't be deleted (About, Contact, Privacy and Terms stay; HTML pages need a super admin)." };
+  updateTag("content");
+  redirect("/admin/content");
 }
 
 // ---------------------------------------------------------------------------

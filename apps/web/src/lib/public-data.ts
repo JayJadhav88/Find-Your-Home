@@ -54,10 +54,39 @@ export async function getContentPage(slug: string) {
   cacheTag("content");
   const { data } = await createPublicClient()
     .from("content_pages")
-    .select("slug, title, body_markdown, updated_at")
+    .select("slug, title, body_markdown, format, description, full_page, is_system, updated_at")
     .eq("slug", slug)
     .maybeSingle();
   return data;
+}
+
+/** Published pages the team added and chose to link in the footer, in their order. */
+export async function getFooterPages() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("content");
+  const { data } = await createPublicClient()
+    .from("content_pages")
+    .select("slug, title, is_system")
+    .eq("in_footer", true)
+    .eq("is_system", false)
+    .order("sort_order")
+    .order("title");
+  return data ?? [];
+}
+
+/** Published pages the team added (for the sitemap). */
+export async function getCustomPages() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("content");
+  const { data } = await createPublicClient().from("content_pages").select("slug, updated_at").eq("is_system", false);
+  return data ?? [];
+}
+
+/** Where a page lives: About, Contact, Privacy and Terms keep their short addresses. */
+export function pagePath(page: { slug: string; is_system: boolean }) {
+  return page.is_system ? `/${page.slug}` : `/pages/${page.slug}`;
 }
 
 export async function getHomeListings() {

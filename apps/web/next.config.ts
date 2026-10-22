@@ -14,6 +14,8 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
+  // Room for HTML pages written in Admin → Pages (up to 500,000 characters).
+  experimental: { serverActions: { bodySizeLimit: "2mb" } },
   transpilePackages: ["@fyh/shared"],
   turbopack: {
     rules: {
@@ -39,6 +41,12 @@ const nextConfig: NextConfig = {
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      {
+        // The team's HTML pages may be shown inside the site's own pages (never other sites).
+        // Their sandbox and policy are set by the route itself (src/app/pages/[slug]/raw).
+        source: "/pages/:slug/raw",
+        headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }],
+      },
       {
         // Browser notification service worker: always fresh, same-origin scripts only.
         source: "/sw.js",

@@ -167,14 +167,14 @@ isOneToOne: false
                   ]
                 },"content_pages": {
                   Row: {
-                    "body_markdown": string,"is_published": boolean,"slug": string,"title": string,"updated_at": string,"updated_by": string | null
+                    "body_html": string,"body_markdown": string,"created_at": string,"description": string | null,"format": string,"full_page": boolean,"in_footer": boolean,"is_published": boolean,"is_system": boolean,"slug": string,"sort_order": number,"title": string,"updated_at": string,"updated_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "body_markdown"?: string,"is_published"?: boolean,"slug": string,"title": string,"updated_at"?: string,"updated_by"?: string | null
+                    "body_html"?: string,"body_markdown"?: string,"created_at"?: string,"description"?: string | null,"format"?: string,"full_page"?: boolean,"in_footer"?: boolean,"is_published"?: boolean,"is_system"?: boolean,"slug": string,"sort_order"?: number,"title": string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Update: {
-                    "body_markdown"?: string,"is_published"?: boolean,"slug"?: string,"title"?: string,"updated_at"?: string,"updated_by"?: string | null
+                    "body_html"?: string,"body_markdown"?: string,"created_at"?: string,"description"?: string | null,"format"?: string,"full_page"?: boolean,"in_footer"?: boolean,"is_published"?: boolean,"is_system"?: boolean,"slug"?: string,"sort_order"?: number,"title"?: string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -449,14 +449,14 @@ isOneToOne: false
                   ]
                 },"job_queue": {
                   Row: {
-                    "attempts": number,"created_at": string,"finished_at": string | null,"id": number,"kind": string,"last_error": string | null,"listing_id": string,"next_attempt_at": string,"payload": NonNullable<Json>,"status": Database["public"]['Enums']["outbox_status"]
+                    "attempts": number,"created_at": string,"finished_at": string | null,"id": number,"kind": string,"last_error": string | null,"listing_id": string | null,"next_attempt_at": string,"payload": NonNullable<Json>,"status": Database["public"]['Enums']["outbox_status"]
                   }
                   ComputedFields: never
                   Insert: {
-                    "attempts"?: number,"created_at"?: string,"finished_at"?: string | null,"id"?: never,"kind": string,"last_error"?: string | null,"listing_id": string,"next_attempt_at"?: string,"payload"?: NonNullable<Json>,"status"?: Database["public"]['Enums']["outbox_status"]
+                    "attempts"?: number,"created_at"?: string,"finished_at"?: string | null,"id"?: never,"kind": string,"last_error"?: string | null,"listing_id"?: string | null,"next_attempt_at"?: string,"payload"?: NonNullable<Json>,"status"?: Database["public"]['Enums']["outbox_status"]
                   }
                   Update: {
-                    "attempts"?: number,"created_at"?: string,"finished_at"?: string | null,"id"?: never,"kind"?: string,"last_error"?: string | null,"listing_id"?: string,"next_attempt_at"?: string,"payload"?: NonNullable<Json>,"status"?: Database["public"]['Enums']["outbox_status"]
+                    "attempts"?: number,"created_at"?: string,"finished_at"?: string | null,"id"?: never,"kind"?: string,"last_error"?: string | null,"listing_id"?: string | null,"next_attempt_at"?: string,"payload"?: NonNullable<Json>,"status"?: Database["public"]['Enums']["outbox_status"]
                   }
                   Relationships: [
                     
@@ -1207,7 +1207,7 @@ isOneToOne: false
 "id": number,
 "kind": string,
 "last_error": string | null,
-"listing_id": string,
+"listing_id": string | null,
 "next_attempt_at": string,
 "payload": NonNullable<Json>,
 "status": Database["public"]['Enums']["outbox_status"]
