@@ -14,11 +14,11 @@ const PUBLIC_BUCKET = "listing-public";
 
 interface Job {
   id: number;
-  kind: "publish_listing_media" | "unpublish_listing_media" | "import_listing_images" | "sync_enquiry_sheet" | "geocode_listing";
+  kind: "publish_listing_media" | "unpublish_listing_media" | "import_listing_images" | "sync_enquiry_sheet" | "geocode_listing" | "delete_listing_files";
   // Every listing job has one (a database check); Google Sheets jobs may not.
   listing_id: string;
   attempts: number;
-  payload: { urls?: string[]; publish?: boolean; enquiry_id?: string };
+  payload: { urls?: string[]; publish?: boolean; enquiry_id?: string; private?: string[]; public?: string[] };
 }
 
 const MAX_IMPORT_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -43,7 +43,9 @@ Deno.serve(async (request) => {
               ? await syncEnquirySheet(db, job)
               : job.kind === "geocode_listing"
                 ? await geocodeListing(db, job.listing_id)
-                : await unpublish(db, job.listing_id);
+                : job.kind === "delete_listing_files"
+                  ? await deleteListingFiles(db, job)
+                  : await unpublish(db, job.listing_id);
       await finish(db, job.id, true);
       results.push({ id: job.id, kind: job.kind, ok: true, ...outcome });
     } catch (failure) {
@@ -159,6 +161,21 @@ async function unpublish(db: SupabaseClient, listingId: string) {
   const { error } = await db.from("listing_media").update({ public_key: null }).eq("listing_id", listingId);
   if (error) throw error;
   return { removed: keys.length };
+}
+
+/** Removes the photo files of a property a super admin deleted (admin_delete_listing). */
+async function deleteListingFiles(db: SupabaseClient, job: Job) {
+  // Only files inside the deleted property's own folder, whatever the payload says.
+  const own = (key: unknown): key is string => typeof key === "string" && key.startsWith(`${job.listing_id}/`) && !key.includes("..");
+  const privateKeys = (job.payload.private ?? []).filter(own);
+  const publicKeys = [...(job.payload.public ?? []).filter(own), ...(await listPublicObjects(db, job.listing_id))];
+  for (const [bucket, keys] of [[PRIVATE_BUCKET, privateKeys], [PUBLIC_BUCKET, [...new Set(publicKeys)]]] as const) {
+    for (let start = 0; start < keys.length; start += 100) {
+      const { error } = await db.storage.from(bucket).remove(keys.slice(start, start + 100));
+      if (error) throw error;
+    }
+  }
+  return { removed: privateKeys.length + new Set(publicKeys).size };
 }
 
 /**

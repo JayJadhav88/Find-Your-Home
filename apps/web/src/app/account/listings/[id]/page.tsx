@@ -9,7 +9,7 @@ import { ListingForm, type ListingFormInitial } from "@/components/listing-form"
 import { Loading } from "@/components/loading";
 import { PhotoManager } from "@/components/photo-manager";
 import { Alert, Badge, Card, PageHeader, Select } from "@/components/ui";
-import { hasRole, requireViewer } from "@/lib/auth";
+import { hasRole, isAdmin, requireViewer } from "@/lib/auth";
 import { listingPath, STATUS_LABEL } from "@/lib/listing-format";
 import { getSiteSettings, getTaxonomy } from "@/lib/public-data";
 import { createUserClient } from "@/lib/supabase";
@@ -43,14 +43,17 @@ async function EditListing({ id, created }: { id: string; created: boolean }) {
     .select("*, private:listing_private_details(street_address), amenities:listing_amenities(amenity_id), media:listing_media(id, upload_key, alt_text, is_cover, sort_order, kind), videos:listing_videos(provider, video_id, instagram_kind, sort_order)")
     .eq("id", id)
     .maybeSingle();
-  if (!listing || (listing.owner_id !== viewer.id && listing.agent_id !== viewer.id)) notFound();
+  const own = listing && (listing.owner_id === viewer.id || listing.agent_id === viewer.id);
+  // Super admins edit any property (the database allows it in every state, without re-review).
+  const asAdmin = Boolean(listing && !own && isAdmin(viewer));
+  if (!listing || (!own && !asAdmin)) notFound();
 
   const [settings, taxonomy, history] = await Promise.all([
     getSiteSettings(),
     getTaxonomy(),
     supabase.rpc("get_listing_history", { p_listing_id: id }),
   ]);
-  const editable = ["draft", "rejected", "published"].includes(listing.status);
+  const editable = asAdmin || ["draft", "rejected", "published"].includes(listing.status);
   const lastDecision = (history.data ?? []).find((event) => event.to_status === "rejected" || event.to_status === "suspended");
   const fmt = { locale: settings.default_locale, timeZone: settings.default_timezone };
 
@@ -129,6 +132,12 @@ async function EditListing({ id, created }: { id: string; created: boolean }) {
         }
       />
       {created ? <Alert tone="success">Draft saved. Add photos below, then submit it for review.</Alert> : null}
+      {asAdmin ? (
+        <Alert tone="warning" title="Editing as a super admin">
+          This property belongs to someone else. Your changes go live straight away, without review, and are recorded in the audit log.{" "}
+          <Link className="underline" href={`/admin/listings/${listing.id}`}>Back to the review page</Link>
+        </Alert>
+      ) : null}
       <Card className="flex flex-col gap-3">
         <div className="flex items-center gap-2">
           <span className="text-sm text-text-muted">Status</span>
@@ -142,7 +151,7 @@ async function EditListing({ id, created }: { id: string; created: boolean }) {
         {lastDecision?.reason && (listing.status === "rejected" || listing.status === "suspended") ? (
           <Alert tone="warning" title="Note from our moderators">{lastDecision.reason}</Alert>
         ) : null}
-        <WorkflowButtons listingId={listing.id} actions={actions} />
+        {asAdmin ? null : <WorkflowButtons listingId={listing.id} actions={actions} />}
         {listing.status === "published" ? (
           <ActionForm action={setAvailability} submitLabel="Update availability" variant="secondary" inline>
             <input type="hidden" name="listingId" value={listing.id} />

@@ -45,6 +45,20 @@ function done(message: string, tags: string[] = []): FormState {
 // ---------------------------------------------------------------------------
 // Listings
 // ---------------------------------------------------------------------------
+export async function deleteListingAsAdmin(_previous: FormState, formData: FormData): Promise<FormState> {
+  const ctx = await adminClient();
+  if (!ctx) return { error: "Only super admins can delete properties." };
+  const listingId = z.uuid().safeParse(formData.get("listingId"));
+  if (!listingId.success) return { error: "Unknown property." };
+  const { error } = await ctx.supabase.rpc("admin_delete_listing", {
+    p_listing_id: listingId.data,
+    p_confirm_reference: text(formData, "confirmReference"),
+  });
+  if (error) return { fieldErrors: error.code === "PT409" ? { confirmReference: error.message } : undefined, error: friendlyDbError(error) };
+  updateTag("listings");
+  redirect("/admin/listings?notice=deleted");
+}
+
 export async function moderateListing(_previous: FormState, formData: FormData): Promise<FormState> {
   const ctx = await staffClient();
   if (!ctx) return NOT_ALLOWED;

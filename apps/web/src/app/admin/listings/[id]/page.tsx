@@ -2,7 +2,7 @@ import { CATEGORY_LABEL, formatDateTime } from "@fyh/shared";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { assignAgent, moderateListing, setListingFeatured } from "@/app/actions/admin";
+import { assignAgent, deleteListingAsAdmin, moderateListing, setListingFeatured } from "@/app/actions/admin";
 import { ActionForm } from "@/components/action-form";
 import { VideoGallery } from "@/components/video-gallery";
 import { Loading } from "@/components/loading";
@@ -98,9 +98,14 @@ async function Review({ id }: { id: string }) {
         title={listing.title}
         description={`${listing.reference_code} · owner ${listing.owner?.display_name ?? "unknown"}${listing.owner?.status === "suspended" ? " (suspended)" : ""}`}
         actions={
-          listing.status === "published" ? (
-            <Link className="text-sm text-brand underline" href={listingPath(listing)}>View live page</Link>
-          ) : null
+          <span className="flex flex-wrap gap-3">
+            {isAdmin(viewer) ? (
+              <Link className="text-sm text-brand underline" href={`/account/listings/${listing.id}`}>Edit details and photos</Link>
+            ) : null}
+            {listing.status === "published" ? (
+              <Link className="text-sm text-brand underline" href={listingPath(listing)}>View live page</Link>
+            ) : null}
+          </span>
         }
       />
       {flags?.length ? (
@@ -258,6 +263,24 @@ async function Review({ id }: { id: string }) {
           ))}
         </ol>
       </Card>
+
+      {isAdmin(viewer) ? (
+        <Card className="border-danger">
+          <h2 className="text-lg font-semibold">Delete permanently</h2>
+          <p className="mt-1 text-sm text-text-muted">
+            Removes the property, its photos, videos and history from the website and the app. Its leads are kept, with the
+            reference noted on each lead. This can&apos;t be undone; to hide it for now, use Suspend or ask the owner to archive it.
+          </p>
+          <div className="mt-3">
+            <ActionForm action={deleteListingAsAdmin} submitLabel="Delete permanently" variant="danger" confirm={`Delete ${listing.reference_code} permanently? This can't be undone.`}>
+              <input type="hidden" name="listingId" value={listing.id} />
+              <Field label={`Type ${listing.reference_code} to confirm`} name="confirmReference" required>
+                <TextInput name="confirmReference" autoComplete="off" className="max-w-56" />
+              </Field>
+            </ActionForm>
+          </div>
+        </Card>
+      ) : null}
     </div>
   );
 }

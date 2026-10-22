@@ -2,7 +2,7 @@ import { LISTING_STATUSES } from "@fyh/shared";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Loading } from "@/components/loading";
-import { Badge, Button, EmptyState, PageHeader, Select, TextInput } from "@/components/ui";
+import { Alert, Badge, Button, ButtonLink, EmptyState, PageHeader, Select, TextInput } from "@/components/ui";
 import { isAdmin, requireStaff } from "@/lib/auth";
 import { STATUS_LABEL } from "@/lib/listing-format";
 import { createUserClient } from "@/lib/supabase";
@@ -18,13 +18,14 @@ export default function AdminListingsPage({ searchParams }: PageProps<"/admin/li
           q={typeof params.q === "string" ? params.q.trim() : ""}
           page={Math.max(1, Number(params.page) || 1)}
           batch={typeof params.batch === "string" ? params.batch : ""}
+          deleted={params.notice === "deleted"}
         />
       ))}
     </Suspense>
   );
 }
 
-async function Listings({ status, q, page, batch }: { status: string; q: string; page: number; batch: string }) {
+async function Listings({ status, q, page, batch, deleted }: { status: string; q: string; page: number; batch: string; deleted: boolean }) {
   const viewer = await requireStaff("/admin/listings");
   const supabase = await createUserClient();
   let query = supabase
@@ -51,10 +52,14 @@ async function Listings({ status, q, page, batch }: { status: string; q: string;
         title="Listings"
         description={batch ? "Listings from one spreadsheet import." : status === "pending_review" ? "Oldest submissions first." : undefined}
         actions={isAdmin(viewer) ? (
-          // File download from a route handler: plain link, no prefetch.
-          <a download className="text-sm text-brand underline" href="/admin/export/listings">Export CSV</a>
+          <span className="flex flex-wrap items-center gap-3">
+            <ButtonLink href="/account/listings/new">Add property</ButtonLink>
+            {/* File download from a route handler: plain link, no prefetch. */}
+            <a download className="text-sm text-brand underline" href="/admin/export/listings">Export CSV</a>
+          </span>
         ) : null}
       />
+      {deleted ? <Alert tone="success">Property deleted. Its leads are kept under Leads &amp; enquiries.</Alert> : null}
       <form className="flex flex-wrap items-end gap-2" action="/admin/listings">
         <label className="flex flex-col gap-1 text-sm font-medium">
           Status

@@ -1014,6 +1014,9 @@ isOneToOne: false
 "admin_create_lead":
 { Args: { "p_city"?: string,"p_email": string,"p_interest": string,"p_listing_id"?: string,"p_message": string,"p_name": string,"p_phone": string,"p_source"?: string }; Returns: string
                            },
+"admin_delete_listing":
+{ Args: { "p_confirm_reference": string,"p_listing_id": string }; Returns: undefined
+                           },
 "admin_enquiry_duplicates":
 { Args: { "p_enquiry_id": string }; Returns: {
               "created_at": string,"id": string,"listing_title": string,"source": string,"status": Database["public"]['Enums']["enquiry_status"]
