@@ -64,7 +64,7 @@ The build runs on Expo's servers (free plan: it may wait in a queue). When it fi
 ## Part F · Try it
 
 1. Make sure `start-local.cmd` is running, including the **background jobs** window.
-2. On the phone, open **Find Your Home (preview)**, sign in (e.g. `demo.buyer@example.test`), and allow notifications when asked.
+2. On the phone, open **Find Your Home (preview)** and sign in (e.g. `demo.buyer@example.test`). Go to **Account → Notifications → Notification settings → Turn on phone notifications**, allow notifications, and make sure **Phone notifications** is on. Then **Save**.
 3. Close the app completely.
 4. On the laptop, sign in as an admin and go to **Admin → Send a message**. Write a title and message, tick **Phone and browser notifications**, and send it now (or a minute from now with **Send later**).
 5. Within about 30 seconds the notification appears on the phone. Tapping it opens the app.
