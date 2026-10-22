@@ -1,5 +1,5 @@
 import { tokens } from "@fyh/shared";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -68,19 +68,36 @@ export function Field({
   required,
   ...props
 }: TextInputProps & { label: string; error?: string; hint?: string; required?: boolean }) {
+  // Password fields get a Show / Hide button.
+  const secret = props.secureTextEntry === true;
+  const [revealed, setRevealed] = useState(false);
   return (
     <View style={styles.field}>
       <Text style={styles.label}>
         {label}
         {required ? <Text style={{ color: colors.danger }}> *</Text> : null}
       </Text>
-      <TextInput
-        accessibilityLabel={label}
-        accessibilityHint={error ?? hint}
-        placeholderTextColor={colors.textMuted}
-        style={[styles.input, props.multiline ? { minHeight: 110, textAlignVertical: "top" } : null, error ? { borderColor: colors.danger } : null]}
-        {...props}
-      />
+      <View style={secret ? styles.secretRow : null}>
+        <TextInput
+          accessibilityLabel={label}
+          accessibilityHint={error ?? hint}
+          placeholderTextColor={colors.textMuted}
+          style={[styles.input, secret ? { flex: 1, paddingRight: 72 } : null, props.multiline ? { minHeight: 110, textAlignVertical: "top" } : null, error ? { borderColor: colors.danger } : null]}
+          {...props}
+          secureTextEntry={secret && !revealed}
+        />
+        {secret ? (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={revealed ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
+            onPress={() => setRevealed((value) => !value)}
+            style={styles.secretToggle}
+            hitSlop={8}
+          >
+            <Text style={styles.secretToggleText}>{revealed ? "Hide" : "Show"}</Text>
+          </Pressable>
+        ) : null}
+      </View>
       {error ? (
         <Text style={styles.error} accessibilityRole="alert">
           {error}
@@ -204,6 +221,9 @@ const styles = StyleSheet.create({
   buttonText: { fontSize: fontSize.md, fontWeight: "600" },
   field: { gap: spacing.xs },
   label: { fontSize: fontSize.sm, fontWeight: "600", color: colors.text },
+  secretRow: { flexDirection: "row", alignItems: "center" },
+  secretToggle: { position: "absolute", right: 0, top: 0, bottom: 0, minWidth: 64, justifyContent: "center", alignItems: "center" },
+  secretToggleText: { color: colors.brand, fontWeight: "700", fontSize: fontSize.sm },
   input: {
     minHeight: TOUCH,
     borderWidth: 1,

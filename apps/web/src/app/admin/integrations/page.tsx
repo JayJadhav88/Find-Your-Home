@@ -17,6 +17,7 @@ import { requireAdmin } from "@/lib/auth";
 import { SHEETS_APPS_SCRIPT } from "@/lib/sheets-script";
 import { getSiteSettings } from "@/lib/public-data";
 import { createUserClient } from "@/lib/supabase";
+import { PasswordInput } from "@/components/password-input";
 
 export default function IntegrationsPage() {
   return (
@@ -67,7 +68,7 @@ async function Integrations() {
             <TextInput name="emailReplyTo" type="email" defaultValue={config.email_reply_to ?? ""} />
           </Field>
           <Field label="New Resend API key" name="resendApiKey" hint="Leave empty to keep the saved key.">
-            <TextInput name="resendApiKey" type="password" autoComplete="off" placeholder="re_…" />
+            <PasswordInput name="resendApiKey" autoComplete="off" placeholder="re_…" />
           </Field>
         </ActionForm>
         <TestButton channel="email" label="Send a test email to me" />
@@ -101,7 +102,7 @@ async function Integrations() {
             </Field>
           </div>
           <Field label="New access token" name="whatsappToken" hint="Leave empty to keep the saved token.">
-            <TextInput name="whatsappToken" type="password" autoComplete="off" />
+            <PasswordInput name="whatsappToken" autoComplete="off" />
           </Field>
         </ActionForm>
         <TestButton channel="whatsapp" label="Send a test WhatsApp to me" hint="Turn on WhatsApp with your number in your own notification settings first." />
@@ -117,7 +118,7 @@ async function Integrations() {
         <ActionForm action={savePushIntegration} submitLabel="Save push settings">
           <Checkbox name="pushEnabled" label="Send phone and browser notifications" defaultChecked={config.push_enabled} />
           <Field label="New Expo access token" name="expoToken" hint="Only needed if you turn on “enhanced push security” in your Expo account.">
-            <TextInput name="expoToken" type="password" autoComplete="off" />
+            <PasswordInput name="expoToken" autoComplete="off" />
           </Field>
         </ActionForm>
         <TestButton channel="push" label="Send a test notification to my devices" hint="Turn on notifications on your phone or in this browser first." />
