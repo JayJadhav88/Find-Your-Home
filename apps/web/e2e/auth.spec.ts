@@ -9,12 +9,12 @@ test.describe("accounts", () => {
     await page.goto("/sign-up");
     await page.getByLabel("Your name").fill("E2E Sign-up");
     await page.getByLabel("Email").fill(email);
-    await page.getByLabel("Password").fill("short");
+    await page.getByRole("textbox", { name: /^Password/ }).fill("short");
     await page.getByRole("button", { name: "Create account" }).click();
     await expect(page.locator("main").getByRole("alert")).toContainText("Use at least 10 characters");
     await expect(page.getByLabel("Email")).toHaveValue(email);
 
-    await page.getByLabel("Password").fill(password);
+    await page.getByRole("textbox", { name: /^Password/ }).fill(password);
     await page.getByRole("button", { name: "Create account" }).click();
     await expect(page.getByText(`Check ${email} for a confirmation link`)).toBeVisible();
 
@@ -42,7 +42,7 @@ test.describe("accounts", () => {
     await page.goto("/sign-up");
     await page.getByLabel("Your name").fill("E2E Reset");
     await page.getByLabel("Email").fill(email);
-    await page.getByLabel("Password").fill(password);
+    await page.getByRole("textbox", { name: /^Password/ }).fill(password);
     await page.getByRole("button", { name: "Create account" }).click();
     await expect(page.getByText("Almost there")).toBeVisible();
     await page.goto(await emailLink(email, "Confirm"));
