@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { countryFromLocale, geocode, placeQuery } from "./geocode";
+import { countryFromLocale, geocode, placeQuery, websiteGeocoder } from "./geocode";
 
 const respond = (status: number, body: unknown) =>
   vi.fn(async (_url: string, _init?: RequestInit) => new Response(JSON.stringify(body), { status })) as unknown as typeof fetch & {
@@ -39,5 +39,23 @@ describe("geocode", () => {
   it("reads the country from a locale", () => {
     expect(countryFromLocale("en-IN")).toBe("in");
     expect(countryFromLocale("en")).toBeNull();
+  });
+
+  it("sends lookups through the website when GEOCODE_PROXY_URL is set", async () => {
+    const env = { GEOCODE_PROXY_URL: "https://site.example.test/api/geocode", REVALIDATE_SECRET: "s".repeat(32) } as Record<string, string>;
+    const upstream = respond(200, [{ lat: "18.5590", lon: "73.7868", display_name: "Baner" }]);
+    const fetchImpl = websiteGeocoder((name) => env[name], upstream)!;
+    const place = await geocode("Baner, Pune", { userAgent: "FindYourHome/1.0 (ops@example.test)", countryCode: "IN", fetchImpl });
+    expect(place).toEqual({ lat: 18.559, lng: 73.7868, label: "Baner" });
+    const [url, init] = upstream.mock.calls[0]!;
+    expect(url).toBe("https://site.example.test/api/geocode");
+    expect(init.method).toBe("POST");
+    expect((init.headers as Record<string, string>)["x-geocode-secret"]).toBe(env.REVALIDATE_SECRET);
+    expect(JSON.parse(String(init.body))).toEqual({ q: "Baner, Pune", countrycodes: "in", userAgent: "FindYourHome/1.0 (ops@example.test)" });
+  });
+
+  it("calls OpenStreetMap directly when no website route is configured", () => {
+    expect(websiteGeocoder(() => undefined)).toBeNull();
+    expect(() => websiteGeocoder((name) => (name === "GEOCODE_PROXY_URL" ? "https://x.test" : undefined))).toThrow(/REVALIDATE_SECRET/);
   });
 });

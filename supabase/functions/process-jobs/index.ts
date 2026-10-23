@@ -3,7 +3,7 @@
 // enquiries to the owner's Google Sheet. Invoked by the scheduler.
 import type { SupabaseClient } from "npm:@supabase/supabase-js@2.118.0";
 import { extensionFor, ImageRejectedError, sanitizeImage } from "../_shared/image-sanitize.ts";
-import { countryFromLocale, geocode, placeQuery } from "../_shared/geocode.ts";
+import { countryFromLocale, geocode, placeQuery, websiteGeocoder } from "../_shared/geocode.ts";
 import { loadIntegrationConfig } from "../_shared/integrations.ts";
 import { postToSheet, sheetRow } from "../_shared/sheets.ts";
 import { safeFetch } from "../_shared/safe-fetch.ts";
@@ -313,6 +313,7 @@ async function geocodeListing(db: SupabaseClient, listingId: string) {
   const { data: settings } = await db.from("site_settings").select("default_locale, contact_email").maybeSingle();
   const userAgent = `FindYourHome/1.0 (${settings?.contact_email ?? Deno.env.get("SITE_URL") ?? "local development"})`;
   const country = place.country_code?.toLowerCase() ?? countryFromLocale(settings?.default_locale);
+  const fetchImpl = websiteGeocoder((name) => Deno.env.get(name)) ?? undefined;
 
   // Nominatim allows about one request per second: space them out.
   const wait = lastGeocodeAt + 1100 - Date.now();
@@ -326,7 +327,7 @@ async function geocodeListing(db: SupabaseClient, listingId: string) {
 
   for (const query of queries) {
     lastGeocodeAt = Date.now();
-    const found = await geocode(query, { userAgent, countryCode: country });
+    const found = await geocode(query, { userAgent, countryCode: country, fetchImpl });
     if (found) {
       const { error: saveError } = await db.rpc("worker_set_listing_coordinates", { p_listing_id: listingId, p_lat: found.lat, p_lng: found.lng });
       if (saveError) throw new Error(saveError.message);

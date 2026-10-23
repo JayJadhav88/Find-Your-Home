@@ -1,15 +1,9 @@
-import { timingSafeEqual } from "node:crypto";
 import { revalidateTag } from "next/cache";
 import { NextResponse, type NextRequest } from "next/server";
+import { secretMatches } from "@/lib/shared-secret";
 
 // Called by the process-jobs worker after it publishes or removes listing photos, so cached
 // public pages pick up the new photos immediately. Protected by REVALIDATE_SECRET.
-
-function secretMatches(provided: string, expected: string): boolean {
-  const a = Buffer.from(provided);
-  const b = Buffer.from(expected);
-  return a.length === b.length && timingSafeEqual(a, b);
-}
 
 export async function POST(request: NextRequest) {
   const expected = process.env.REVALIDATE_SECRET;

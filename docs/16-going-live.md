@@ -22,11 +22,21 @@ Why the build looks the way it does (shared hosting limits):
 
 ## Supabase settings
 
-- **Function secrets** (`supabase secrets list`): `WORKER_SECRET`, `REVALIDATE_SECRET`, `WEB_PUSH_PUBLIC_KEY`, `WEB_PUSH_PRIVATE_KEY`, `EMAIL_PROVIDER=log`, `SITE_URL`, `REVALIDATE_URL`. Values are in the git-ignored `.secrets/live-functions.env`.
+- **Function secrets** (`supabase secrets list`): `WORKER_SECRET`, `REVALIDATE_SECRET`, `WEB_PUSH_PUBLIC_KEY`, `WEB_PUSH_PRIVATE_KEY`, `EMAIL_PROVIDER=log`, `SITE_URL`, `REVALIDATE_URL`, `GEOCODE_PROXY_URL` (`https://coral-salamander-372599.hostingersite.com/api/geocode`). Values are in the git-ignored `.secrets/live-functions.env`.
 - **Authentication → URL Configuration:**
   - Site URL: the Hostinger address;
   - Redirect URLs: `https://coral-salamander-372599.hostingersite.com/**` and `findyourhome://**`.
 - **Admins:** two super admins, created with one-time passwords in `.secrets/live-admin-patil.txt` and `.secrets/live-admin-jaydeep.txt`. A new password is required at first sign-in.
+
+## Place search (OpenStreetMap)
+
+OpenStreetMap's free place lookup (Nominatim) refuses requests from Supabase's servers (403), so the lookups go through the website:
+
+1. The search box calls the Supabase `geocode` function, which checks the cache and the per-visitor limit.
+2. On a cache miss it asks the website's `/api/geocode` route (on Hostinger, which OpenStreetMap accepts), sending `REVALIDATE_SECRET` to prove who it is.
+3. The route asks OpenStreetMap, at most once a second, and passes the answer back.
+
+The `process-jobs` worker finds listing map pins the same way. Without `GEOCODE_PROXY_URL` (local development) the functions call OpenStreetMap directly. If the domain changes, update `GEOCODE_PROXY_URL` too.
 
 ## Updating the site
 
@@ -34,7 +44,6 @@ Commit and `git push` to `main`; Hostinger rebuilds (about 3 minutes). For datab
 
 ## Not done yet / known limits
 
-- **Place search ("Near a place" / "Near me") doesn't work live:** OpenStreetMap's free service refuses requests from Supabase's servers (403). PIN code and city search work. Fix: run the lookup from the Hostinger server, or use a geocoding service with a key.
 - **Emails aren't sent:** `EMAIL_PROVIDER=log`. Supabase's built-in sign-in emails (confirm sign-up, reset password) only reach your own team's addresses on the free setup. Before real customers:
   1. create a Resend account and verify your domain;
   2. set the Resend key in Admin → Integrations and `EMAIL_PROVIDER=resend`;
@@ -44,7 +53,7 @@ Commit and `git push` to `main`; Hostinger rebuilds (about 3 minutes). For datab
   2. in Supabase → Authentication → Providers → Google, enter the Client ID and secret;
   3. set `NEXT_PUBLIC_GOOGLE_SIGN_IN=true` in Hostinger and redeploy.
 - **The phone app** still points at the laptop. For a live app build, set the `EXPO_PUBLIC_*` values to the live addresses ([15-phone-push.md](15-phone-push.md) Part D).
-- **Own domain:** in Hostinger, Connect domain. Then update `NEXT_PUBLIC_SITE_URL` in Hostinger, `SITE_URL` / `REVALIDATE_URL` in Supabase secrets, and the Supabase Site URL and redirect URLs. Redeploy.
+- **Own domain:** in Hostinger, Connect domain. Then update `NEXT_PUBLIC_SITE_URL` in Hostinger, `SITE_URL` / `REVALIDATE_URL` / `GEOCODE_PROXY_URL` in Supabase secrets, and the Supabase Site URL and redirect URLs. Redeploy.
 - **Free Supabase plan:** the project pauses after 7 days without activity and has no backups. Upgrade to Pro before launch.
 - **The older Seoul project** ("Find Your Home") is unused. Pause or delete it in Supabase.
 - **The repository is public**, by your choice. Never commit secrets: `.secrets/` and `.env*` are git-ignored.

@@ -47,6 +47,36 @@ export async function geocode(
   return { lat, lng, label: String(first.display_name ?? q).slice(0, 200) };
 }
 
+/**
+ * Nominatim answers 403 to Supabase's cloud servers, so live lookups go through the website's
+ * /api/geocode route (its server is not blocked). Returns a fetch for geocode() that does that
+ * when GEOCODE_PROXY_URL is set, or null to call Nominatim directly (local development).
+ */
+export function websiteGeocoder(
+  env: (name: string) => string | undefined,
+  fetchImpl: typeof fetch = fetch,
+): typeof fetch | null {
+  const proxyUrl = env("GEOCODE_PROXY_URL");
+  if (!proxyUrl) return null;
+  const secret = env("REVALIDATE_SECRET");
+  if (!secret) throw new Error("GEOCODE_PROXY_URL is set but REVALIDATE_SECRET is not");
+  return (async (input: string | URL | Request, init?: RequestInit) => {
+    const asked = new URL(input instanceof Request ? input.url : String(input));
+    const headers = new Headers(init?.headers);
+    return await fetchImpl(proxyUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-geocode-secret": secret },
+      body: JSON.stringify({
+        q: asked.searchParams.get("q"),
+        countrycodes: asked.searchParams.get("countrycodes"),
+        userAgent: headers.get("User-Agent"),
+      }),
+      redirect: "error",
+      signal: AbortSignal.timeout(15_000),
+    });
+  }) as typeof fetch;
+}
+
 /** Two-letter country code from a locale such as "en-IN" (null when there is none). */
 export function countryFromLocale(locale: string | null | undefined): string | null {
   const region = (locale ?? "").split("-")[1];

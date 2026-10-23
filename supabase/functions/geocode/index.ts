@@ -1,7 +1,7 @@
 // Public: turns a place typed in the search box ("Baner, Pune" or "411045") into coordinates
 // for "near a place" search. Results are cached and each visitor is rate-limited, as
 // OpenStreetMap's free service asks. GET /functions/v1/geocode?q=...
-import { countryFromLocale, geocode } from "../_shared/geocode.ts";
+import { countryFromLocale, geocode, websiteGeocoder } from "../_shared/geocode.ts";
 import { errorMessage, serviceClient } from "../_shared/worker.ts";
 
 const CORS = {
@@ -38,6 +38,7 @@ Deno.serve(async (request) => {
     const place = await geocode(q, {
       userAgent: `FindYourHome/1.0 (${settings?.contact_email ?? Deno.env.get("SITE_URL") ?? "local development"})`,
       countryCode: countryFromLocale(settings?.default_locale),
+      fetchImpl: websiteGeocoder((name) => Deno.env.get(name)) ?? undefined,
     });
     await db.rpc("geocode_cache_put", { p_query: q, p_lat: place?.lat ?? null, p_lng: place?.lng ?? null, p_label: place?.label ?? q });
     return place ? reply({ found: true, ...place }) : reply({ found: false });
