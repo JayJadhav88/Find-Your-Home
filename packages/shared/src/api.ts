@@ -524,14 +524,17 @@ export async function submitContactLead(
 }
 
 // Site content (banners, floating button)
-export async function getAppBanners(client: Client) {
+/** Live banners for the app: "top" (rotating) or "offers" (side by side). */
+export async function getAppBanners(client: Client, placement: "top" | "offers") {
   return check(
     await client
       .from("banners")
       .select("id, title, subtitle, image_url, cta_label, target_url")
+      .eq("placement", placement)
       .in("audience", ["all", "app"])
       .order("sort_order")
-      .limit(8),
+      .order("created_at", { ascending: false })
+      .limit(placement === "top" ? 8 : 12),
   );
 }
 

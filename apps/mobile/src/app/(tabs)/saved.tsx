@@ -8,6 +8,7 @@ import { Button, Card, EmptyState, ErrorState, Loading, text } from "@/component
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { useResource } from "@/lib/use-resource";
+import { TopBanner } from "@/components/site-banners";
 
 const { spacing } = tokens;
 
@@ -39,6 +40,7 @@ export default function SavedScreen() {
       keyExtractor={(item) => item.id}
       contentContainerStyle={{ padding: spacing.md, gap: spacing.md }}
       refreshControl={<RefreshControl refreshing={loading} onRefresh={reload} />}
+      ListHeaderComponent={<TopBanner />}
       ListEmptyComponent={<EmptyState title="No saved homes yet" message="Tap “Save” on any property to keep it here." />}
       renderItem={({ item }) => {
         if (item.status !== "published") {

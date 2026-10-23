@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import { Suspense } from "react";
+import { FooterOffersSlot, TopBannerSlot } from "@/components/banners";
 import { SiteFooter } from "@/components/site-footer";
 import { FloatingAction } from "@/components/floating-action";
 import { SiteHeader } from "@/components/site-header";
 import { env } from "@/lib/env";
-import { getSiteSettings } from "@/lib/public-data";
+import { getBanners, getSiteSettings } from "@/lib/public-data";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const settings = await getSiteSettings();
+  const [settings, topBanners, offerBanners] = await Promise.all([getSiteSettings(), getBanners("top"), getBanners("offers")]);
   return (
     <html lang={settings.default_locale} className={`${geistSans.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col font-sans">
@@ -35,9 +36,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           Skip to content
         </a>
         <SiteHeader brandName={settings.brand_name} />
+        <TopBannerSlot banners={topBanners} />
         <main id="main" className="flex-1">
           {children}
         </main>
+        <FooterOffersSlot banners={offerBanners} />
         <SiteFooter />
         <Suspense fallback={null}>
           <FloatingAction />

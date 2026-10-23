@@ -16,11 +16,14 @@ import { useCallback, useEffect, useState } from "react";
 import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { ListingCard } from "@/components/listing-card";
 import { NearControls, type NearPlace } from "@/components/near-controls";
-import { FloatingButton, SiteBanners } from "@/components/site-banners";
+import { FloatingButton, OffersRow, TopBanner } from "@/components/site-banners";
 import { Button, EmptyState, ErrorState, Field, Loading, Notice, Segmented } from "@/components/ui";
 import { useSession } from "@/lib/session";
 import { supabase } from "@/lib/supabase";
 import { useResource } from "@/lib/use-resource";
+
+// Index of the home after which the offers row appears.
+const OFFERS_AFTER = 3;
 
 const { colors, spacing, fontSize } = tokens;
 
@@ -209,8 +212,8 @@ export default function ExploreScreen() {
       onEndReached={loadMore}
       ListHeaderComponent={
         <View style={styles.header}>
+          <TopBanner />
           <Text style={styles.heading}>Find a home</Text>
-          <SiteBanners />
           <Segmented label="Category" value={category} options={CATEGORIES} onChange={(value) => setCategory(value as ListingCategory | "")} />
           <Field
             label="Search"
@@ -293,7 +296,17 @@ export default function ExploreScreen() {
           ) : null}
         </View>
       }
-      renderItem={({ item }) => <ListingCard listing={item} locale={locale} />}
+      renderItem={({ item, index }) =>
+        // The offers row sits in the middle of the list, after the fourth home.
+        index === OFFERS_AFTER ? (
+          <View style={{ gap: spacing.md }}>
+            <ListingCard listing={item} locale={locale} />
+            <OffersRow />
+          </View>
+        ) : (
+          <ListingCard listing={item} locale={locale} />
+        )
+      }
       ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
       ListEmptyComponent={
         loading ? (
@@ -302,7 +315,15 @@ export default function ExploreScreen() {
           <EmptyState title="No homes match" message="Try another category, city or a higher price." />
         )
       }
-      ListFooterComponent={loadingMore ? <Loading label="Loading more…" /> : undefined}
+      ListFooterComponent={
+        loadingMore ? (
+          <Loading label="Loading more…" />
+        ) : items.length && items.length <= OFFERS_AFTER ? (
+          <View style={{ paddingTop: spacing.md }}>
+            <OffersRow />
+          </View>
+        ) : undefined
+      }
     />
     <FloatingButton />
     </View>

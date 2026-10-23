@@ -7,13 +7,15 @@ export function cx(...classes: Array<string | false | null | undefined>): string
   return classes.filter(Boolean).join(" ");
 }
 
-type Variant = "primary" | "secondary" | "danger" | "ghost";
+type Variant = "primary" | "accent" | "secondary" | "danger" | "ghost";
 
 const buttonBase =
   "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-60";
 
 const variants: Record<Variant, string> = {
   primary: "bg-brand text-white hover:bg-brand-strong",
+  // Logo orange; navy text keeps it readable.
+  accent: "bg-accent text-brand-strong hover:brightness-95",
   secondary: "border border-border bg-surface text-text hover:bg-surface-muted",
   danger: "bg-danger text-white hover:opacity-90",
   ghost: "text-brand hover:bg-brand-soft",

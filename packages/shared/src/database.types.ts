@@ -61,14 +61,14 @@ isOneToOne: false
                   ]
                 },"banners": {
                   Row: {
-                    "audience": string,"created_at": string,"cta_label": string | null,"ends_at": string | null,"id": string,"image_url": string | null,"is_active": boolean,"sort_order": number,"starts_at": string | null,"subtitle": string | null,"target_url": string | null,"title": string,"updated_at": string
+                    "audience": string,"created_at": string,"cta_label": string | null,"ends_at": string | null,"id": string,"image_url": string | null,"is_active": boolean,"placement": string,"sort_order": number,"starts_at": string | null,"subtitle": string | null,"target_url": string | null,"title": string,"updated_at": string
                   }
                   ComputedFields: never
                   Insert: {
-                    "audience"?: string,"created_at"?: string,"cta_label"?: string | null,"ends_at"?: string | null,"id"?: string,"image_url"?: string | null,"is_active"?: boolean,"sort_order"?: number,"starts_at"?: string | null,"subtitle"?: string | null,"target_url"?: string | null,"title": string,"updated_at"?: string
+                    "audience"?: string,"created_at"?: string,"cta_label"?: string | null,"ends_at"?: string | null,"id"?: string,"image_url"?: string | null,"is_active"?: boolean,"placement"?: string,"sort_order"?: number,"starts_at"?: string | null,"subtitle"?: string | null,"target_url"?: string | null,"title": string,"updated_at"?: string
                   }
                   Update: {
-                    "audience"?: string,"created_at"?: string,"cta_label"?: string | null,"ends_at"?: string | null,"id"?: string,"image_url"?: string | null,"is_active"?: boolean,"sort_order"?: number,"starts_at"?: string | null,"subtitle"?: string | null,"target_url"?: string | null,"title"?: string,"updated_at"?: string
+                    "audience"?: string,"created_at"?: string,"cta_label"?: string | null,"ends_at"?: string | null,"id"?: string,"image_url"?: string | null,"is_active"?: boolean,"placement"?: string,"sort_order"?: number,"starts_at"?: string | null,"subtitle"?: string | null,"target_url"?: string | null,"title"?: string,"updated_at"?: string
                   }
                   Relationships: [
                     

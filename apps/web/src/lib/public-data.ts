@@ -183,17 +183,19 @@ export async function getBuilderBySlug(slug: string) {
   return data;
 }
 
-export async function getBanners(audience: "web" | "app" = "web") {
+/** Live banners for one area: "top" (rotating, under the header) or "offers" (side by side). */
+export async function getBanners(placement: "top" | "offers", audience: "web" | "app" = "web") {
   "use cache";
   cacheLife("minutes");
   cacheTag("banners");
   const { data } = await createPublicClient()
     .from("banners")
     .select("id, title, subtitle, image_url, cta_label, target_url, audience")
+    .eq("placement", placement)
     .in("audience", ["all", audience])
     .order("sort_order")
     .order("created_at", { ascending: false })
-    .limit(8);
+    .limit(placement === "top" ? 8 : 12);
   return data ?? [];
 }
 

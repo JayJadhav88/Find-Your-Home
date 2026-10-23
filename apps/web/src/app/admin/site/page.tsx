@@ -17,6 +17,7 @@ type Banner = {
   cta_label: string | null;
   target_url: string | null;
   audience: string;
+  placement: string;
   starts_at: string | null;
   ends_at: string | null;
   sort_order: number;
@@ -57,15 +58,25 @@ async function SiteContent() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="Site content" description="Home banners, the floating button and feature switches. Changes show within a few minutes, with no app update needed." />
+      <PageHeader title="Site content" description="Banners, the floating button and feature switches. Changes show within a few minutes on the website and the app, with no app update needed." />
 
       <section className="flex flex-col gap-4" aria-labelledby="banners-heading">
-        <h2 id="banners-heading" className="text-xl font-semibold">Home banners</h2>
+        <h2 id="banners-heading" className="text-xl font-semibold">Banners</h2>
+        <p className="text-sm text-text-muted">
+          <strong>Top banner:</strong> one at a time, changing every few seconds, under the header on every page (wide image, about 1600 × 500).{" "}
+          <strong>Offers row:</strong> cards side by side (one on phones, two on tablets, three on computers) in the middle of the home page and above the footer on other pages (image about 800 × 450).
+        </p>
         <Card>
           <h3 className="mb-3 font-semibold">Add a banner</h3>
           <BannerForm timeZone={settings.default_timezone} />
         </Card>
-        {((banners ?? []) as Banner[]).map((banner) => (
+        {(["top", "offers"] as const).map((area) => (
+          <div key={area} className="flex flex-col gap-2">
+            <h3 className="mt-2 font-semibold">{area === "top" ? "Top banners" : "Offers row"}</h3>
+            {!((banners ?? []) as Banner[]).some((banner) => banner.placement === area) ? (
+              <p className="text-sm text-text-muted">None yet.</p>
+            ) : null}
+        {((banners ?? []) as Banner[]).filter((banner) => banner.placement === area).map((banner) => (
           <Card key={banner.id} className="flex flex-col gap-2">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <p className="font-semibold">{banner.title}</p>
@@ -85,6 +96,8 @@ async function SiteContent() {
               </div>
             </details>
           </Card>
+        ))}
+          </div>
         ))}
       </section>
 
@@ -170,6 +183,12 @@ function BannerForm({ banner, timeZone, starts, ends }: { banner?: Banner; timeZ
         </Field>
         <Field label="Image (optional)" name={id("imageUrl")}>
           <ImageUploadField name="imageUrl" id={id("imageUrl")} defaultValue={banner?.image_url ?? ""} />
+        </Field>
+        <Field label="Where it shows" name={id("placement")}>
+          <Select name="placement" id={id("placement")} defaultValue={banner?.placement ?? "top"}>
+            <option value="top">Top banner (one at a time, rotating)</option>
+            <option value="offers">Offers row (cards side by side)</option>
+          </Select>
         </Field>
         <Field label="Show on" name={id("audience")}>
           <Select name="audience" id={id("audience")} defaultValue={banner?.audience ?? "all"}>

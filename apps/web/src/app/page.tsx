@@ -1,14 +1,14 @@
-import { BannerCarousel } from "@/components/banner-carousel";
+import { OffersRow } from "@/components/banners";
 import { ListingCard, ListingGrid } from "@/components/listing-card";
 import { Button, EmptyState, Select, TextInput } from "@/components/ui";
 import { getBanners, getHomeListings, getSiteSettings, getTaxonomy } from "@/lib/public-data";
 
 export default async function HomePage() {
-  const [settings, taxonomy, { featured, recent, newProjects }, banners] = await Promise.all([
+  const [settings, taxonomy, { featured, recent, newProjects }, offers] = await Promise.all([
     getSiteSettings(),
     getTaxonomy(),
     getHomeListings(),
-    getBanners("web"),
+    getBanners("offers"),
   ]);
   const cities = taxonomy.locations.filter((location) => location.level === "city");
 
@@ -46,11 +46,12 @@ export default async function HomePage() {
                 </option>
               ))}
             </Select>
-            <Button type="submit">Search</Button>
+            <Button type="submit" variant="accent">
+              Search
+            </Button>
           </form>
         </div>
       </section>
-      <BannerCarousel banners={banners} />
 
       <div className="mx-auto flex max-w-6xl flex-col gap-12 px-4 py-12">
         {featured.length ? (
@@ -65,6 +66,9 @@ export default async function HomePage() {
             </ListingGrid>
           </section>
         ) : null}
+
+        {/* Offers row in the middle of the home page (Admin → Site content → "Offers row"). */}
+        <OffersRow banners={offers} />
 
         {newProjects.length ? (
           <section aria-labelledby="projects-heading">

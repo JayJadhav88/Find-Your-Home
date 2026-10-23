@@ -12,6 +12,7 @@ import { CATEGORY_BADGE, displayArea, displayPrice } from "@/lib/format";
 import { useSession } from "@/lib/session";
 import { env, supabase } from "@/lib/supabase";
 import { useResource } from "@/lib/use-resource";
+import { OffersRow } from "@/components/site-banners";
 
 const { colors, spacing, fontSize, radius } = tokens;
 
@@ -245,6 +246,7 @@ export default function ListingScreen() {
           )}
         </Card>
         <ReportListing listingId={listing.id} />
+        <OffersRow />
       </View>
     </ScrollView>
   );
