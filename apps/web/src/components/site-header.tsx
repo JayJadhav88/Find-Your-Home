@@ -12,7 +12,7 @@ export function SiteHeader({ brandName }: { brandName: string }) {
           {/* eslint-disable-next-line @next/next/no-img-element -- small static logo; next/image adds nothing here */}
           <img src="/brand/logo-icon.png" alt="" width={51} height={40} className="h-10 w-auto" />
           {/* eslint-disable-next-line @next/next/no-img-element -- see above */}
-          <img src="/brand/logo-wordmark.png" alt={brandName} width={160} height={20} className="hidden h-5 w-auto sm:block" />
+          <img src="/brand/logo-wordmark.png" alt={brandName} width={160} height={20} className="h-4 w-auto sm:h-5" />
         </Link>
         <nav aria-label="Main" className="flex flex-wrap items-center gap-1 text-sm">
           <Link href="/search?category=rental" className="rounded-lg px-3 py-2 hover:bg-surface-muted">

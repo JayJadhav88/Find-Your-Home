@@ -93,7 +93,7 @@ export function TopBanner({ banners }: { banners: BannerItem[] }) {
                 <img src={banner.image_url} alt="" className="absolute inset-0 h-full w-full object-cover" loading={position === 0 ? "eager" : "lazy"} />
               ) : null}
               <div className="absolute inset-0 bg-gradient-to-r from-brand-strong/85 via-brand-strong/45 to-transparent" />
-              <div className="relative flex h-full max-w-xl flex-col justify-center gap-2 px-6 sm:px-10">
+              <div className="relative flex h-full max-w-xl flex-col justify-center gap-2 px-14 sm:px-16">
                 <p className="text-xl font-bold leading-tight text-white sm:text-3xl">{banner.title}</p>
                 {banner.subtitle ? <p className="text-sm text-white/90 sm:text-base">{banner.subtitle}</p> : null}
                 {href ? (
