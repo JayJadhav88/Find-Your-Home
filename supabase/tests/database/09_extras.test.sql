@@ -106,6 +106,9 @@ select is((select count(*)::int from public.my_listing_stats()), 0, 'other membe
 select tests.as_postgres();
 update public.site_settings set listing_expiry_days = 30;
 update app.config set value = '1970-01-01T00:00:00Z' where key = 'expiry_last_run';
+-- Other live listings in the local database (e.g. the aging demo data) must not count here.
+update public.listings set published_at = now() - interval '10 days', renewed_at = null
+where status = 'published' and owner_id not in (select id from fx where key in ('owner', 'scammer'));
 update public.listings set published_at = now() - interval '25 days' where title = 'Normal flat 2';
 update public.listings set published_at = now() - interval '31 days' where title = 'Normal flat 3';
 select is(

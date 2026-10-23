@@ -16,6 +16,8 @@ export async function GET(request: NextRequest) {
   let ok = false;
   if (code) {
     ok = !(await supabase.auth.exchangeCodeForSession(code)).error;
+    // Google users never need a password: replaces a one-time password if the account had one.
+    if (ok) await supabase.rpc("finish_google_sign_in");
   } else if (tokenHash && type) {
     ok = !(await supabase.auth.verifyOtp({ token_hash: tokenHash, type })).error;
   }

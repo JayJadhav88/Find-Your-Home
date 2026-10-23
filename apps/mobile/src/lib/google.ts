@@ -38,5 +38,7 @@ export async function signInWithGoogle(): Promise<GoogleResult> {
       ? await supabase.auth.setSession({ access_token: params.access_token, refresh_token: params.refresh_token })
       : null;
   if (!session || session.error) return { ok: false, cancelled: false, message: "Google sign-in didn't finish. Please try again." };
+  // Google users never need a password: replaces a one-time password if the account had one.
+  await supabase.rpc("finish_google_sign_in");
   return { ok: true };
 }

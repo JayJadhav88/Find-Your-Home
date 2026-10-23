@@ -1096,6 +1096,9 @@ isOneToOne: false
               "display_name": string,"id": string
             }[]
                            },
+"finish_google_sign_in":
+{ Args: Record<PropertyKey, never>; Returns: boolean
+                           },
 "follow_site_link":
 { Args: { "p_key": string,"p_visitor"?: string }; Returns: string
                            },
