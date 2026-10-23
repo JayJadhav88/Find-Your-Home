@@ -1,6 +1,7 @@
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { type NextRequest, NextResponse } from "next/server";
 import { safeNext } from "@/lib/auth";
+import { absoluteUrl } from "@/lib/env";
 import { createUserClient } from "@/lib/supabase";
 
 // Landing point for links in Supabase Auth emails (sign-up confirmation, password reset) and
@@ -24,6 +25,8 @@ export async function GET(request: NextRequest) {
 
   // Google sends ?error=… when the person cancels or the provider is not set up.
   const failure = url.searchParams.has("error") ? "/sign-in?error=google" : "/sign-in?error=link-expired";
-  const target = new URL(ok ? next : failure, url.origin);
+  // The public address, not the request's: behind a host's proxy (Hostinger) the request
+  // arrives at an internal address such as 0.0.0.0:3000.
+  const target = absoluteUrl(ok ? next : failure);
   return NextResponse.redirect(target);
 }
