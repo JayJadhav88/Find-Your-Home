@@ -37,7 +37,8 @@ export async function geocode(
     redirect: "error",
   });
   if (response.status === 429 || response.status >= 500) throw new Error(`Geocoding service busy (${response.status})`);
-  if (!response.ok) return null;
+  // A refusal (e.g. 403 when the service blocks a server) is not "no such place": never cache it.
+  if (!response.ok) throw new Error(`Geocoding service refused the request (${response.status})`);
   const results = (await response.json().catch(() => [])) as Array<{ lat?: string; lon?: string; display_name?: string }>;
   const first = results[0];
   const lat = Number(first?.lat);

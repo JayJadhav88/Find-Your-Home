@@ -27,6 +27,10 @@ describe("geocode", () => {
     await expect(geocode("Pune", { userAgent: "x", fetchImpl: respond(429, {}) })).rejects.toThrow(/busy/);
   });
 
+  it("reports a refusal as an error, so it is not cached as 'no such place'", async () => {
+    await expect(geocode("Pune", { userAgent: "x", fetchImpl: respond(403, {}) })).rejects.toThrow(/refused.*403/);
+  });
+
   it("builds queries from the parts that are present", () => {
     expect(placeQuery(["Near City Mall", null, "Pune", "", "411045", "IN"])).toBe("Near City Mall, Pune, 411045, IN");
     expect(placeQuery(["Line\nbreak"])).toBe("Line break");
