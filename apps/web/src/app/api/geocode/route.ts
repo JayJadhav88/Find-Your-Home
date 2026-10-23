@@ -7,8 +7,6 @@ import { secretMatches } from "@/lib/shared-secret";
 // proxy: it only ever asks Nominatim's search for one place. Caching and the per-visitor limit
 // stay in the Supabase functions; this route keeps Nominatim's one-request-per-second rule.
 
-export const dynamic = "force-dynamic";
-
 const NOMINATIM_URL = "https://nominatim.openstreetmap.org/search";
 const SPACING_MS = 1100;
 const MAX_WAIT_MS = 5000;
