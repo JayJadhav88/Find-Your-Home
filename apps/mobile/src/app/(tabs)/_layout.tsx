@@ -1,6 +1,7 @@
 import { tokens } from "@fyh/shared";
+import { Image } from "expo-image";
 import { Tabs } from "expo-router";
-import { Text, type ColorValue } from "react-native";
+import { Text, View, type ColorValue } from "react-native";
 import { useInbox } from "@/lib/notifications";
 
 // Simple text glyphs keep the app free of icon-font dependencies.
@@ -13,6 +14,16 @@ const icon = (glyph: string) =>
     );
   };
 
+/** The Find Your Home logo in place of the "Explore" title. */
+function LogoTitle() {
+  return (
+    <View accessible accessibilityRole="header" accessibilityLabel="Find Your Home" style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+      <Image source={require("../../../assets/brand/logo-icon.png")} style={{ width: 38, height: 30 }} contentFit="contain" accessible={false} />
+      <Image source={require("../../../assets/brand/logo-wordmark.png")} style={{ width: 128, height: 16 }} contentFit="contain" accessible={false} />
+    </View>
+  );
+}
+
 export default function TabsLayout() {
   const { unread } = useInbox();
   return (
@@ -24,7 +35,7 @@ export default function TabsLayout() {
         sceneStyle: { backgroundColor: tokens.colors.surfaceMuted },
       }}
     >
-      <Tabs.Screen name="index" options={{ title: "Explore", tabBarIcon: icon("⌂") }} />
+      <Tabs.Screen name="index" options={{ title: "Explore", headerTitle: () => <LogoTitle />, tabBarIcon: icon("⌂") }} />
       <Tabs.Screen name="saved" options={{ title: "Saved", tabBarIcon: icon("♡") }} />
       <Tabs.Screen name="listings" options={{ title: "My listings", tabBarIcon: icon("＋") }} />
       <Tabs.Screen
