@@ -1,3 +1,4 @@
+import { fileURLToPath } from "node:url";
 import type { NextConfig } from "next";
 
 // Listing photos are served from the Supabase "listing-public" bucket.
@@ -12,6 +13,11 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // One self-contained server for Node hosts such as Hostinger (scripts/build-hostinger.mjs).
+  // Traced from the monorepo root so the shared package is included.
+  ...(process.env.NEXT_OUTPUT === "standalone"
+    ? { output: "standalone" as const, outputFileTracingRoot: fileURLToPath(new URL("../../", import.meta.url)) }
+    : {}),
   cacheComponents: true,
   partialPrefetching: true,
   // Room for HTML pages written in Admin → Pages (up to 500,000 characters).
