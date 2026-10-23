@@ -23,6 +23,11 @@ const nextConfig: NextConfig = {
   // Room for HTML pages written in Admin → Pages (up to 500,000 characters).
   experimental: {
     serverActions: { bodySizeLimit: "2mb" },
+    // Hostinger's front servers change the router headers Next.js hashes into `?_rsc=`, so the
+    // check redirects every in-app navigation forever (signed-in pages stuck on "Loading…").
+    // The check guards against CDNs caching data responses by URL alone; ours are not cached
+    // (Hostinger reports DYNAMIC, signed-in pages are no-store).
+    validateRSCRequestHeaders: false,
     // Shared hosting limits processes and threads: build with one worker there.
     ...(process.env.NEXT_OUTPUT === "standalone" ? { cpus: 1, workerThreads: false } : {}),
   },
