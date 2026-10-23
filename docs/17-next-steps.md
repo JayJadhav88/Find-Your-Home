@@ -78,6 +78,16 @@ The free plan pauses after 7 days without visitors and keeps no backups.
 3. Google Cloud → **Clients → Find Your Home → Add secret**. Tell Claude, who switches Supabase to the new secret. Then **disable the old secret** (it was pasted in chat).
 4. Keep the `.secrets` folder on the laptop private. It holds the live keys. Never upload it.
 
+## Banners (Admin → Site content)
+
+1. **Add a banner:** give it a title, an optional subtitle and button text, a **Button link** (e.g. `/search?category=new_project` or an `https://` address) and an **Image** (Upload).
+2. **Where it shows:**
+   - **Top banner:** one at a time, changing every 5 seconds, under the header on every page. Use a wide image, about 1600 × 500.
+   - **Offers row:** cards side by side (1 on phones, 2 on tablets, 3 on computers), in the middle of the home page and above the footer elsewhere. Use an image about 800 × 450.
+3. **Order** decides the sequence (lower first). **Start** and **End** schedule it. **Show on** picks website, app or both.
+
+Banners and clicks appear within a minute on the website and the app. Admin, account and sign-in pages never show banners.
+
 ## Already done
 
 - Website live on Hostinger, with every push to GitHub redeploying it.
