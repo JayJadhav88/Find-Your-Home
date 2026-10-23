@@ -28,7 +28,15 @@ rmSync(`${web}.next/standalone`, { recursive: true, force: true });
 // webpack, not Turbopack: shared hosting doesn't let Turbopack start its helper processes.
 const build = spawnSync("node", [`${web}node_modules/next/dist/bin/next`, "build", "--webpack", web], {
   stdio: "inherit",
-  env: { ...process.env, NEXT_OUTPUT: "standalone" },
+  // Few threads: shared hosting refuses to start more ("OS can't spawn worker thread").
+  env: {
+    ...process.env,
+    NEXT_OUTPUT: "standalone",
+    NEXT_TELEMETRY_DISABLED: "1",
+    TOKIO_WORKER_THREADS: "2",
+    RAYON_NUM_THREADS: "2",
+    UV_THREADPOOL_SIZE: "2",
+  },
 });
 if (build.status !== 0) process.exit(build.status ?? 1);
 

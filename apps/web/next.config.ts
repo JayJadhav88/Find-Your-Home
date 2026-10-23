@@ -21,7 +21,11 @@ const nextConfig: NextConfig = {
   cacheComponents: true,
   partialPrefetching: true,
   // Room for HTML pages written in Admin → Pages (up to 500,000 characters).
-  experimental: { serverActions: { bodySizeLimit: "2mb" } },
+  experimental: {
+    serverActions: { bodySizeLimit: "2mb" },
+    // Shared hosting limits processes and threads: build with one worker there.
+    ...(process.env.NEXT_OUTPUT === "standalone" ? { cpus: 1, workerThreads: false } : {}),
+  },
   transpilePackages: ["@fyh/shared"],
   images: {
     remotePatterns: [
