@@ -36,11 +36,16 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
           Skip to content
         </a>
         <SiteHeader brandName={settings.brand_name} />
-        <TopBannerSlot banners={topBanners} />
+        {/* The banner areas read the page address (to stay off admin and account pages). */}
+        <Suspense fallback={null}>
+          <TopBannerSlot banners={topBanners} />
+        </Suspense>
         <main id="main" className="flex-1">
           {children}
         </main>
-        <FooterOffersSlot banners={offerBanners} />
+        <Suspense fallback={null}>
+          <FooterOffersSlot banners={offerBanners} />
+        </Suspense>
         <SiteFooter />
         <Suspense fallback={null}>
           <FloatingAction />
