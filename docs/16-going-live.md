@@ -48,10 +48,7 @@ Commit and `git push` to `main`; Hostinger rebuilds (about 3 minutes). For datab
   1. create a Resend account and verify your domain;
   2. set the Resend key in Admin → Integrations and `EMAIL_PROVIDER=resend`;
   3. set Resend as Supabase's SMTP server (Authentication → Emails → SMTP settings).
-- **Google sign-in isn't switched on live:**
-  1. in Google Cloud, add `https://perckbkfdaepwlkiigsv.supabase.co/auth/v1/callback` as a redirect URI;
-  2. in Supabase → Authentication → Providers → Google, enter the Client ID and secret;
-  3. set `NEXT_PUBLIC_GOOGLE_SIGN_IN=true` in Hostinger and redeploy.
+- **Google sign-in** is on (2026-10-23): Supabase has the Google client (pushed with `supabase config push` from a copy of config.toml using the live addresses), and Hostinger has `NEXT_PUBLIC_GOOGLE_SIGN_IN=true`. Google Cloud must list `https://perckbkfdaepwlkiigsv.supabase.co/auth/v1/callback` under the client's Authorized redirect URIs. While the Google app is in **Testing**, only listed test users can sign in; **Publish app** for everyone. Signing in with Google never asks for a password: an account made with a one-time password gets a random one nobody knows (`finish_google_sign_in`).
 - **The phone app** still points at the laptop. For a live app build, set the `EXPO_PUBLIC_*` values to the live addresses ([15-phone-push.md](15-phone-push.md) Part D).
 - **Own domain:** in Hostinger, Connect domain. Then update `NEXT_PUBLIC_SITE_URL` in Hostinger, `SITE_URL` / `REVALIDATE_URL` / `GEOCODE_PROXY_URL` in Supabase secrets, and the Supabase Site URL and redirect URLs. Redeploy.
 - **Free Supabase plan:** the project pauses after 7 days without activity and has no backups. Upgrade to Pro before launch.
