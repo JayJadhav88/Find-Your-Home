@@ -23,14 +23,6 @@ const nextConfig: NextConfig = {
   // Room for HTML pages written in Admin → Pages (up to 500,000 characters).
   experimental: { serverActions: { bodySizeLimit: "2mb" } },
   transpilePackages: ["@fyh/shared"],
-  turbopack: {
-    rules: {
-      "*.css": {
-        loaders: ["@tailwindcss/turbopack"],
-        as: "*.css",
-      },
-    },
-  },
   images: {
     remotePatterns: [
       {

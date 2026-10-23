@@ -25,7 +25,8 @@ for (const name of ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_PUBLISHABL
 }
 
 rmSync(`${web}.next/standalone`, { recursive: true, force: true });
-const build = spawnSync("node", [`${web}node_modules/next/dist/bin/next`, "build", web], {
+// webpack, not Turbopack: shared hosting doesn't let Turbopack start its helper processes.
+const build = spawnSync("node", [`${web}node_modules/next/dist/bin/next`, "build", "--webpack", web], {
   stdio: "inherit",
   env: { ...process.env, NEXT_OUTPUT: "standalone" },
 });
