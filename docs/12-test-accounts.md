@@ -17,7 +17,7 @@ These accounts exist only in the local database on this computer (`supabase star
 | Content manager | `demo.content@example.test` | Admin → Site content (banners, floating button) and Pages |
 | Marketing | `demo.marketing@example.test` | Admin → Send a message |
 
-**Your own admins** are separate, each with a one-time password in a git-ignored file: `patilsharvari611@gmail.com` in `.secrets/first-admin.txt`, and `jaydeepjadhav313212111010@gmail.com` in `.secrets/jaydeep-admin.txt`. You must choose a new password the first time you sign in. If that password is lost or was already used, give the account a fresh one: `node scripts/admin-bootstrap.mjs --reset --email <their Gmail>` (with `SUPABASE_URL` and `SUPABASE_SECRET_KEY` set, as in the README).
+**Your own admins** are separate, each with a one-time password in a git-ignored file: `<first admin Gmail>` in `.secrets/first-admin.txt`, and `<second admin Gmail>` in `.secrets/jaydeep-admin.txt`. You must choose a new password the first time you sign in. If that password is lost or was already used, give the account a fresh one: `node scripts/admin-bootstrap.mjs --reset --email <their Gmail>` (with `SUPABASE_URL` and `SUPABASE_SECRET_KEY` set, as in the README).
 
 ## Where to sign in
 
@@ -30,4 +30,4 @@ Emails the site sends (password resets, alerts) land in Mailpit at http://127.0.
 
 - Each account is a normal member as well (buyer), so team accounts can also browse and enquire.
 - To try the sales agent: sign in as the CRM manager, open a lead, set **Team owner** to Demo Sales Agent, then sign in as the sales agent.
-- To start fresh: `npx supabase db reset` restores the demo data but **deletes your own admin account**. Recreate it with `node scripts/admin-bootstrap.mjs --create --email patilsharvari611@gmail.com` (see the README).
+- To start fresh: `npx supabase db reset` restores the demo data but **deletes your own admin account**. Recreate it with `node scripts/admin-bootstrap.mjs --create --email <first admin Gmail>` (see the README).
