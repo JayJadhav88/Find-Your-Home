@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // Builds the website as one self-contained Node.js server for Hostinger (or any Node host):
 //
-//   pnpm build:hostinger
+//   pnpm build            (same as pnpm build:hostinger; pnpm build:all builds every package)
 //   node apps/web/.next/standalone/apps/web/server.js      # PORT and HOSTNAME from the host
 //
-// Hostinger settings: root directory "/", package manager pnpm, build script
-// "build:hostinger", application type "Other", entry file
+// Hostinger settings: root directory "/", package manager pnpm, build command
+// "pnpm run build", framework "Other", entry file
 // "apps/web/.next/standalone/apps/web/server.js". NEXT_PUBLIC_* variables must be set
 // before the build, because they are built into the pages. See docs/16-going-live.md.
 

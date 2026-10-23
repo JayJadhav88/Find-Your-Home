@@ -36,7 +36,7 @@ pnpm test:functions  # Edge Function unit tests (image sanitizer, email)
 pnpm workers         # run the photo + email workers once (needs supabase/functions/.env)
 pnpm smoke           # API-level end-to-end flow against the local stack (demo accounts)
 pnpm e2e             # Playwright browser tests (needs a web build; see apps/web/e2e/README.md)
-pnpm typecheck && pnpm lint && pnpm build
+pnpm typecheck && pnpm lint && pnpm build:all   # pnpm build = the website server for Hostinger
 ```
 
 `pnpm exec supabase status` prints the local URLs and keys. Put the API URL and **publishable** key into `apps/web/.env.local` and `apps/mobile/.env.local` using the names in [.env.example](.env.example). The **secret** key is only for the bootstrap script and server code, never for a `NEXT_PUBLIC_` / `EXPO_PUBLIC_` variable (the shared config validator refuses to start if you do).
