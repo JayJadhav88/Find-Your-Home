@@ -8,8 +8,11 @@ export function SiteHeader({ brandName }: { brandName: string }) {
   return (
     <header className="border-b border-border bg-surface">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <Link href="/" className="text-lg font-semibold text-brand">
-          {brandName}
+        <Link href="/" className="flex items-center gap-2" aria-label={`${brandName} home`}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- small static logo; next/image adds nothing here */}
+          <img src="/brand/logo-icon.png" alt="" width={51} height={40} className="h-10 w-auto" />
+          {/* eslint-disable-next-line @next/next/no-img-element -- see above */}
+          <img src="/brand/logo-wordmark.png" alt={brandName} width={160} height={20} className="hidden h-5 w-auto sm:block" />
         </Link>
         <nav aria-label="Main" className="flex flex-wrap items-center gap-1 text-sm">
           <Link href="/search?category=rental" className="rounded-lg px-3 py-2 hover:bg-surface-muted">

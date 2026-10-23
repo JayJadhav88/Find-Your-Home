@@ -14,7 +14,8 @@
         "APP_IOS_BUNDLE_ID": "com.findyourhome.app.preview",
         "APP_ANDROID_PACKAGE": "com.findyourhome.app.preview",
         "APP_NAME": "Find Your Home (preview)"
-      }
+      },
+      "channel": "preview"
     },
     "production": {
       "environment": "production",
@@ -22,7 +23,8 @@
       "env": {
         "APP_IOS_BUNDLE_ID": "com.example.findyourhome",
         "APP_ANDROID_PACKAGE": "com.example.findyourhome"
-      }
+      },
+      "channel": "production"
     }
   },
   "submit": {

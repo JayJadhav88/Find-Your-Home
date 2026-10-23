@@ -1,16 +1,16 @@
 // Brand design tokens shared by web (Tailwind/CSS variables) and mobile (RN theme).
-// Placeholder palette: warm, residential, high-contrast. Replace when brand assets are supplied.
+// Palette from the Find Your Home logo: navy (brand) and orange (accent).
 
 export const colors = {
-  brand: "#1F5F57",
-  brandStrong: "#164640",
-  brandSoft: "#E3EFEC",
-  accent: "#C8693B",
+  brand: "#0B3266",
+  brandStrong: "#001F42",
+  brandSoft: "#E7EEF8",
+  accent: "#F28C0F",
   surface: "#FFFFFF",
-  surfaceMuted: "#F6F4F0",
-  border: "#DAD5CC",
-  text: "#1C1B19",
-  textMuted: "#5C5850",
+  surfaceMuted: "#F4F6FA",
+  border: "#D8DEE8",
+  text: "#141B26",
+  textMuted: "#526075",
   danger: "#B42318",
   success: "#1E7A44",
   warning: "#9A6700",

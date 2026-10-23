@@ -7,7 +7,8 @@ export async function SiteFooter() {
     <footer className="mt-16 border-t border-border bg-surface">
       <div className="mx-auto flex max-w-6xl flex-col gap-4 px-4 py-8 text-sm text-text-muted sm:flex-row sm:justify-between">
         <div>
-          <p className="font-semibold text-text">{settings.brand_name}</p>
+          {/* eslint-disable-next-line @next/next/no-img-element -- small static logo */}
+          <img src="/brand/logo-full.png" alt={settings.brand_name} width={145} height={70} className="mb-2 h-16 w-auto" />
           {settings.contact_email ? (
             <p>
               <a className="underline" href={`mailto:${settings.contact_email}`}>

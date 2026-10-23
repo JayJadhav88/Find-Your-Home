@@ -15,13 +15,14 @@
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#1F5F57",
+        "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
       "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
         "android.permission.RECORD_AUDIO"
       ]
     },
@@ -42,7 +43,7 @@
       [
         "expo-notifications",
         {
-          "color": "#1F5F57"
+          "color": "#0B3266"
         }
       ],
       [
@@ -57,6 +58,15 @@
           "photosPermission": "Find Your Home uses your photo library so you can add pictures of a property you are listing.",
           "cameraPermission": "Find Your Home uses the camera so you can take pictures of a property you are listing.",
           "microphonePermission": false
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#FFFFFF"
         }
       ]
     ],
@@ -73,6 +83,12 @@
         "projectId": "2cd57faf-a3e5-47aa-bfa3-695e62fb6fb3"
       }
     },
-    "owner": "jaydeep88s-team"
+    "owner": "jaydeep88s-team",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/2cd57faf-a3e5-47aa-bfa3-695e62fb6fb3"
+    }
   }
 }

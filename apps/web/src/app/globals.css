@@ -2,15 +2,15 @@
 
 /* Values mirror packages/shared/src/tokens.ts. Phase 2 generates this block from the tokens. */
 :root {
-  --fyh-brand: #1f5f57;
-  --fyh-brand-strong: #164640;
-  --fyh-brand-soft: #e3efec;
-  --fyh-accent: #c8693b;
+  --fyh-brand: #0b3266;
+  --fyh-brand-strong: #001f42;
+  --fyh-brand-soft: #e7eef8;
+  --fyh-accent: #f28c0f;
   --fyh-surface: #ffffff;
-  --fyh-surface-muted: #f6f4f0;
-  --fyh-border: #dad5cc;
-  --fyh-text: #1c1b19;
-  --fyh-text-muted: #5c5850;
+  --fyh-surface-muted: #f4f6fa;
+  --fyh-border: #d8dee8;
+  --fyh-text: #141b26;
+  --fyh-text-muted: #526075;
   --fyh-focus: #2563eb;
   --fyh-danger: #b42318;
   --fyh-success: #1e7a44;
