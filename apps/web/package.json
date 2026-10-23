@@ -12,14 +12,17 @@
   },
   "dependencies": {
     "@fyh/shared": "workspace:*",
+    "@next/env": "16.4.2",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.118.0",
+    "@swc/helpers": "0.5.23",
     "exceljs": "^4.4.0",
     "next": "16.4.2",
     "papaparse": "^5.7.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "server-only": "^0.0.1",
+    "styled-jsx": "5.1.6",
     "zod": "^4.6.7"
   },
   "devDependencies": {

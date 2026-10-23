@@ -10,7 +10,7 @@
 // before the build, because they are built into the pages. See docs/16-going-live.md.
 
 import { spawnSync } from "node:child_process";
-import { cpSync, existsSync, rmSync } from "node:fs";
+import { cpSync, existsSync, realpathSync, rmSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
@@ -25,6 +25,8 @@ for (const name of ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_PUBLISHABL
 }
 
 rmSync(`${web}.next/standalone`, { recursive: true, force: true });
+// A cache left by a different build mode can crash webpack's hashing; start clean.
+rmSync(`${web}.next/cache`, { recursive: true, force: true });
 // webpack, not Turbopack: shared hosting doesn't let Turbopack start its helper processes.
 const build = spawnSync("node", [`${web}node_modules/next/dist/bin/next`, "build", "--webpack", web], {
   stdio: "inherit",
@@ -43,4 +45,11 @@ if (build.status !== 0) process.exit(build.status ?? 1);
 // The standalone server serves these from its own folder.
 cpSync(`${web}.next/static`, `${standalone}.next/static`, { recursive: true });
 if (existsSync(`${web}public`)) cpSync(`${web}public`, `${standalone}public`, { recursive: true });
+// pnpm keeps Next.js's helper packages beside it in node_modules/.pnpm, which the hosting copy
+// of the package doesn't always keep. Put real copies next to the app so `require` finds them.
+for (const name of ["@swc/helpers", "styled-jsx", "@next/env"]) {
+  const target = `${standalone}node_modules/${name}`;
+  rmSync(target, { recursive: true, force: true });
+  cpSync(realpathSync(`${web}node_modules/${name}`), target, { recursive: true, dereference: true });
+}
 console.log("build-hostinger: ready → apps/web/.next/standalone/apps/web/server.js");
