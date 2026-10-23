@@ -13,9 +13,7 @@
       "env": {
         "APP_IOS_BUNDLE_ID": "com.findyourhome.app.preview",
         "APP_ANDROID_PACKAGE": "com.findyourhome.app.preview",
-        "APP_NAME": "Find Your Home (preview)",
-        "APP_GOOGLE_SERVICES_FILE": "./google-services.preview.json",
-        "APP_ALLOW_HTTP": "1"
+        "APP_NAME": "Find Your Home (preview)"
       }
     },
     "production": {

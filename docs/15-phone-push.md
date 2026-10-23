@@ -1,5 +1,7 @@
 # 15 · Phone push notifications (Android test build)
 
+> **Update 2026-10-23:** the `preview` build now talks to the **live** site (its `EXPO_PUBLIC_*` values are stored in Expo for the `preview` environment), so Part D is done and plain-http access is off. After adding `google-services.preview.json` (Part B), add `"APP_GOOGLE_SERVICES_FILE": "./google-services.preview.json"` back to the `preview` profile in `apps/mobile/eas.json` for push notifications.
+
 These steps get notifications onto an Android phone even when the app is closed. Everything here is free. **Expo Go can't receive push notifications**, so you'll install a test build of the app (an APK) instead. It talks to the database on this laptop, so the phone and laptop must be on the same Wi-Fi or hotspot.
 
 Run the commands in a terminal inside `find-your-home\apps\mobile`. The ones that ask for a password you type yourself; never paste passwords or keys into chat.
