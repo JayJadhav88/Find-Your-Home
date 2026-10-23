@@ -13,7 +13,7 @@ import {
 } from "@fyh/shared";
 import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { FlatList, RefreshControl, StyleSheet, Text, View } from "react-native";
+import { FlatList, Pressable, RefreshControl, StyleSheet, Switch, Text, View } from "react-native";
 import { ListingCard } from "@/components/listing-card";
 import { NearControls, type NearPlace } from "@/components/near-controls";
 import { FloatingButton, OffersRow, TopBanner } from "@/components/site-banners";
@@ -37,6 +37,30 @@ const SORTS = [
   { value: "newest", label: "Newest" },
   { value: "price_asc", label: "Price ↑" },
   { value: "price_desc", label: "Price ↓" },
+] as const;
+const BATHS = [
+  { value: "", label: "Any" },
+  { value: "1", label: "1+" },
+  { value: "2", label: "2+" },
+  { value: "3", label: "3+" },
+] as const;
+const FURNISHING = [
+  { value: "", label: "Any" },
+  { value: "unfurnished", label: "Unfurnished" },
+  { value: "semi_furnished", label: "Semi" },
+  { value: "furnished", label: "Furnished" },
+] as const;
+const PARKING = [
+  { value: "", label: "Any" },
+  { value: "1", label: "1+" },
+  { value: "2", label: "2+" },
+  { value: "3", label: "3+" },
+] as const;
+const RECENT = [
+  { value: "", label: "Any time" },
+  { value: "1", label: "24 hours" },
+  { value: "7", label: "7 days" },
+  { value: "30", label: "30 days" },
 ] as const;
 const BEDS = [
   { value: "", label: "Any" },
@@ -66,6 +90,18 @@ export default function ExploreScreen() {
   const [construction, setConstruction] = useState("");
   const [near, setNear] = useState<NearPlace | null>(null);
   const [radius, setRadius] = useState(10);
+  const [localityId, setLocalityId] = useState("");
+  const [typeId, setTypeId] = useState("");
+  const [minPrice, setMinPrice] = useState("");
+  const [baths, setBaths] = useState("");
+  const [minArea, setMinArea] = useState("");
+  const [maxArea, setMaxArea] = useState("");
+  const [furnishing, setFurnishing] = useState("");
+  const [parking, setParking] = useState("");
+  const [amenityIds, setAmenityIds] = useState<string[]>([]);
+  const [recent, setRecent] = useState("");
+  const [featuredOnly, setFeaturedOnly] = useState(false);
+  const [photosOnly, setPhotosOnly] = useState(false);
 
   // Opening a saved search passes its query string; apply it once per value.
   const { viewer } = useSession();
@@ -81,6 +117,15 @@ export default function ExploreScreen() {
     setCityId(saved.location ?? "");
     setBeds(saved.beds ? String(saved.beds) : "");
     setMaxPrice(saved.maxPrice ? String(saved.maxPrice) : "");
+    setMinPrice(saved.minPrice ? String(saved.minPrice) : "");
+    setBaths(saved.baths ? String(saved.baths) : "");
+    setTypeId(saved.type?.[0] ?? "");
+    setFurnishing(saved.furnishing ?? "");
+    setParking(saved.parking ? String(saved.parking) : "");
+    setAmenityIds(saved.amenities ?? []);
+    setRecent(saved.recent ? String(saved.recent) : "");
+    setFeaturedOnly(saved.featured);
+    setPhotosOnly(saved.photos);
     setSort(saved.sort === "price_asc" || saved.sort === "price_desc" ? saved.sort : "newest");
   }
   const [saveNotice, setSaveNotice] = useState<{ tone: "success" | "danger"; text: string } | null>(null);
@@ -92,6 +137,7 @@ export default function ExploreScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const currency = reference.data?.settings.default_currency ?? reference.data?.taxonomy.currencies[0]?.code ?? null;
+  const areaUnit = reference.data?.settings.default_area_unit ?? "sq_ft";
   const locale = reference.data?.settings.default_locale ?? "en";
 
   const filters = useCallback(
@@ -99,20 +145,22 @@ export default function ExploreScreen() {
       q: submittedQuery || undefined,
       category: category || undefined,
       purpose: undefined,
-      type: undefined,
-      location: cityId || undefined,
+      type: typeId ? [typeId] : undefined,
+      location: localityId || cityId || undefined,
       currency: undefined,
-      minPrice: undefined,
-      maxPrice: maxPrice && Number(maxPrice) > 0 ? Number(maxPrice) : undefined,
+      minPrice: positive(minPrice),
+      maxPrice: positive(maxPrice),
       beds: beds ? Number(beds) : undefined,
-      baths: undefined,
-      minArea: undefined,
-      maxArea: undefined,
-      unit: undefined,
-      amenities: undefined,
-      furnishing: undefined,
-      featured: false,
-      recent: undefined,
+      baths: baths ? Number(baths) : undefined,
+      minArea: positive(minArea),
+      maxArea: positive(maxArea),
+      unit: positive(minArea) || positive(maxArea) ? areaUnit : undefined,
+      amenities: amenityIds.length ? amenityIds : undefined,
+      furnishing: (furnishing || undefined) as SearchFilters["furnishing"],
+      parking: parking ? Number(parking) : undefined,
+      photos: photosOnly,
+      featured: featuredOnly,
+      recent: recent ? Number(recent) : undefined,
       sort: sort === "distance" && !near ? "newest" : sort,
       cursor: nextCursor,
       builder: builderId || undefined,
@@ -123,7 +171,10 @@ export default function ExploreScreen() {
       radius: near ? radius : undefined,
       near: near?.label,
     }),
-    [submittedQuery, category, cityId, maxPrice, beds, sort, builderId, construction, submittedPin, near, radius],
+    [
+      submittedQuery, category, cityId, localityId, typeId, minPrice, maxPrice, beds, baths, minArea, maxArea, areaUnit,
+      furnishing, parking, amenityIds, recent, featuredOnly, photosOnly, sort, builderId, construction, submittedPin, near, radius,
+    ],
   );
 
   const load = useCallback(async () => {
@@ -195,6 +246,32 @@ export default function ExploreScreen() {
   if (reference.error) return <ErrorState message={reference.error} onRetry={reference.reload} />;
 
   const cities = (reference.data?.taxonomy.locations ?? []).filter((location) => location.level === "city");
+  const localities = (reference.data?.taxonomy.locations ?? []).filter((location) => location.level === "locality" && location.parent_id === cityId);
+  const propertyTypes = reference.data?.taxonomy.propertyTypes ?? [];
+  const amenities = reference.data?.taxonomy.amenities ?? [];
+  const clearFilters = () => {
+    setCityId("");
+    setLocalityId("");
+    setTypeId("");
+    setMinPrice("");
+    setMaxPrice("");
+    setBeds("");
+    setBaths("");
+    setMinArea("");
+    setMaxArea("");
+    setFurnishing("");
+    setParking("");
+    setAmenityIds([]);
+    setRecent("");
+    setFeaturedOnly(false);
+    setPhotosOnly(false);
+    setBuilderId("");
+    setConstruction("");
+    setPin("");
+    setSubmittedPin("");
+    setNear(null);
+    setSort("newest");
+  };
 
   const radiusOptions = reference.data?.settings.radius_options ?? [2, 5, 10, 25];
   const builders = reference.data?.builders ?? [];
@@ -234,7 +311,26 @@ export default function ExploreScreen() {
                   label="City"
                   value={cityId}
                   options={[{ value: "", label: "Any" }, ...cities.map((city) => ({ value: city.id, label: city.name }))]}
-                  onChange={setCityId}
+                  onChange={(value) => {
+                    setCityId(value);
+                    setLocalityId("");
+                  }}
+                />
+              ) : null}
+              {localities.length ? (
+                <Segmented
+                  label="Neighbourhood"
+                  value={localityId}
+                  options={[{ value: "", label: "Any" }, ...localities.map((place) => ({ value: place.id, label: place.name }))]}
+                  onChange={setLocalityId}
+                />
+              ) : null}
+              {propertyTypes.length ? (
+                <Segmented
+                  label="Property type"
+                  value={typeId}
+                  options={[{ value: "", label: "Any" }, ...propertyTypes.map((type) => ({ value: type.id, label: type.name }))]}
+                  onChange={setTypeId}
                 />
               ) : null}
               <NearControls
@@ -257,13 +353,70 @@ export default function ExploreScreen() {
                 placeholder="e.g. 411045"
               />
               <Segmented label="Bedrooms" value={beds} options={[...BEDS]} onChange={setBeds} />
-              <Field
-                label={`Maximum price${currency ? ` (${currency})` : ""}`}
-                keyboardType="numeric"
-                value={maxPrice}
-                onChangeText={(value) => setMaxPrice(value.replace(/[^\d]/g, ""))}
-                placeholder="Any"
-              />
+              <Segmented label="Bathrooms" value={baths} options={[...BATHS]} onChange={setBaths} />
+              <View style={styles.row}>
+                <View style={{ flex: 1 }}>
+                  <Field
+                    label={`Min price${currency ? ` (${currency})` : ""}`}
+                    keyboardType="numeric"
+                    value={minPrice}
+                    onChangeText={(value) => setMinPrice(value.replace(/[^\d]/g, ""))}
+                    placeholder="Any"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Field
+                    label={`Max price${currency ? ` (${currency})` : ""}`}
+                    keyboardType="numeric"
+                    value={maxPrice}
+                    onChangeText={(value) => setMaxPrice(value.replace(/[^\d]/g, ""))}
+                    placeholder="Any"
+                  />
+                </View>
+              </View>
+              <View style={styles.row}>
+                <View style={{ flex: 1 }}>
+                  <Field
+                    label={`Min area (${areaUnit === "sq_ft" ? "sq ft" : areaUnit === "sq_m" ? "m²" : areaUnit})`}
+                    keyboardType="numeric"
+                    value={minArea}
+                    onChangeText={(value) => setMinArea(value.replace(/[^\d]/g, ""))}
+                    placeholder="Any"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Field
+                    label="Max area"
+                    keyboardType="numeric"
+                    value={maxArea}
+                    onChangeText={(value) => setMaxArea(value.replace(/[^\d]/g, ""))}
+                    placeholder="Any"
+                  />
+                </View>
+              </View>
+              <Segmented label="Furnishing" value={furnishing} options={[...FURNISHING]} onChange={setFurnishing} />
+              <Segmented label="Car parking" value={parking} options={[...PARKING]} onChange={setParking} />
+              {amenities.length ? (
+                <View style={{ gap: spacing.xs }}>
+                  <Text style={styles.label}>Must have</Text>
+                  <View style={styles.chips}>
+                    {amenities.map((amenity) => {
+                      const on = amenityIds.includes(amenity.id);
+                      return (
+                        <Pressable
+                          key={amenity.id}
+                          accessibilityRole="checkbox"
+                          accessibilityState={{ checked: on }}
+                          onPress={() => setAmenityIds((current) => (on ? current.filter((id) => id !== amenity.id) : [...current, amenity.id]))}
+                          style={[styles.chip, on ? styles.chipOn : null]}
+                        >
+                          <Text style={[styles.chipText, on ? { color: colors.surface } : null]}>{amenity.name}</Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                </View>
+              ) : null}
               {builders.length ? (
                 <Segmented
                   label="Builder"
@@ -283,7 +436,11 @@ export default function ExploreScreen() {
                 ]}
                 onChange={setConstruction}
               />
+              <Segmented label="Listed within" value={recent} options={[...RECENT]} onChange={setRecent} />
+              <ToggleRow label="With photos only" value={photosOnly} onChange={setPhotosOnly} />
+              <ToggleRow label="Featured only" value={featuredOnly} onChange={setFeaturedOnly} />
               <Segmented label="Sort by" value={sort} options={sortOptions} onChange={(value) => setSort((value || "newest") as typeof sort)} />
+              <Button label="Clear filters" variant="ghost" onPress={clearFilters} />
             </View>
           ) : null}
           {viewer ? <Button label="Save this search & get alerts" variant="ghost" onPress={saveThisSearch} /> : null}
@@ -330,6 +487,20 @@ export default function ExploreScreen() {
   );
 }
 
+/** A typed number, or undefined when empty or zero. */
+function positive(value: string) {
+  return value && Number(value) > 0 ? Number(value) : undefined;
+}
+
+function ToggleRow({ label, value, onChange }: { label: string; value: boolean; onChange: (value: boolean) => void }) {
+  return (
+    <Pressable accessibilityRole="switch" accessibilityState={{ checked: value }} onPress={() => onChange(!value)} style={styles.toggle}>
+      <Text style={[styles.label, { flex: 1 }]}>{label}</Text>
+      <Switch value={value} onValueChange={onChange} trackColor={{ true: colors.brand }} accessibilityElementsHidden />
+    </Pressable>
+  );
+}
+
 const styles = StyleSheet.create({
   list: { padding: spacing.md, paddingBottom: spacing.xxl },
   header: { gap: spacing.md, marginBottom: spacing.md },
@@ -337,4 +508,18 @@ const styles = StyleSheet.create({
   row: { flexDirection: "row", gap: spacing.sm },
   filters: { gap: spacing.md, backgroundColor: colors.surface, borderRadius: 12, padding: spacing.md, borderWidth: 1, borderColor: colors.border },
   count: { fontSize: fontSize.sm, color: colors.textMuted },
+  label: { fontSize: fontSize.sm, fontWeight: "600", color: colors.text },
+  toggle: { flexDirection: "row", alignItems: "center", gap: spacing.sm, minHeight: 44 },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: spacing.xs },
+  chip: {
+    minHeight: 38,
+    paddingHorizontal: spacing.md,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
+    justifyContent: "center",
+    backgroundColor: colors.surface,
+  },
+  chipOn: { backgroundColor: colors.brand, borderColor: colors.brand },
+  chipText: { fontSize: fontSize.sm, color: colors.text, fontWeight: "600" },
 });

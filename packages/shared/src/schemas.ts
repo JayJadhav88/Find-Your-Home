@@ -268,6 +268,10 @@ export const searchParamsSchema = z.object({
     .optional()
     .catch(undefined),
   furnishing: z.preprocess(blankToUndefined, z.enum(FURNISHINGS).optional()).catch(undefined),
+  // At least this many car parking spaces.
+  parking: optionalNumber(1, 10, { integer: true }).catch(undefined),
+  // Only homes with photos.
+  photos: z.preprocess((value) => value === "1" || value === "true" || value === true, z.boolean()).catch(false),
   featured: z.preprocess((value) => value === "1" || value === "true", z.boolean()).catch(false),
   recent: optionalNumber(1, 365, { integer: true }).catch(undefined),
   sort: z.preprocess(blankToUndefined, z.enum(SEARCH_SORTS).default("newest")).catch("newest"),
@@ -323,6 +327,8 @@ export function searchFiltersToRpcArgs(filters: SearchFilters, defaults: { curre
     p_near_lat: filters.lat !== undefined && filters.lng !== undefined ? filters.lat : undefined,
     p_near_lng: filters.lat !== undefined && filters.lng !== undefined ? filters.lng : undefined,
     p_radius_km: filters.lat !== undefined && filters.lng !== undefined ? (filters.radius ?? 10) : undefined,
+    p_min_parking: filters.parking ?? undefined,
+    p_with_photos: filters.photos || undefined,
   };
 }
 
@@ -352,6 +358,8 @@ export function searchFiltersToQuery(filters: Partial<SearchFilters>): string {
   set("unit", filters.unit);
   set("amenities", filters.amenities);
   set("furnishing", filters.furnishing);
+  set("parking", filters.parking);
+  set("photos", filters.photos);
   set("featured", filters.featured);
   set("recent", filters.recent);
   set("builder", filters.builder);

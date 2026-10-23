@@ -277,6 +277,15 @@ function FilterForm({
           ))}
         </Select>
       </label>
+      <label className={field}>
+        Car parking
+        <Select bare name="parking" defaultValue={filters.parking?.toString() ?? ""}>
+          <option value="">Any</option>
+          <option value="1">At least 1</option>
+          <option value="2">At least 2</option>
+          <option value="3">At least 3</option>
+        </Select>
+      </label>
       {taxonomy.amenities.length ? (
         <fieldset>
           <legend className="text-sm font-medium">Must have</legend>
@@ -299,6 +308,10 @@ function FilterForm({
       <label className="flex min-h-9 items-center gap-2 text-sm">
         <input type="checkbox" name="featured" value="1" defaultChecked={filters.featured} className="size-4 accent-[var(--fyh-brand)]" />
         Featured only
+      </label>
+      <label className="flex min-h-9 items-center gap-2 text-sm">
+        <input type="checkbox" name="photos" value="1" defaultChecked={filters.photos} className="size-4 accent-[var(--fyh-brand)]" />
+        With photos only
       </label>
       <Select name="recent" aria-label="Listed within" defaultValue={filters.recent?.toString() ?? ""}>
         <option value="">Listed any time</option>
