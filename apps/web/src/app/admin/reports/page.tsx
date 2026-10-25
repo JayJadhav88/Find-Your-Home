@@ -2,7 +2,9 @@ import { formatDateTime } from "@fyh/shared";
 import Link from "next/link";
 import { Suspense } from "react";
 import { handleReport } from "@/app/actions/admin";
+import { bulkReports } from "@/app/actions/admin-bulk";
 import { ActionForm } from "@/components/action-form";
+import { BulkActionBar, RowCheckbox, SelectAllCheckbox } from "@/components/bulk-actions";
 import { Loading } from "@/components/loading";
 import { Badge, Card, EmptyState, PageHeader } from "@/components/ui";
 import { requireStaff } from "@/lib/auth";
@@ -52,9 +54,17 @@ async function Reports({ showAll }: { showAll: boolean }) {
         }
       />
       {reports?.length ? (
+        <>
+        <label className="flex items-center gap-2 text-sm">
+          <SelectAllCheckbox formId="bulk-reports" /> Select all {reports.length} shown
+        </label>
         <ul className="flex flex-col gap-3">
           {reports.map((report) => (
-            <li key={report.id}>
+            <li key={report.id} className="flex items-start gap-3">
+              <span className="pt-5">
+                <RowCheckbox formId="bulk-reports" value={String(report.id)} label={`report ${report.id}`} />
+              </span>
+              <div className="min-w-0 flex-1">
               <Card className="flex flex-col gap-2">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-medium">
@@ -93,9 +103,21 @@ async function Reports({ showAll }: { showAll: boolean }) {
                   )}
                 </div>
               </Card>
+            </div>
             </li>
           ))}
         </ul>
+        <BulkActionBar
+          formId="bulk-reports"
+          action={bulkReports}
+          noun={["report", "reports"]}
+          actions={[
+            { value: "resolved", label: "Mark resolved" },
+            { value: "dismissed", label: "Dismiss" },
+            { value: "open", label: "Reopen" },
+          ]}
+        />
+        </>
       ) : (
         <EmptyState title={showAll ? "No reports yet" : "No open reports"} />
       )}

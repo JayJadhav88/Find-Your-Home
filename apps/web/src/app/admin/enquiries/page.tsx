@@ -14,7 +14,9 @@ import {
 import Link from "next/link";
 import { Suspense } from "react";
 import { createLead } from "@/app/actions/admin-enquiries";
+import { bulkEnquiries } from "@/app/actions/admin-bulk";
 import { ActionForm } from "@/components/action-form";
+import { BulkActionBar, RowCheckbox, SelectAllCheckbox } from "@/components/bulk-actions";
 import { Loading } from "@/components/loading";
 import { Badge, Button, Card, cx, EmptyState, Field, PageHeader, Select, TextArea, TextInput } from "@/components/ui";
 import { canManageEnquiries, isAdmin, requireEnquiryTeam } from "@/lib/auth";
@@ -26,6 +28,8 @@ const OWNER_FILTERS = [
   ["mine", "Assigned to me"],
   ["unassigned", "Not assigned"],
 ] as const;
+
+const FORM_ID = "bulk-leads";
 
 const CLOSED: readonly string[] = ["closed", "spam", "won", "lost", "unqualified"];
 
@@ -87,7 +91,8 @@ async function Enquiries({ filters }: { filters: Filters }) {
     .select("id", { count: "exact", head: true })
     .lte("follow_up_at", new Date().toISOString())
     .not("status", "in", `(${CLOSED.join(",")})`);
-  const [{ data }, statusCounts, { count: overdue }] = await Promise.all([query, counts, dueCount]);
+  const team = canManageEnquiries(viewer) ? supabase.rpc("enquiry_team") : Promise.resolve({ data: [] as Array<{ id: string; display_name: string }> });
+  const [{ data }, statusCounts, { count: overdue }, { data: members }] = await Promise.all([query, counts, dueCount, team]);
   const rows = data ?? [];
   const fmt = { locale: settings.default_locale, timeZone: settings.default_timezone };
   const filterLink = (extra: string) => `/admin/enquiries?${extra}`;
@@ -213,15 +218,22 @@ async function Enquiries({ filters }: { filters: Filters }) {
       {rows.length === 0 ? (
         <EmptyState title="No leads match" />
       ) : (
+        <>
+        <label className="flex items-center gap-2 text-sm">
+          <SelectAllCheckbox formId={FORM_ID} /> Select all {rows.length} shown
+        </label>
         <ul className="divide-y divide-border rounded-xl border border-border bg-surface">
           {rows.map((row) => {
             const late = isOverdue(row.follow_up_at, row.status);
             const waiting = !row.first_response_at && (row.status === "new" || row.status === "assigned");
             return (
-              <li key={row.id}>
+              <li key={row.id} className="flex items-start gap-3 pl-4">
+                <span className="pt-4">
+                  <RowCheckbox formId={FORM_ID} value={row.id} label={row.name} />
+                </span>
                 <Link
                   href={`/admin/enquiries/${row.id}`}
-                  className="flex flex-col gap-1 p-4 hover:bg-surface-muted sm:flex-row sm:items-center sm:justify-between"
+                  className="flex flex-1 flex-col gap-1 p-4 pl-0 hover:bg-surface-muted sm:flex-row sm:items-center sm:justify-between"
                 >
                   <span>
                     <span className="font-medium">
@@ -249,6 +261,31 @@ async function Enquiries({ filters }: { filters: Filters }) {
             );
           })}
         </ul>
+        <BulkActionBar
+          formId={FORM_ID}
+          action={bulkEnquiries}
+          noun={["lead", "leads"]}
+          actions={[
+            {
+              value: "status",
+              label: "Change status",
+              choiceLabel: "New status",
+              choices: ENQUIRY_STATUSES.map((value) => ({ value, label: ENQUIRY_STATUS_LABEL[value] })),
+              reason: "optional",
+            },
+            ...(canManageEnquiries(viewer)
+              ? [
+                  {
+                    value: "assign",
+                    label: "Assign to",
+                    choiceLabel: "Team member",
+                    choices: [{ value: "", label: "Nobody (unassign)" }, ...(members ?? []).map((member) => ({ value: member.id, label: member.display_name }))],
+                  },
+                ]
+              : []),
+          ]}
+        />
+        </>
       )}
       <Card className="text-sm text-text-muted">
         Lead age is shown until the first reply. Statuses: New → Assigned → Contacted → Qualified → Visit scheduled → Negotiation → Won or

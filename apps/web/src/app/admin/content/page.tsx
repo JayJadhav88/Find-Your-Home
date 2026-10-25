@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { createContentPage } from "@/app/actions/admin";
+import { bulkPages } from "@/app/actions/admin-bulk";
 import { ActionForm } from "@/components/action-form";
+import { BulkActionBar, RowCheckbox, SelectAllCheckbox } from "@/components/bulk-actions";
 import { Loading } from "@/components/loading";
 import { Alert, Badge, Card, Field, PageHeader, Select, TextInput } from "@/components/ui";
 import { isAdmin, requireContentTeam } from "@/lib/auth";
@@ -57,10 +59,14 @@ async function Content() {
         </ActionForm>
       </Card>
 
+      <label className="flex items-center gap-2 text-sm">
+        <SelectAllCheckbox formId="bulk-pages" /> Select all pages
+      </label>
       <ul className="flex flex-col gap-2">
         {(pages ?? []).map((page) => (
-          <li key={page.slug}>
-            <Card className="flex flex-wrap items-center justify-between gap-3">
+          <li key={page.slug} className="flex items-center gap-3">
+            <RowCheckbox formId="bulk-pages" value={page.slug} label={page.title} />
+            <Card className="flex flex-1 flex-wrap items-center justify-between gap-3">
               <div className="flex flex-col gap-1">
                 <Link href={`/admin/content/${page.slug}`} className="font-semibold text-brand underline">
                   {page.title}
@@ -76,6 +82,18 @@ async function Content() {
           </li>
         ))}
       </ul>
+      {pages?.length ? (
+        <BulkActionBar
+          formId="bulk-pages"
+          action={bulkPages}
+          noun={["page", "pages"]}
+          actions={[
+            { value: "publish", label: "Publish" },
+            { value: "unpublish", label: "Unpublish (hide)" },
+            { value: "delete", label: "Delete (standard pages are kept)", danger: true, confirm: "Delete {count} page(s)? This can't be undone." },
+          ]}
+        />
+      ) : null}
     </div>
   );
 }

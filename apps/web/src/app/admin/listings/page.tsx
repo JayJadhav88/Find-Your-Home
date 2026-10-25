@@ -1,6 +1,8 @@
 import { LISTING_STATUSES } from "@fyh/shared";
 import Link from "next/link";
 import { Suspense } from "react";
+import { bulkListings } from "@/app/actions/admin-bulk";
+import { BulkActionBar, RowCheckbox, SelectAllCheckbox, type BulkAction } from "@/components/bulk-actions";
 import { Loading } from "@/components/loading";
 import { Alert, Badge, Button, ButtonLink, EmptyState, PageHeader, Select, TextInput } from "@/components/ui";
 import { isAdmin, requireStaff } from "@/lib/auth";
@@ -8,6 +10,25 @@ import { STATUS_LABEL } from "@/lib/listing-format";
 import { createUserClient } from "@/lib/supabase";
 
 const PAGE_SIZE = 50;
+const FORM_ID = "bulk-listings";
+
+const STAFF_ACTIONS: BulkAction[] = [
+  { value: "approve", label: "Approve and publish" },
+  { value: "reject", label: "Reject (send back to owner)", reason: "required" },
+  { value: "suspend", label: "Suspend (take offline)", reason: "required", danger: true },
+  { value: "reinstate", label: "Reinstate" },
+];
+const ADMIN_ACTIONS: BulkAction[] = [
+  ...STAFF_ACTIONS,
+  { value: "feature", label: "Feature on the home page" },
+  { value: "unfeature", label: "Stop featuring" },
+  {
+    value: "delete",
+    label: "Delete permanently",
+    danger: true,
+    confirm: "Delete {count} listing(s) permanently, with their photos and history? This can't be undone. Leads are kept.",
+  },
+];
 
 export default function AdminListingsPage({ searchParams }: PageProps<"/admin/listings">) {
   return (
@@ -85,6 +106,9 @@ async function Listings({ status, q, page, batch, deleted }: { status: string; q
             <caption className="sr-only">Listings</caption>
             <thead className="border-b border-border text-text-muted">
               <tr>
+                <th scope="col" className="w-10 p-3">
+                  <SelectAllCheckbox formId={FORM_ID} />
+                </th>
                 <th scope="col" className="p-3">Listing</th>
                 <th scope="col" className="p-3">Owner</th>
                 <th scope="col" className="p-3">Status</th>
@@ -94,6 +118,9 @@ async function Listings({ status, q, page, batch, deleted }: { status: string; q
             <tbody>
               {rows.map((row) => (
                 <tr key={row.id} className="border-b border-border last:border-0">
+                  <td className="p-3 align-top">
+                    <RowCheckbox formId={FORM_ID} value={row.id} label={row.title} />
+                  </td>
                   <td className="p-3">
                     <Link href={`/admin/listings/${row.id}`} className="font-medium text-brand underline">{row.title}</Link>
                     <span className="block text-text-muted">{row.reference_code}{row.is_featured ? " · Featured" : ""}</span>
@@ -107,6 +134,16 @@ async function Listings({ status, q, page, batch, deleted }: { status: string; q
           </table>
         </div>
       )}
+      {rows.length ? (
+        <BulkActionBar
+          formId={FORM_ID}
+          action={bulkListings}
+          actions={isAdmin(viewer) ? ADMIN_ACTIONS : STAFF_ACTIONS}
+          noun={["listing", "listings"]}
+          totalMatching={count ?? undefined}
+          filter={{ status, q, batch }}
+        />
+      ) : null}
       {pages > 1 ? (
         <nav aria-label="Pages" className="flex items-center gap-3 text-sm">
           {page > 1 ? <Link className="text-brand underline" href={link(page - 1)}>Previous</Link> : null}

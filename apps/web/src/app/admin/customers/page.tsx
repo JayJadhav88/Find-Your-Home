@@ -2,7 +2,9 @@ import { ROLE_LABEL, type AppRole } from "@fyh/shared";
 import Link from "next/link";
 import { Suspense } from "react";
 import { setUserRole, setUserStatus } from "@/app/actions/admin";
+import { bulkCustomers } from "@/app/actions/admin-bulk";
 import { ActionForm } from "@/components/action-form";
+import { BulkActionBar, RowCheckbox, SelectAllCheckbox } from "@/components/bulk-actions";
 import { Loading } from "@/components/loading";
 import { Alert, Badge, Button, Card, EmptyState, PageHeader, Select, TextInput } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
@@ -44,9 +46,17 @@ async function Customers({ q }: { q: string }) {
       {customers.length === 0 ? (
         <EmptyState title="No customers found" />
       ) : (
+        <>
+        <label className="flex items-center gap-2 text-sm">
+          <SelectAllCheckbox formId="bulk-customers" /> Select all {customers.length} shown
+        </label>
         <ul className="flex flex-col gap-3">
           {customers.map((customer) => (
-            <li key={customer.id}>
+            <li key={customer.id} className="flex items-start gap-3">
+              <span className="pt-5">
+                <RowCheckbox formId="bulk-customers" value={customer.id} label={customer.display_name} />
+              </span>
+              <div className="min-w-0 flex-1">
               <Card className="flex flex-col gap-3">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
@@ -108,9 +118,20 @@ async function Customers({ q }: { q: string }) {
                   )}
                 </div>
               </Card>
+            </div>
             </li>
           ))}
         </ul>
+        <BulkActionBar
+          formId="bulk-customers"
+          action={bulkCustomers}
+          noun={["customer", "customers"]}
+          actions={[
+            { value: "suspended", label: "Suspend (sign out, block sign-in)", reason: "optional", danger: true },
+            { value: "active", label: "Reactivate" },
+          ]}
+        />
+        </>
       )}
       <p className="text-sm text-text-muted">
         To make a customer part of the team, use <Link className="underline" href="/admin/team">Team &amp; roles</Link>.
