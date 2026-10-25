@@ -49,7 +49,12 @@ export const IMPORT_COLUMNS: ImportColumn[] = [
   { header: "Video URLs", help: "YouTube or Instagram links, separated by commas or new lines", example: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
   { header: "Virtual tour URL", help: "Optional https link", example: "" },
   { header: "Project name", help: "Required for New project", example: "" },
-  { header: "Project registration number", help: "Optional, for New project", example: "" },
+  { header: "Project registration number", help: "Optional, for New project (e.g. MahaRERA P52100012345)", example: "" },
+  { header: "Builder", help: "New project: the developer's name. Matched to Admin → Builders, or added there if new", example: "" },
+  { header: "Price up to", help: "Optional top of a price range (number, at least Price)", example: "" },
+  { header: "Configurations", help: "Optional, comma-separated, e.g. 2 BHK, 3 BHK", example: "" },
+  { header: "Launch date", help: "Optional date (YYYY-MM-DD)", example: "" },
+  { header: "Landmark", help: "Optional, e.g. Near Hinjewadi Phase 1 metro", example: "" },
 ];
 
 export interface ImportTaxonomy {
@@ -97,6 +102,11 @@ export interface ImportRow {
   virtual_tour_url: string | null;
   project_name: string | null;
   project_registration_number: string | null;
+  builder_name: string | null;
+  price_max: number | null;
+  configurations: string[];
+  launch_date: string | null;
+  landmark: string | null;
   amenity_ids: string[];
   image_urls: string[];
   videos: Array<{ provider: ParsedVideo["provider"]; video_id: string; instagram_kind: string | null }>;
@@ -354,6 +364,27 @@ export function prepareImportRows(
     const projectName = get("Project name");
     if (category === "new_project" && !projectName) fail("Project name is required for New project");
 
+    const builderName = get("Builder").replace(/\s+/g, " ");
+    if (builderName && category !== "new_project") fail("Builder is only used for New project rows");
+    if (builderName.length > 120) fail("Builder name is longer than 120 characters");
+
+    const priceMax = number(get("Price up to"), { max: 999_999_999_999 });
+    if (priceMax === "invalid") fail(`Price up to "${get("Price up to")}" is not a number`);
+    if (typeof priceMax === "number" && typeof price === "number" && priceMax < price) fail("Price up to must be at least Price");
+
+    const configurations = get("Configurations")
+      .split(/[,;\n]+/)
+      .map((item) => item.trim().replace(/\s+/g, " "))
+      .filter(Boolean);
+    if (configurations.length > 12) fail("At most 12 configurations");
+    if (configurations.some((item) => item.length > 40 || /[<>]/.test(item))) fail("Configurations must be short labels like 2 BHK");
+
+    const launchDate = dateValue(record["Launch date"]);
+    if (launchDate === "invalid") fail(`Launch date "${get("Launch date")}" must be a date (YYYY-MM-DD)`);
+
+    const landmark = get("Landmark");
+    if (landmark.length > 120) fail("Landmark is longer than 120 characters");
+
     if (messages.length) {
       errors.push({ row_number: rowNumber, title, messages });
       return;
@@ -395,6 +426,11 @@ export function prepareImportRows(
       virtual_tour_url: tour || null,
       project_name: projectName || null,
       project_registration_number: get("Project registration number") || null,
+      builder_name: builderName || null,
+      price_max: typeof priceMax === "number" ? priceMax : null,
+      configurations,
+      launch_date: launchDate === "invalid" ? null : launchDate,
+      landmark: landmark || null,
       amenity_ids: [...new Set(amenityIds)],
       image_urls: imageUrls,
       videos,

@@ -124,4 +124,39 @@ describe("prepareImportRows", () => {
     expect(errors).toHaveLength(1);
     expect(errors[0]!.messages).toContain("Project name is required for New project");
   });
+
+  it("reads builder, price range, configurations, launch date and landmark for new projects", () => {
+    const { rows, errors } = prepareImportRows(
+      [
+        {
+          ...good,
+          Category: "New project",
+          "Project name": "Skyline Towers",
+          Builder: "  Example   Developers ",
+          Price: "85,00,000",
+          "Price up to": "1,20,00,000",
+          Configurations: "2 BHK; 3 BHK",
+          "Launch date": "2026-03-01",
+          Landmark: "Near the metro",
+        },
+      ],
+      taxonomy,
+    );
+    expect(errors).toEqual([]);
+    expect(rows[0]).toMatchObject({
+      builder_name: "Example Developers",
+      price_amount: 8500000,
+      price_max: 12000000,
+      configurations: ["2 BHK", "3 BHK"],
+      launch_date: "2026-03-01",
+      landmark: "Near the metro",
+    });
+  });
+
+  it("rejects a builder on non-project rows and an inverted price range", () => {
+    const { errors } = prepareImportRows([{ ...good, Builder: "X", Price: "100", "Price up to": "50" }], taxonomy);
+    expect(errors[0]!.messages).toEqual(
+      expect.arrayContaining(["Builder is only used for New project rows", "Price up to must be at least Price"]),
+    );
+  });
 });

@@ -42,3 +42,6 @@ playwright/.cache/
 # Firebase service account keys (FCM V1 push): secret, upload to EAS only
 *firebase-adminsdk*.json
 *service-account*.json
+
+# Research spreadsheets for the admin import (kept out of the public repo)
+data-imports/
