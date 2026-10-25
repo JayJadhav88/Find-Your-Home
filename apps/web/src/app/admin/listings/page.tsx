@@ -2,6 +2,7 @@ import { LISTING_STATUSES } from "@fyh/shared";
 import Link from "next/link";
 import { Suspense } from "react";
 import { bulkListings } from "@/app/actions/admin-bulk";
+import { ActionForm } from "@/components/action-form";
 import { BulkActionBar, RowCheckbox, SelectAllCheckbox, type BulkAction } from "@/components/bulk-actions";
 import { Loading } from "@/components/loading";
 import { Alert, Badge, Button, ButtonLink, EmptyState, PageHeader, Select, TextInput } from "@/components/ui";
@@ -62,7 +63,10 @@ async function Listings({ status, q, page, batch, deleted }: { status: string; q
     status === "pending_review"
       ? query.order("submitted_at", { ascending: true })
       : query.order("updated_at", { ascending: false });
-  const { data, count, error } = await query.range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
+  const [{ data, count, error }, { count: pendingCount }] = await Promise.all([
+    query.range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1),
+    supabase.from("listings").select("id", { count: "exact", head: true }).eq("status", "pending_review"),
+  ]);
   const rows = data ?? [];
   const pages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
   const link = (next: number) => `/admin/listings?${new URLSearchParams({ ...(status && { status }), ...(q && { q }), page: String(next) })}`;
@@ -80,6 +84,24 @@ async function Listings({ status, q, page, batch, deleted }: { status: string; q
           </span>
         ) : null}
       />
+      {pendingCount ? (
+        <div className="flex flex-col gap-2 rounded-xl border border-border bg-surface p-4">
+          <p className="text-sm">
+            <strong>{pendingCount}</strong> listing{pendingCount === 1 ? " is" : "s are"} waiting for review. Approve them all at once;
+            any that are incomplete (no cover photo, area or price) are skipped and listed.
+          </p>
+          <ActionForm
+            action={bulkListings}
+            submitLabel={`Approve all ${pendingCount} waiting for review`}
+            confirm={`Approve and publish all ${pendingCount} listings waiting for review? Incomplete ones are skipped.`}
+            inline
+          >
+            <input type="hidden" name="bulkAction" value="approve" />
+            <input type="hidden" name="scope" value="all" />
+            <input type="hidden" name="filter_status" value="pending_review" />
+          </ActionForm>
+        </div>
+      ) : null}
       {deleted ? <Alert tone="success">Property deleted. Its leads are kept under Leads &amp; enquiries.</Alert> : null}
       <form className="flex flex-wrap items-end gap-2" action="/admin/listings">
         <label className="flex flex-col gap-1 text-sm font-medium">

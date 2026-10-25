@@ -2,7 +2,7 @@
 
 import { startTransition, useActionState, useEffect, useRef, type ReactNode } from "react";
 import { initialFormState, type FormState } from "@/app/actions/types";
-import { Alert, Button } from "./ui";
+import { Alert, Button, cx } from "./ui";
 
 /**
  * Generic form for a Server Action with the (previousState, formData) signature. Shows the
@@ -62,7 +62,7 @@ export function ActionForm({
           {pending ? "Working…" : submitLabel}
         </Button>
       </div>
-      <div aria-live="polite" className={inline ? "basis-full" : undefined}>
+      <div aria-live="polite" className={cx("whitespace-pre-line", inline && "basis-full")}>
         {state.error ? <Alert tone="danger">{state.error}</Alert> : null}
         {errors.length ? <Alert tone="danger">{errors.join(" ")}</Alert> : null}
         {state.ok && state.message ? <Alert tone="success">{state.message}</Alert> : null}
