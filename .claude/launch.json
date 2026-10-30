@@ -4,8 +4,24 @@
     {
       "name": "web",
       "runtimeExecutable": "node",
-      "runtimeArgs": ["apps/web/node_modules/next/dist/bin/next", "start", "apps/web"],
+      "runtimeArgs": [
+        "apps/web/node_modules/next/dist/bin/next",
+        "start",
+        "apps/web"
+      ],
       "port": 3000
+    },
+    {
+      "name": "web-dev",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "apps/web/node_modules/next/dist/bin/next",
+        "dev",
+        "apps/web",
+        "--port",
+        "3001"
+      ],
+      "port": 3001
     }
   ]
 }
