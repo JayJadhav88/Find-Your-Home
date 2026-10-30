@@ -222,3 +222,22 @@ export async function getBoostPlans() {
   if (error) throw error;
   return data ?? [];
 }
+
+export type IntegrationFlags = { payments: boolean; otp_sign_in: boolean; otp_leads: boolean; maps_provider: "osm" | "google"; google_maps_key: string | null };
+
+/** Public switches from Admin → Integrations (never keys). */
+export async function getIntegrationFlags(): Promise<IntegrationFlags> {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("integrations");
+  const { data, error } = await createPublicClient().rpc("public_integration_flags");
+  if (error) throw error;
+  const flags = (data ?? {}) as Partial<IntegrationFlags>;
+  return {
+    payments: Boolean(flags.payments),
+    otp_sign_in: Boolean(flags.otp_sign_in),
+    otp_leads: Boolean(flags.otp_leads),
+    maps_provider: flags.maps_provider === "google" ? "google" : "osm",
+    google_maps_key: flags.google_maps_key ?? null,
+  };
+}

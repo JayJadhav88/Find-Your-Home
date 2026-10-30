@@ -3,8 +3,9 @@
 //   POST {action: "verify", orderId, paymentId, signature} → checks Razorpay's signature, marks paid
 //   Razorpay webhook (order.paid), signed with RAZORPAY_WEBHOOK_SECRET: marks paid even if the
 //   buyer closed the browser right after paying.
-// Secrets (set with `supabase secrets set`): RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, RAZORPAY_WEBHOOK_SECRET.
+// Keys come from Admin → Integrations (Vault); RAZORPAY_* function secrets still work as a fallback.
 // The price always comes from the database, never from the browser.
+import { loadIntegrationConfig, razorpayConfig } from "../_shared/integrations.ts";
 import { errorMessage, serviceClient } from "../_shared/worker.ts";
 
 const CORS = {
@@ -39,11 +40,10 @@ Deno.serve(async (request) => {
   const webhookSignature = request.headers.get("x-razorpay-signature");
   if (webhookSignature) return handleWebhook(request, webhookSignature);
 
-  const keyId = Deno.env.get("RAZORPAY_KEY_ID");
-  const keySecret = Deno.env.get("RAZORPAY_KEY_SECRET");
-  if (!keyId || !keySecret) return reply({ error: "Online payment isn't set up yet. Please contact us to boost your property." }, 503);
-
   const db = serviceClient();
+  const razorpay = razorpayConfig(await loadIntegrationConfig(db), (name) => Deno.env.get(name));
+  if (!razorpay) return reply({ error: "Online payment isn't set up yet. Please contact us to boost your property." }, 503);
+  const { keyId, keySecret } = razorpay;
   const token = (request.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
   const { data: auth } = await db.auth.getUser(token);
   const user = auth?.user;
@@ -135,7 +135,7 @@ Deno.serve(async (request) => {
 });
 
 async function handleWebhook(request: Request, signature: string): Promise<Response> {
-  const secret = Deno.env.get("RAZORPAY_WEBHOOK_SECRET");
+  const secret = razorpayConfig(await loadIntegrationConfig(serviceClient()), (name) => Deno.env.get(name))?.webhookSecret;
   if (!secret) return reply({ error: "Webhook not configured" }, 503);
   const raw = await request.text();
   if (!sameText(await hmacHex(secret, raw), signature)) return reply({ error: "Bad signature" }, 400);

@@ -10,9 +10,10 @@ import {
   saveWhatsAppIntegration,
   sendIntegrationTest,
 } from "@/app/actions/admin-messaging";
+import { newCalendarLink, saveMapsIntegration, savePaymentIntegration, saveSmsIntegration } from "@/app/actions/admin-integrations";
 import { ActionForm } from "@/components/action-form";
 import { Loading } from "@/components/loading";
-import { Badge, Card, Checkbox, Field, PageHeader, TextInput } from "@/components/ui";
+import { Badge, Card, Checkbox, Field, PageHeader, Select, TextInput } from "@/components/ui";
 import { requireAdmin } from "@/lib/auth";
 import { SHEETS_APPS_SCRIPT } from "@/lib/sheets-script";
 import { getSiteSettings } from "@/lib/public-data";
@@ -51,8 +52,102 @@ async function Integrations() {
     <div className="flex flex-col gap-8">
       <PageHeader
         title="Integrations"
-        description="Keys for email, WhatsApp and push. Keys are stored encrypted and can't be viewed again, only replaced or removed."
+        description="Payments, SMS codes, maps, calendar, email, WhatsApp and push. Keys are stored encrypted and can't be viewed again, only replaced or removed."
       />
+
+      <Card className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold">Online payments (Razorpay)</h2>
+        <p className="text-sm text-text-muted">
+          Used for Boost. In the Razorpay dashboard: Account &amp; Settings → API Keys. Start with Test Mode keys (rzp_test_…) and
+          switch to Live keys after Razorpay activates your account. Webhook (recommended): add{" "}
+          <code className="break-all">{`${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/boost-payment`}</code> with the event{" "}
+          <code>order.paid</code> and a secret of your choice, then paste that secret below.
+        </p>
+        <KeyStatus label="Key Secret" secret={secret("razorpay_key_secret")} name="razorpay_key_secret" fmt={fmt} />
+        <KeyStatus label="Webhook secret" secret={secret("razorpay_webhook_secret")} name="razorpay_webhook_secret" fmt={fmt} />
+        <ActionForm action={savePaymentIntegration} submitLabel="Save payment settings">
+          <Checkbox name="paymentsEnabled" label="Take payments online" defaultChecked={config.payments_enabled} />
+          <Field label="Key Id" name="razorpayKeyId" hint="Starts with rzp_test_ or rzp_live_. This one is not secret.">
+            <TextInput name="razorpayKeyId" defaultValue={config.razorpay_key_id ?? ""} placeholder="rzp_test_…" autoComplete="off" />
+          </Field>
+          <Field label="New Key Secret" name="razorpayKeySecret" hint="Leave empty to keep the saved secret.">
+            <PasswordInput name="razorpayKeySecret" autoComplete="off" />
+          </Field>
+          <Field label="New webhook secret" name="razorpayWebhookSecret" hint="Leave empty to keep the saved secret.">
+            <PasswordInput name="razorpayWebhookSecret" autoComplete="off" />
+          </Field>
+        </ActionForm>
+      </Card>
+
+      <Card className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold">SMS one-time codes (OTP)</h2>
+        <p className="text-sm text-text-muted">
+          For sign-in with a mobile number and to verify phone numbers in the lead pop-up. In India the sender id and the OTP
+          message template must first be approved on DLT (your SMS provider helps with this). Template example:
+          &ldquo;{"{#var#}"} is your Find Your Home verification code. It is valid for 10 minutes.&rdquo;
+        </p>
+        <KeyStatus label="SMS API key" secret={secret("sms_api_key")} name="sms_api_key" fmt={fmt} />
+        <ActionForm action={saveSmsIntegration} submitLabel="Save SMS settings">
+          <Field label="Provider" name="smsProvider">
+            <Select name="smsProvider" defaultValue={config.sms_provider ?? ""}>
+              <option value="">Not set up</option>
+              <option value="msg91">MSG91</option>
+              <option value="2factor">2Factor.in</option>
+            </Select>
+          </Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Sender id (DLT header)" name="smsSenderId" hint="6 capital letters, e.g. FYHOME.">
+              <TextInput name="smsSenderId" defaultValue={config.sms_sender_id ?? ""} maxLength={6} />
+            </Field>
+            <Field label="OTP template id" name="smsTemplateId" hint="MSG91: the template id. 2Factor: the template name (optional).">
+              <TextInput name="smsTemplateId" defaultValue={config.sms_template_id ?? ""} />
+            </Field>
+          </div>
+          <Field label="New API key" name="smsApiKey" hint="MSG91: Authkey. 2Factor: API key. Leave empty to keep the saved key.">
+            <PasswordInput name="smsApiKey" autoComplete="off" />
+          </Field>
+          <Checkbox name="otpSignIn" label="Let people sign in and sign up with their mobile number" defaultChecked={config.otp_sign_in_enabled} />
+          <Checkbox name="otpLeads" label="Verify the phone number by SMS in the lead pop-up (fewer fake leads, small cost per SMS)" defaultChecked={config.otp_leads_enabled} />
+        </ActionForm>
+      </Card>
+
+      <Card className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold">Maps</h2>
+        <p className="text-sm text-text-muted">
+          OpenStreetMap is free and needs no key. Google Maps needs a browser key from Google Cloud (Maps Embed API), restricted to
+          your website address. Google includes a monthly free allowance.
+        </p>
+        <ActionForm action={saveMapsIntegration} submitLabel="Save map settings">
+          <Field label="Map provider" name="mapsProvider">
+            <Select name="mapsProvider" defaultValue={config.maps_provider}>
+              <option value="osm">OpenStreetMap (free)</option>
+              <option value="google">Google Maps</option>
+            </Select>
+          </Field>
+          <Field label="Google Maps browser key" name="googleMapsKey" hint="Starts with AIza. Visitors can see it, so restrict it to your site in Google Cloud.">
+            <TextInput name="googleMapsKey" defaultValue={config.google_maps_key ?? ""} autoComplete="off" />
+          </Field>
+        </ActionForm>
+      </Card>
+
+      <Card className="flex flex-col gap-4">
+        <h2 className="text-lg font-semibold">Team calendar</h2>
+        <p className="text-sm text-text-muted">
+          Visits, confirmed shoots and callbacks are in{" "}
+          <a href="/admin/calendar" className="text-brand underline">
+            Admin → Calendar
+          </a>
+          . To see them in Google Calendar as well, make a private link and add it in Google Calendar → Other calendars → + → From
+          URL. Anyone with the link can see the events, so share it only with the team. Making a new link stops the old one.
+        </p>
+        <p className="text-sm">Link: {config.calendar_token_hash ? <Badge tone="published">made</Badge> : <Badge>not made yet</Badge>}</p>
+        <ActionForm
+          action={newCalendarLink}
+          submitLabel={config.calendar_token_hash ? "Make a new link" : "Make the link"}
+          variant="secondary"
+          confirm={config.calendar_token_hash ? "Make a new link? The old one stops working." : undefined}
+        />
+      </Card>
 
       <Card className="flex flex-col gap-4">
         <h2 className="text-lg font-semibold">Email (Resend)</h2>
