@@ -73,6 +73,20 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"boost_plans": {
+                  Row: {
+                    "created_at": string,"days": number,"description": string | null,"id": string,"is_active": boolean,"name": string,"price_paise": number,"sort_order": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"days": number,"description"?: string | null,"id"?: string,"is_active"?: boolean,"name": string,"price_paise": number,"sort_order"?: number
+                  }
+                  Update: {
+                    "created_at"?: string,"days"?: number,"description"?: string | null,"id"?: string,"is_active"?: boolean,"name"?: string,"price_paise"?: number,"sort_order"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"broadcasts": {
                   Row: {
                     "audience": string,"body": string,"channels": (Database["public"]['Enums']["notification_channel"])[],"city_id": string | null,"created_at": string,"created_by": string | null,"id": number,"recipients": number | null,"scheduled_at": string,"sent_at": string | null,"status": Database["public"]['Enums']["broadcast_status"],"title": string,"url": string | null
@@ -527,6 +541,38 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"listing_boosts": {
+                  Row: {
+                    "amount_paise": number,"buyer_id": string | null,"created_at": string,"currency": string,"days": number,"ends_at": string | null,"id": string,"listing_id": string,"paid_at": string | null,"plan_id": string | null,"plan_name": string,"razorpay_order_id": string | null,"razorpay_payment_id": string | null,"starts_at": string | null,"status": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "amount_paise": number,"buyer_id"?: string | null,"created_at"?: string,"currency"?: string,"days": number,"ends_at"?: string | null,"id"?: string,"listing_id": string,"paid_at"?: string | null,"plan_id"?: string | null,"plan_name": string,"razorpay_order_id"?: string | null,"razorpay_payment_id"?: string | null,"starts_at"?: string | null,"status"?: string
+                  }
+                  Update: {
+                    "amount_paise"?: number,"buyer_id"?: string | null,"created_at"?: string,"currency"?: string,"days"?: number,"ends_at"?: string | null,"id"?: string,"listing_id"?: string,"paid_at"?: string | null,"plan_id"?: string | null,"plan_name"?: string,"razorpay_order_id"?: string | null,"razorpay_payment_id"?: string | null,"starts_at"?: string | null,"status"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "listing_boosts_buyer_id_fkey"
+      columns: ["buyer_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "listing_boosts_listing_id_fkey"
+      columns: ["listing_id"]
+isOneToOne: false
+      referencedRelation: "listings"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "listing_boosts_plan_id_fkey"
+      columns: ["plan_id"]
+isOneToOne: false
+      referencedRelation: "boost_plans"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"listing_media": {
                   Row: {
                     "alt_text": string | null,"bytes": number | null,"content_hash": string | null,"created_at": string,"height": number | null,"id": string,"is_cover": boolean,"kind": Database["public"]['Enums']["media_kind"],"listing_id": string,"mime_type": string | null,"public_key": string | null,"sort_order": number,"upload_key": string,"width": number | null
@@ -619,6 +665,26 @@ isOneToOne: false
       referencedColumns: ["id"]
     },{
       foreignKeyName: "listing_status_events_listing_id_fkey"
+      columns: ["listing_id"]
+isOneToOne: false
+      referencedRelation: "listings"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"listing_video_files": {
+                  Row: {
+                    "created_at": string,"id": string,"listing_id": string,"sort_order": number,"storage_key": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"id"?: string,"listing_id": string,"sort_order"?: number,"storage_key": string
+                  }
+                  Update: {
+                    "created_at"?: string,"id"?: string,"listing_id"?: string,"sort_order"?: number,"storage_key"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "listing_video_files_listing_id_fkey"
       columns: ["listing_id"]
 isOneToOne: false
       referencedRelation: "listings"
@@ -911,6 +977,32 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"shoot_requests": {
+                  Row: {
+                    "contact_name": string,"contact_phone": string,"created_at": string,"id": string,"listing_id": string,"notes": string | null,"preferred_date": string,"preferred_slot": string,"requester_id": string | null,"scheduled_at": string | null,"status": string,"team_note": string | null,"updated_at": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "contact_name": string,"contact_phone": string,"created_at"?: string,"id"?: string,"listing_id": string,"notes"?: string | null,"preferred_date": string,"preferred_slot": string,"requester_id"?: string | null,"scheduled_at"?: string | null,"status"?: string,"team_note"?: string | null,"updated_at"?: string
+                  }
+                  Update: {
+                    "contact_name"?: string,"contact_phone"?: string,"created_at"?: string,"id"?: string,"listing_id"?: string,"notes"?: string | null,"preferred_date"?: string,"preferred_slot"?: string,"requester_id"?: string | null,"scheduled_at"?: string | null,"status"?: string,"team_note"?: string | null,"updated_at"?: string
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "shoot_requests_listing_id_fkey"
+      columns: ["listing_id"]
+isOneToOne: false
+      referencedRelation: "listings"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "shoot_requests_requester_id_fkey"
+      columns: ["requester_id"]
+isOneToOne: false
+      referencedRelation: "profiles"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"site_settings": {
                   Row: {
                     "allowed_image_types": (string)[],"brand_name": string,"broadcast_weekly_cap": number,"captcha_enabled": boolean,"comparison_max": number,"contact_email": string | null,"contact_phone": string | null,"contact_whatsapp": string | null,"default_area_unit": Database["public"]['Enums']["area_unit"],"default_currency": string | null,"default_locale": string,"default_timezone": string,"enquiry_limit_per_hour": number,"id": boolean,"lead_questions": NonNullable<Json>,"listing_expiry_days": number,"material_change_policy": string,"material_fields": (string)[],"max_image_bytes": number,"max_images_per_listing": number,"new_listing_days": number,"owner_leads_enabled": boolean,"quiet_end_hour": number,"quiet_start_hour": number,"radius_options": (number)[],"review_hours_target": number,"self_service_owner": boolean,"seo_default_description": string | null,"seo_default_title": string | null,"submission_limit_per_day": number,"updated_at": string,"updated_by": string | null
@@ -1079,11 +1171,17 @@ isOneToOne: false
 "admin_update_enquiry":
 { Args: { "p_enquiry_id": string,"p_follow_up_at": string,"p_lost_reason"?: string,"p_status": Database["public"]['Enums']["enquiry_status"],"p_team_assignee": string }; Returns: undefined
                            },
+"admin_update_shoot":
+{ Args: { "p_id": string,"p_scheduled_at"?: string,"p_status": string,"p_team_note"?: string }; Returns: undefined
+                           },
 "assign_listing_agent":
 { Args: { "p_agent_id": string,"p_listing_id": string }; Returns: undefined
                            },
 "become_owner":
 { Args: Record<PropertyKey, never>; Returns: undefined
+                           },
+"boost_mark_paid":
+{ Args: { "p_order_id": string,"p_payment_id": string }; Returns: Json
                            },
 "bootstrap_admin":
 { Args: { "p_email": string }; Returns: string
@@ -1160,6 +1258,9 @@ isOneToOne: false
                            },
 "request_data_export":
 { Args: Record<PropertyKey, never>; Returns: string
+                           },
+"request_shoot":
+{ Args: { "p_date": string,"p_listing_id": string,"p_notes"?: string,"p_slot": string }; Returns: string
                            },
 "require_password_change":
 { Args: { "p_user_id": string }; Returns: undefined
