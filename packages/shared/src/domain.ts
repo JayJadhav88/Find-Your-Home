@@ -70,8 +70,10 @@ export type PossessionStatus = (typeof POSSESSION_STATUSES)[number];
 export const AREA_UNITS = ["sq_m", "sq_ft", "acre", "hectare"] as const;
 export type AreaUnit = (typeof AREA_UNITS)[number];
 
-export const ENQUIRY_KINDS = ["enquiry", "visit_request"] as const;
+export const ENQUIRY_KINDS = ["enquiry", "visit_request", "brochure", "callback", "contact_reveal"] as const;
 export type EnquiryKind = (typeof ENQUIRY_KINDS)[number];
+/** Kinds a visitor can send with the enquiry form (the others come from the lead pop-up). */
+export const ENQUIRY_FORM_KINDS = ["enquiry", "visit_request"] as const;
 
 export const ENQUIRY_STATUSES = [
   "new", "assigned", "in_progress", "qualified", "visit_scheduled", "negotiation", "won", "lost", "unqualified",

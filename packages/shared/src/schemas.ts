@@ -3,7 +3,7 @@ import { parseVideoUrl, splitLinks } from "./videos";
 import {
   ADDRESS_VISIBILITIES,
   AREA_UNITS,
-  ENQUIRY_KINDS,
+  ENQUIRY_FORM_KINDS,
   FURNISHINGS,
   LISTING_CATEGORIES,
   LISTING_PURPOSES,
@@ -76,7 +76,7 @@ export const enquirySchema = z
     email: emailSchema,
     phone: optionalText(32),
     message: z.string().trim().min(1, "Write a message").max(5000),
-    kind: z.enum(ENQUIRY_KINDS).default("enquiry"),
+    kind: z.enum(ENQUIRY_FORM_KINDS).default("enquiry"),
     /** Local date-time from <input type="datetime-local">, interpreted in `timeZone`. */
     visitAt: optionalText(32),
     timeZone: optionalText(64),
