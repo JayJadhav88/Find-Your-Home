@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound, permanentRedirect } from "next/navigation";
 import { Suspense } from "react";
 import { toggleFavorite } from "@/app/actions/favorites";
-import { EnquiryForm } from "@/components/enquiry-form";
+import { EnquiryPopup } from "@/components/enquiry-popup";
 import { LeadActions, type LeadQuestion } from "@/components/lead-actions";
 import { ReportListing } from "@/components/report-listing";
 import { ViewBeacon } from "@/components/view-beacon";
@@ -21,7 +21,7 @@ import {
   POSSESSION_LABEL,
   publicImageUrl,
 } from "@/lib/listing-format";
-import { getListingReferenceById, getPublicListing, getSiteSettings, getTaxonomy, locationLabel } from "@/lib/public-data";
+import { getIntegrationFlags, getListingReferenceById, getPublicListing, getSiteSettings, getTaxonomy, locationLabel } from "@/lib/public-data";
 import { createUserClient } from "@/lib/supabase";
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -72,7 +72,7 @@ async function ListingDetail({ reference, slug }: { reference: string; slug?: st
   if (!listing) notFound();
   if (slug !== listing.slug || reference !== listing.reference_code) permanentRedirect(listingPath(listing));
 
-  const [settings, taxonomy] = await Promise.all([getSiteSettings(), getTaxonomy()]);
+  const [settings, taxonomy, integrations] = await Promise.all([getSiteSettings(), getTaxonomy(), getIntegrationFlags()]);
   const locale = settings.default_locale;
   const photos = listing.media
     .filter((item) => item.kind === "image" && item.public_key)
@@ -99,10 +99,18 @@ async function ListingDetail({ reference, slug }: { reference: string; slug?: st
     ["Reference", listing.reference_code],
   ];
 
-  const mapLink =
-    listing.address_visibility !== "hidden" && listing.public_lat != null && listing.public_lng != null
-      ? `https://www.openstreetmap.org/?mlat=${listing.public_lat}&mlon=${listing.public_lng}#map=15/${listing.public_lat}/${listing.public_lng}`
-      : null;
+  const hasPoint = listing.address_visibility !== "hidden" && listing.public_lat != null && listing.public_lng != null;
+  const google = integrations.maps_provider === "google" && integrations.google_maps_key;
+  const mapLink = !hasPoint
+    ? null
+    : google
+      ? `https://www.google.com/maps/search/?api=1&query=${listing.public_lat},${listing.public_lng}`
+      : `https://www.openstreetmap.org/?mlat=${listing.public_lat}&mlon=${listing.public_lng}#map=15/${listing.public_lat}/${listing.public_lng}`;
+  const mapEmbed = !hasPoint
+    ? null
+    : google
+      ? `https://www.google.com/maps/embed/v1/place?key=${integrations.google_maps_key}&q=${listing.public_lat},${listing.public_lng}&zoom=15`
+      : `https://www.openstreetmap.org/export/embed.html?bbox=${listing.public_lng! - 0.012},${listing.public_lat! - 0.007},${listing.public_lng! + 0.012},${listing.public_lat! + 0.007}&layer=mapnik&marker=${listing.public_lat},${listing.public_lng}`;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -217,9 +225,18 @@ async function ListingDetail({ reference, slug }: { reference: string; slug?: st
             {listing.address_visibility === "approximate" ? (
               <p className="text-sm text-text-muted">The exact address is shared by the lister after you get in touch.</p>
             ) : null}
+            {mapEmbed ? (
+              <iframe
+                src={mapEmbed}
+                title={`Map of the area around ${listing.title}`}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                className="mt-3 aspect-[16/9] w-full rounded-xl border border-border"
+              />
+            ) : null}
             {mapLink ? (
               <a href={mapLink} target="_blank" rel="noopener noreferrer" className="mt-2 inline-block text-sm text-brand underline">
-                Open the area on OpenStreetMap (opens a new tab)
+                Open the area on {google ? "Google Maps" : "OpenStreetMap"} (opens a new tab)
               </a>
             ) : null}
           </section>
@@ -302,7 +319,7 @@ async function ListingDetail({ reference, slug }: { reference: string; slug?: st
             ) : null}
             <div className="mt-4">
               {listing.contact_via_form ? (
-                <Suspense fallback={<EnquiryForm listingId={listing.id} brandName={settings.brand_name} />}>
+                <Suspense fallback={<EnquiryPopup listingId={listing.id} brandName={settings.brand_name} />}>
                   <EnquiryFormForViewer listingId={listing.id} brandName={settings.brand_name} />
                 </Suspense>
               ) : (
@@ -467,6 +484,6 @@ async function FavoriteButton({ listingId, returnTo }: { listingId: string; retu
 async function EnquiryFormForViewer({ listingId, brandName }: { listingId: string; brandName: string }) {
   const viewer = await getViewer();
   return (
-    <EnquiryForm listingId={listingId} brandName={brandName} defaultName={viewer?.displayName} defaultEmail={viewer?.email} />
+    <EnquiryPopup listingId={listingId} brandName={brandName} defaultName={viewer?.displayName} defaultEmail={viewer?.email} />
   );
 }

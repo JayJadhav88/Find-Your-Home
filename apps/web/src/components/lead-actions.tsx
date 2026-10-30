@@ -24,6 +24,13 @@ interface Visitor {
   phone: string;
   email: string;
   answers: Record<string, string>;
+  /** Proof of an earlier SMS check of this phone (when verification is switched on). */
+  verifyToken?: string;
+}
+interface Pending {
+  kind: Kind;
+  details: Visitor;
+  callbackAt: string | null;
 }
 interface Revealed {
   phone?: string | null;
@@ -102,11 +109,23 @@ export function LeadActions({
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [pending, startTransition] = useTransition();
+  // Waiting for the SMS code before the request can be sent.
+  const [awaitingCode, setAwaitingCode] = useState<Pending | null>(null);
+  const [codeError, setCodeError] = useState<string | null>(null);
 
   const hasContact = hasPhone || hasWhatsapp || hasEmail;
 
-  function submit(chosen: Kind, details: Visitor, callbackAt: string | null) {
+  async function sendCode(phone: string): Promise<string | null> {
+    const { error: failure } = await getBrowserClient().functions.invoke("phone-otp", { body: { phone } });
+    if (!failure) return null;
+    const context = (failure as { context?: Response }).context;
+    const detail = context ? await context.json().catch(() => null) : null;
+    return detail?.error ?? "We couldn't send the SMS. Please try again.";
+  }
+
+  function submit(chosen: Kind, details: Visitor, callbackAt: string | null, code?: string) {
     setError(null);
+    setCodeError(null);
     startTransition(async () => {
       const attribution = readAttribution();
       const { data, error: failure } = await getBrowserClient().rpc("submit_gated_lead", {
@@ -120,7 +139,26 @@ export function LeadActions({
         p_consent_text_version: CONSENT_VERSION,
         p_source: attribution.source,
         p_utm: attribution.utm,
+        p_otp: code ?? details.verifyToken,
       });
+      if (failure?.code === "PT428") {
+        // Phone verification is on: send a code and ask for it.
+        const problem = await sendCode(details.phone);
+        if (problem) {
+          setError(problem);
+          return;
+        }
+        setAwaitingCode({ kind: chosen, details: { ...details, verifyToken: undefined }, callbackAt });
+        if (!dialog.current?.open) {
+          dialog.current?.showModal();
+          setDialogOpen(true);
+        }
+        return;
+      }
+      if (failure && code) {
+        setCodeError(failure.code === "22023" || failure.code === "PT409" ? failure.message : "That didn't work. Please try again.");
+        return;
+      }
       if (failure) {
         setError(
           failure.code === "PT429"
@@ -131,8 +169,9 @@ export function LeadActions({
         );
         return;
       }
-      saveVisitor(details);
-      const result = (data ?? {}) as { brochure_key?: string | null } & Revealed;
+      const result = (data ?? {}) as { brochure_key?: string | null; verify_token?: string | null } & Revealed;
+      saveVisitor({ ...details, verifyToken: result.verify_token ?? details.verifyToken });
+      setAwaitingCode(null);
       if (chosen === "contact_reveal") setRevealed({ phone: result.phone, whatsapp: result.whatsapp, email: result.email });
       if (chosen === "brochure" && result.brochure_key) {
         const url = `${env.supabaseUrl}/storage/v1/object/public/listing-brochures/${result.brochure_key}`;
@@ -245,10 +284,52 @@ export function LeadActions({
         className="m-auto w-[min(100%-2rem,28rem)] rounded-2xl border border-border bg-surface p-0 text-text shadow-xl backdrop:bg-black/50"
         onClose={() => {
           setKind(null);
+          setAwaitingCode(null);
           setDialogOpen(false);
         }}
       >
-        {kind ? (
+        {awaitingCode ? (
+          <form
+            noValidate
+            className="flex flex-col gap-3 p-5"
+            onSubmit={(event) => {
+              event.preventDefault();
+              const code = String(new FormData(event.currentTarget).get("code") ?? "").replace(/\D/g, "");
+              if (code.length !== 6) return setCodeError("Enter the 6-digit code from the SMS.");
+              submit(awaitingCode.kind, awaitingCode.details, awaitingCode.callbackAt, code);
+            }}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 id="lead-dialog-title" className="text-lg font-semibold">
+                  Verify your phone number
+                </h2>
+                <p className="text-sm text-text-muted">We sent a 6-digit code by SMS to {awaitingCode.details.phone}.</p>
+              </div>
+              <button type="button" onClick={() => dialog.current?.close()} aria-label="Close" className="rounded-lg px-2 text-xl text-text-muted hover:bg-surface-muted">
+                ×
+              </button>
+            </div>
+            <LeadField label="Code" name="code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} error={codeError ?? undefined} required />
+            <Button type="submit" disabled={pending}>
+              {pending ? "Checking…" : "Verify and continue"}
+            </Button>
+            <button
+              type="button"
+              disabled={pending}
+              className="self-start text-sm text-brand underline"
+              onClick={() =>
+                startTransition(async () => {
+                  const problem = await sendCode(awaitingCode.details.phone);
+                  setCodeError(problem ?? null);
+                  if (!problem) setNotice(null);
+                })
+              }
+            >
+              Send the code again
+            </button>
+          </form>
+        ) : kind ? (
           <form onSubmit={onSubmit} noValidate className="flex flex-col gap-3 p-5">
             <div className="flex items-start justify-between gap-3">
               <div>

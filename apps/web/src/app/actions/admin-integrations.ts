@@ -87,7 +87,7 @@ export async function saveMapsIntegration(_previous: FormState, formData: FormDa
   return { ok: true, message: "Map settings saved." };
 }
 
-export async function newCalendarLink(_previous: FormState, _formData: FormData): Promise<FormState> {
+export async function newCalendarLink(): Promise<FormState> {
   const supabase = await adminClient();
   if (!supabase) return NOT_ALLOWED;
   const { data, error } = await supabase.rpc("admin_new_calendar_link");

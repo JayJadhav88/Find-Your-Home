@@ -3,7 +3,9 @@ import { Suspense } from "react";
 import { SignInForm } from "@/components/auth-forms";
 import { AuthShell } from "@/components/auth-shell";
 import { GoogleSignInButton } from "@/components/google-button";
+import { PhoneSignIn } from "@/components/phone-sign-in";
 import { safeNext } from "@/lib/auth";
+import { getIntegrationFlags } from "@/lib/public-data";
 
 export const metadata: Metadata = { title: "Sign in", robots: { index: false } };
 
@@ -16,11 +18,12 @@ export default function SignInPage({ searchParams }: PageProps<"/sign-in">) {
   return (
     <AuthShell title="Sign in" description="Save homes, send enquiries and manage your listings.">
       <Suspense>
-        {searchParams.then((params) => {
+        {Promise.all([searchParams, getIntegrationFlags()]).then(([params, flags]) => {
           const next = safeNext(typeof params.next === "string" ? params.next : null);
           return (
             <div className="flex flex-col gap-4">
               <GoogleSignInButton next={next} />
+              {flags.otp_sign_in ? <PhoneSignIn next={next} /> : null}
               <SignInForm next={next} notice={typeof params.error === "string" ? NOTICES[params.error] : undefined} />
             </div>
           );

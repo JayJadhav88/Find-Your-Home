@@ -17,13 +17,15 @@ export function EnquiryForm({
   defaultName,
   defaultEmail,
   brandName,
+  initialKind = "enquiry",
 }: {
   listingId: string;
   defaultName?: string;
   defaultEmail?: string;
   brandName: string;
+  initialKind?: "enquiry" | "visit_request";
 }) {
-  const [kind, setKind] = useState<"enquiry" | "visit_request">("enquiry");
+  const [kind, setKind] = useState<"enquiry" | "visit_request">(initialKind);
   // The visitor's own time zone; "UTC" while rendering on the server.
   const timeZone = useSyncExternalStore(
     noopSubscribe,
