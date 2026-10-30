@@ -14,7 +14,8 @@ const STORAGE_KEY = "fyh_visitor_v1";
 
 export type LeadQuestion = { id: string; label: string; options: string[] };
 type Kind = "contact_reveal" | "brochure" | "callback";
-type Visitor = { name: string; phone: string; email: string; answers: Record<string, string> };
+type Visitor = { name: string; phone: string; email: string; answers: Record<string, string>; verifyToken?: string };
+type Pending = { kind: Kind; visitor: Visitor; callbackAt?: string | null };
 type Revealed = { phone?: string | null; whatsapp?: string | null; email?: string | null };
 
 export function leadQuestions(value: unknown): LeadQuestion[] {
@@ -56,6 +57,9 @@ export function LeadActions({
   const [sending, setSending] = useState(false);
   const [revealed, setRevealed] = useState<Revealed | null>(null);
   const [done, setDone] = useState<string | null>(null);
+  // Phone verification by SMS (when switched on in Admin → Integrations).
+  const [awaitingCode, setAwaitingCode] = useState<Pending | null>(null);
+  const [code, setCode] = useState("");
   const hasContact = hasPhone || hasWhatsapp || hasEmail;
 
   useEffect(() => {
@@ -79,7 +83,15 @@ export function LeadActions({
     setKind(next);
   }
 
-  async function submit(which: Kind, visitor: Visitor, callbackAt?: string | null) {
+  async function sendCode(number: string): Promise<string | null> {
+    const { error: failure } = await supabase.functions.invoke("phone-otp", { body: { phone: number } });
+    if (!failure) return null;
+    const context = (failure as { context?: Response }).context;
+    const detail = context ? await context.json().catch(() => null) : null;
+    return detail?.error ?? "We couldn't send the SMS. Please try again.";
+  }
+
+  async function submit(which: Kind, visitor: Visitor, callbackAt?: string | null, otp?: string) {
     setSending(true);
     setError(null);
     try {
@@ -93,12 +105,23 @@ export function LeadActions({
         p_callback_at: callbackAt ?? undefined,
         p_consent_text_version: CONSENT_VERSION,
         p_source: "app",
+        p_otp: otp ?? visitor.verifyToken,
       });
+      if (failure?.code === "PT428") {
+        const problem = await sendCode(visitor.phone);
+        if (problem) throw new Error(problem);
+        setCode("");
+        setAwaitingCode({ kind: which, visitor: { ...visitor, verifyToken: undefined }, callbackAt });
+        setKind(which);
+        return;
+      }
       if (failure) throw new Error(failure.message);
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(visitor)).catch(() => null);
-      setStored(visitor);
+      const result = (data ?? {}) as { brochure_key?: string | null; verify_token?: string | null } & Revealed;
+      const saved = { ...visitor, verifyToken: result.verify_token ?? visitor.verifyToken };
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(saved)).catch(() => null);
+      setStored(saved);
+      setAwaitingCode(null);
       setKind(null);
-      const result = (data ?? {}) as { brochure_key?: string | null } & Revealed;
       if (which === "contact_reveal") setRevealed(result);
       if (which === "brochure" && result.brochure_key) {
         await Linking.openURL(`${env.supabaseUrl}/storage/v1/object/public/listing-brochures/${result.brochure_key}`);
@@ -113,8 +136,18 @@ export function LeadActions({
     }
   }
 
+  function close() {
+    setKind(null);
+    setAwaitingCode(null);
+  }
+
   function send() {
     if (!kind) return;
+    if (awaitingCode) {
+      if (!/^\d{6}$/.test(code)) return setError("Enter the 6-digit code from the SMS.");
+      void submit(awaitingCode.kind, awaitingCode.visitor, awaitingCode.callbackAt, code);
+      return;
+    }
     if (!name.trim()) return setError("Please enter your name.");
     if (phone.replace(/\D/g, "").length < 7) return setError("Please enter a valid phone number.");
     if (!consent) return setError(`Please agree that ${brandName} shares your details with the lister.`);
@@ -149,10 +182,28 @@ export function LeadActions({
       {done ? <Notice tone="success">{done}</Notice> : null}
       {error && !kind ? <Notice tone="danger">{error}</Notice> : null}
 
-      <Modal visible={kind !== null} animationType="slide" transparent onRequestClose={() => setKind(null)}>
+      <Modal visible={kind !== null} animationType="slide" transparent onRequestClose={close}>
         <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={styles.backdrop}>
           <View style={styles.sheet}>
             <ScrollView contentContainerStyle={{ gap: spacing.md, padding: spacing.lg }} keyboardShouldPersistTaps="handled">
+              {awaitingCode ? (
+                <>
+                  <Text style={text.h2}>Verify your phone number</Text>
+                  <Text style={text.muted}>We sent a 6-digit code by SMS to {awaitingCode.visitor.phone}.</Text>
+                  {error ? <Notice tone="danger">{error}</Notice> : null}
+                  <Field label="Code" keyboardType="number-pad" autoComplete="sms-otp" textContentType="oneTimeCode" maxLength={6} value={code} onChangeText={(value) => setCode(value.replace(/\D/g, ""))} />
+                  <Button label="Verify and continue" loading={sending} onPress={send} />
+                  <Button
+                    label="Send the code again"
+                    variant="ghost"
+                    onPress={() => {
+                      void sendCode(awaitingCode.visitor.phone).then((problem) => setError(problem));
+                    }}
+                  />
+                  <Button label="Cancel" variant="secondary" onPress={close} />
+                </>
+              ) : (
+              <>
               <Text style={text.h2}>{title}</Text>
               <Text style={text.muted}>Leave your details. The lister gets them so they can help you.</Text>
               {error ? <Notice tone="danger">{error}</Notice> : null}
@@ -203,7 +254,9 @@ export function LeadActions({
                 <Text style={styles.consentText}>I agree that {brandName} shares my name and phone number with the lister.</Text>
               </Pressable>
               <Button label={kind === "brochure" ? "Download" : kind === "callback" ? "Request callback" : "Show details"} loading={sending} onPress={send} />
-              <Button label="Cancel" variant="secondary" onPress={() => setKind(null)} />
+              <Button label="Cancel" variant="secondary" onPress={close} />
+              </>
+              )}
             </ScrollView>
           </View>
         </KeyboardAvoidingView>

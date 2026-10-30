@@ -4,7 +4,7 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
 import { Linking, Pressable, ScrollView, Share, StyleSheet, Text, useWindowDimensions, View } from "react-native";
-import { EnquiryForm } from "@/components/enquiry-form";
+import { EnquiryPopup } from "@/components/enquiry-popup";
 import { LeadActions, leadQuestions } from "@/components/lead-actions";
 import { ReportListing } from "@/components/report-listing";
 import { Badge, Button, Card, ErrorState, Loading, Notice, text } from "@/components/ui";
@@ -252,7 +252,7 @@ export default function ListingScreen() {
             </View>
           ) : null}
           {listing.contact_via_form ? (
-            <EnquiryForm listingId={listing.id} brandName={data.settings.brand_name} defaultName={viewer?.displayName} defaultEmail={viewer?.email} />
+            <EnquiryPopup listingId={listing.id} brandName={data.settings.brand_name} defaultName={viewer?.displayName} defaultEmail={viewer?.email} />
           ) : (
             <Notice>This lister prefers to be contacted directly.</Notice>
           )}

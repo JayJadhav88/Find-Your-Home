@@ -13,18 +13,20 @@ export function EnquiryForm({
   brandName,
   defaultName,
   defaultEmail,
+  initialKind = "enquiry",
 }: {
   listingId: string;
   brandName: string;
   defaultName?: string;
   defaultEmail?: string;
+  initialKind?: "enquiry" | "visit_request";
 }) {
   const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-  const [kind, setKind] = useState<"enquiry" | "visit_request">("enquiry");
+  const [kind, setKind] = useState<"enquiry" | "visit_request">(initialKind);
   const [name, setName] = useState(defaultName ?? "");
   const [email, setEmail] = useState(defaultEmail ?? "");
   const [phone, setPhone] = useState("");
-  const [message, setMessage] = useState("Is this property still available?");
+  const [message, setMessage] = useState(initialKind === "visit_request" ? "I'd like to visit this property." : "Is this property still available?");
   const [visitDate, setVisitDate] = useState("");
   const [visitTime, setVisitTime] = useState("");
   const [consent, setConsent] = useState(false);
