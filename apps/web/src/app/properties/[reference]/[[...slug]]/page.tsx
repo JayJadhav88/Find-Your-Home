@@ -224,14 +224,33 @@ async function ListingDetail({ reference, slug }: { reference: string; slug?: st
             ) : null}
           </section>
 
-          {listing.videos.length || listing.virtual_tour_url ? (
+          {listing.videos.length || listing.video_files.length || listing.virtual_tour_url ? (
             <section aria-labelledby="media-heading">
               <h2 id="media-heading" className="text-xl font-semibold">
                 Videos{listing.virtual_tour_url ? " and tour" : ""}
               </h2>
-              <div className="mt-3">
-                <VideoGallery title={listing.title} videos={[...listing.videos].sort((a, b) => a.sort_order - b.sort_order)} />
-              </div>
+              {listing.video_files.length ? (
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  {[...listing.video_files]
+                    .sort((a, b) => a.sort_order - b.sort_order)
+                    .map((file, index) => (
+                      <video
+                        key={file.storage_key}
+                        src={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/listing-videos/${file.storage_key}`}
+                        controls
+                        preload="metadata"
+                        playsInline
+                        aria-label={`${listing.title}: video ${index + 1}`}
+                        className="aspect-video w-full rounded-xl bg-black"
+                      />
+                    ))}
+                </div>
+              ) : null}
+              {listing.videos.length ? (
+                <div className="mt-3">
+                  <VideoGallery title={listing.title} videos={[...listing.videos].sort((a, b) => a.sort_order - b.sort_order)} />
+                </div>
+              ) : null}
               {listing.virtual_tour_url ? (
                 <p className="mt-3 text-sm">
                   <a href={listing.virtual_tour_url} target="_blank" rel="noopener noreferrer nofollow" className="text-brand underline">

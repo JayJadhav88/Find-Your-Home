@@ -119,7 +119,8 @@ export async function getPublicListing(reference: string) {
       `*, property_type:property_types(name, slug),
        media:listing_media(id, kind, public_key, alt_text, sort_order, is_cover),
        amenities:listing_amenities(amenity:amenities(id, name, category)),
-       videos:listing_videos(provider, video_id, instagram_kind, sort_order)`,
+       videos:listing_videos(provider, video_id, instagram_kind, sort_order),
+       video_files:listing_video_files(storage_key, sort_order)`,
     )
     .eq("reference_code", reference)
     .eq("status", "published")
@@ -205,4 +206,19 @@ export async function getFloatingAction() {
   cacheTag("floating-action");
   const { data } = await createPublicClient().from("floating_action").select("is_active, icon, label, target_url, position").maybeSingle();
   return data?.is_active && data.target_url ? data : null;
+}
+
+/** Boost plans shown on the list-your-property pages (Admin → Boosts). */
+export async function getBoostPlans() {
+  "use cache";
+  cacheLife("hours");
+  cacheTag("boost-plans");
+  const { data, error } = await createPublicClient()
+    .from("boost_plans")
+    .select("id, name, description, days, price_paise")
+    .eq("is_active", true)
+    .order("sort_order")
+    .order("price_paise");
+  if (error) throw error;
+  return data ?? [];
 }

@@ -98,6 +98,7 @@ const LISTING_DETAIL = `*, property_type:property_types(name),
   media:listing_media(id, kind, public_key, alt_text, sort_order, is_cover),
   amenities:listing_amenities(amenity:amenities(id, name)),
   videos:listing_videos(provider, video_id, instagram_kind, sort_order),
+  video_files:listing_video_files(storage_key, sort_order),
   city:locations!listings_city_id_fkey(name),
   locality:locations!listings_locality_id_fkey(name)`;
 

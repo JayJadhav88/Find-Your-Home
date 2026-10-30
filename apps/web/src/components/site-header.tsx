@@ -24,7 +24,7 @@ export function SiteHeader({ brandName }: { brandName: string }) {
           <Link href="/search?category=new_project" className="rounded-lg px-3 py-2 hover:bg-surface-muted">
             New projects
           </Link>
-          <Link href="/account/listings/new" className="rounded-lg px-3 py-2 hover:bg-surface-muted">
+          <Link href="/list-your-property" className="rounded-lg px-3 py-2 hover:bg-surface-muted">
             List a property
           </Link>
           <Suspense fallback={<span className="inline-block h-9 w-20" aria-hidden />}>

@@ -5,14 +5,17 @@ import { Suspense } from "react";
 import { setAvailability } from "@/app/actions/listings";
 import { WorkflowButtons } from "@/components/account-forms";
 import { ActionForm } from "@/components/action-form";
+import { BoostPicker } from "@/components/boost-picker";
 import { BrochureUpload } from "@/components/brochure-upload";
 import { ListingForm, type ListingFormInitial } from "@/components/listing-form";
 import { Loading } from "@/components/loading";
 import { PhotoManager } from "@/components/photo-manager";
+import { ShootRequestForm } from "@/components/quick-listing-forms";
+import { VideoFileUpload } from "@/components/video-file-upload";
 import { Alert, Badge, Card, PageHeader, Select } from "@/components/ui";
 import { hasRole, isAdmin, requireViewer } from "@/lib/auth";
 import { listingPath, STATUS_LABEL } from "@/lib/listing-format";
-import { getSiteSettings, getTaxonomy } from "@/lib/public-data";
+import { getBoostPlans, getSiteSettings, getTaxonomy } from "@/lib/public-data";
 import { createUserClient } from "@/lib/supabase";
 
 export default function EditListingPage({ params, searchParams }: PageProps<"/account/listings/[id]">) {
@@ -41,7 +44,7 @@ async function EditListing({ id, created }: { id: string; created: boolean }) {
   const supabase = await createUserClient();
   const { data: listing } = await supabase
     .from("listings")
-    .select("*, private:listing_private_details(street_address), amenities:listing_amenities(amenity_id), media:listing_media(id, upload_key, alt_text, is_cover, sort_order, kind), videos:listing_videos(provider, video_id, instagram_kind, sort_order)")
+    .select("*, private:listing_private_details(street_address), amenities:listing_amenities(amenity_id), media:listing_media(id, upload_key, alt_text, is_cover, sort_order, kind), videos:listing_videos(provider, video_id, instagram_kind, sort_order), video_files:listing_video_files(id, storage_key, sort_order)")
     .eq("id", id)
     .maybeSingle();
   const own = listing && (listing.owner_id === viewer.id || listing.agent_id === viewer.id);
@@ -49,11 +52,15 @@ async function EditListing({ id, created }: { id: string; created: boolean }) {
   const asAdmin = Boolean(listing && !own && isAdmin(viewer));
   if (!listing || (!own && !asAdmin)) notFound();
 
-  const [settings, taxonomy, history] = await Promise.all([
+  const [settings, taxonomy, history, plans, { data: boosts }, { data: shoots }] = await Promise.all([
     getSiteSettings(),
     getTaxonomy(),
     supabase.rpc("get_listing_history", { p_listing_id: id }),
+    getBoostPlans(),
+    supabase.from("listing_boosts").select("plan_name, status, ends_at").eq("listing_id", id).in("status", ["paid", "active"]),
+    supabase.from("shoot_requests").select("status, preferred_date, preferred_slot, scheduled_at").eq("listing_id", id).in("status", ["requested", "confirmed"]),
   ]);
+  const canBoost = own && ["draft", "pending_review", "published", "rejected"].includes(listing.status);
   const editable = asAdmin || ["draft", "rejected", "published"].includes(listing.status);
   const lastDecision = (history.data ?? []).find((event) => event.to_status === "rejected" || event.to_status === "suspended");
   const fmt = { locale: settings.default_locale, timeZone: settings.default_timezone };
@@ -173,6 +180,42 @@ async function EditListing({ id, created }: { id: string; created: boolean }) {
           <BrochureUpload listingId={listing.id} current={listing.brochure_key} />
         </Card>
       ) : null}
+
+      {canBoost && plans.length ? (
+        <Card className="flex flex-col gap-3">
+          <h2 className="font-semibold">Boost this property</h2>
+          {boosts?.length ? (
+            <Alert tone="success">
+              {boosts.map((boost) =>
+                boost.status === "active" && boost.ends_at
+                  ? `${boost.plan_name}: featured until ${formatDateTime(boost.ends_at, fmt)}. `
+                  : `${boost.plan_name}: paid, starts when the property is approved. `,
+              )}
+            </Alert>
+          ) : null}
+          <BoostPicker listingId={listing.id} plans={plans} brandName={settings.brand_name} isLive={listing.status === "published"} />
+        </Card>
+      ) : null}
+
+      {own ? (
+        <Card className="flex flex-col gap-3">
+          <h2 className="font-semibold">Professional photo &amp; video shoot</h2>
+          {shoots?.[0] ? (
+            <Alert tone="success">
+              {shoots[0].status === "confirmed" && shoots[0].scheduled_at
+                ? `Shoot confirmed for ${formatDateTime(shoots[0].scheduled_at, fmt)}.`
+                : `Shoot requested for ${shoots[0].preferred_date} (${shoots[0].preferred_slot}). Our team will call you to confirm.`}
+            </Alert>
+          ) : (
+            <ShootRequestForm listingId={listing.id} minDate={new Date().toISOString().slice(0, 10)} />
+          )}
+        </Card>
+      ) : null}
+
+      <Card className="flex flex-col gap-3">
+        <h2 className="font-semibold">Video files</h2>
+        <VideoFileUpload listingId={listing.id} files={[...listing.video_files].sort((a, b) => a.sort_order - b.sort_order)} editable={editable} />
+      </Card>
 
       <PhotoManager
         listingId={listing.id}

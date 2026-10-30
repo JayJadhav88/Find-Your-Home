@@ -11,6 +11,7 @@ const LINKS: Array<[string, string, (viewer: Viewer | null) => boolean]> = [
   ["/admin", "Dashboard", isTeam],
   ["/admin/listings", "Listings", isStaff],
   ["/admin/reports", "Reports", isStaff],
+  ["/admin/boosts", "Boosts & shoots", isStaff],
   ["/admin/builders", "Builders", isStaff],
   ["/admin/import", "Import from Excel", isAdmin],
   ["/admin/enquiries", "Leads & enquiries", canSeeLeads],
