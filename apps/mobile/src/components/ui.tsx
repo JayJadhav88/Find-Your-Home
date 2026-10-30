@@ -17,7 +17,7 @@ const { colors, spacing, radius, fontSize } = tokens;
 // Minimum touch target recommended by both platforms.
 const TOUCH = 48;
 
-type Variant = "primary" | "secondary" | "danger" | "ghost";
+type Variant = "primary" | "secondary" | "danger" | "ghost" | "accent";
 
 export function Button({
   label,
@@ -44,9 +44,9 @@ export function Button({
       {...props}
     >
       {loading ? (
-        <ActivityIndicator color={variant === "primary" || variant === "danger" ? colors.surface : colors.brand} />
+        <ActivityIndicator color={variant === "primary" || variant === "danger" ? colors.surface : variant === "accent" ? colors.brandStrong : colors.brand} />
       ) : (
-        <Text style={[styles.buttonText, { color: variant === "primary" || variant === "danger" ? colors.surface : variant === "ghost" ? colors.brand : colors.text }]}>
+        <Text style={[styles.buttonText, { color: variant === "primary" || variant === "danger" ? colors.surface : variant === "ghost" ? colors.brand : variant === "accent" ? colors.brandStrong : colors.text }]}>
           {label}
         </Text>
       )}
@@ -59,6 +59,7 @@ const buttonVariants: Record<Variant, ViewStyle> = {
   secondary: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border },
   danger: { backgroundColor: colors.danger },
   ghost: { backgroundColor: "transparent" },
+  accent: { backgroundColor: colors.accent },
 };
 
 export function Field({

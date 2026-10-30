@@ -240,7 +240,7 @@ async function Enquiries({ filters }: { filters: Filters }) {
                       {row.listing?.title ?? (row.interest ? `${LEAD_INTEREST_LABEL[row.interest as LeadInterest]} (no listing)` : "Lead")}
                     </span>
                     <span className="block text-sm text-text-muted">
-                      {row.name} · {row.lead_type === "owner" ? "owner" : row.kind === "visit_request" ? `visit ${row.visit_status}` : "enquiry"} ·{" "}
+                      {row.name} · {row.lead_type === "owner" ? "owner" : row.kind === "visit_request" ? `visit ${row.visit_status}` : row.kind === "brochure" ? "brochure" : row.kind === "callback" ? "callback" : row.kind === "contact_reveal" ? "viewed contact" : "enquiry"} ·{" "}
                       {LEAD_SOURCE_LABEL[row.source as LeadSource] ?? row.source} · {formatDateTime(row.created_at, fmt)}
                       {row.owner ? ` · ${row.owner.display_name}` : ""}
                     </span>

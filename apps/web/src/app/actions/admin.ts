@@ -205,6 +205,24 @@ export async function setCurrencyEnabled(_previous: FormState, formData: FormDat
   return done(`${code} updated.`, ["taxonomy", "settings"]);
 }
 
+export async function saveLeadQuestions(_previous: FormState, formData: FormData): Promise<FormState> {
+  const ctx = await adminClient();
+  if (!ctx) return NOT_ALLOWED;
+  const questions: Array<{ id: string; label: string; options: string[] }> = [];
+  for (const index of [0, 1, 2]) {
+    const label = text(formData, `label${index}`);
+    const options = [...new Set(text(formData, `options${index}`).split(",").map((option) => option.trim()).filter(Boolean))];
+    if (!label && !options.length) continue;
+    if (label.length < 3) return { fieldErrors: { [`label${index}`]: "Write the question (at least 3 characters)" } };
+    if (options.length < 2 || options.length > 6) return { fieldErrors: { [`options${index}`]: "Give 2 to 6 choices, separated by commas" } };
+    if (options.some((option) => option.length > 40)) return { fieldErrors: { [`options${index}`]: "Keep each choice under 40 characters" } };
+    questions.push({ id: `q${index + 1}`, label, options });
+  }
+  const { error } = await ctx.supabase.from("site_settings").update({ lead_questions: questions }).eq("id", true);
+  if (error) return { error: friendlyDbError(error) };
+  return done("Questions saved. They show on property pages within a few minutes.", ["settings"]);
+}
+
 const PAGE_SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
 export async function createContentPage(_previous: FormState, formData: FormData): Promise<FormState> {

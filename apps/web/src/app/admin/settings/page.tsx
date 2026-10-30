@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { setCurrencyEnabled, updateSettings } from "@/app/actions/admin";
+import { saveLeadQuestions, setCurrencyEnabled, updateSettings } from "@/app/actions/admin";
 import { ActionForm } from "@/components/action-form";
 import { Loading } from "@/components/loading";
 import { Badge, Card, Checkbox, Field, PageHeader, Select, TextArea, TextInput } from "@/components/ui";
@@ -111,6 +111,31 @@ async function Settings() {
           <h2 className="mt-4 text-lg font-semibold">Search engines</h2>
           <Field label="Default page title" name="seoTitle" hint="Up to 70 characters."><TextInput name="seoTitle" maxLength={70} defaultValue={settings.seo_default_title ?? ""} /></Field>
           <Field label="Default description" name="seoDescription" hint="Up to 170 characters."><TextArea name="seoDescription" maxLength={170} rows={2} defaultValue={settings.seo_default_description ?? ""} /></Field>
+        </ActionForm>
+      </Card>
+
+      <Card>
+        <h2 className="text-lg font-semibold">Lead pop-up questions</h2>
+        <p className="mb-3 text-sm text-text-muted">
+          Asked (with name and phone) before a visitor sees a lister&apos;s phone number, downloads a brochure or asks for a callback.
+          Up to three questions; answers are optional for visitors and appear on each lead. Leave a question empty to remove it.
+        </p>
+        <ActionForm action={saveLeadQuestions} submitLabel="Save questions">
+          {[0, 1, 2].map((index) => {
+            const question = (Array.isArray(settings.lead_questions) ? settings.lead_questions[index] : undefined) as
+              | { label?: string; options?: string[] }
+              | undefined;
+            return (
+              <div key={index} className={grid}>
+                <Field label={`Question ${index + 1}`} name={`label${index}`}>
+                  <TextInput name={`label${index}`} id={`label${index}`} maxLength={80} defaultValue={question?.label ?? ""} />
+                </Field>
+                <Field label="Answer choices" name={`options${index}`} hint="2 to 6 choices, separated by commas.">
+                  <TextInput name={`options${index}`} id={`options${index}`} maxLength={300} defaultValue={(question?.options ?? []).join(", ")} />
+                </Field>
+              </div>
+            );
+          })}
         </ActionForm>
       </Card>
     </div>

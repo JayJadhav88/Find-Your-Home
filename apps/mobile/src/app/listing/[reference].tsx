@@ -5,6 +5,7 @@ import * as WebBrowser from "expo-web-browser";
 import { useEffect, useState } from "react";
 import { Linking, Pressable, ScrollView, Share, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { EnquiryForm } from "@/components/enquiry-form";
+import { LeadActions, leadQuestions } from "@/components/lead-actions";
 import { ReportListing } from "@/components/report-listing";
 import { Badge, Button, Card, ErrorState, Loading, Notice, text } from "@/components/ui";
 import { VideoPlayer } from "@/components/video-player";
@@ -237,6 +238,17 @@ export default function ListingScreen() {
                   <Button label="Email" variant="secondary" onPress={() => Linking.openURL(`mailto:${listing.contact!.email}`)} style={{ flex: 1 }} />
                 ) : null}
               </View>
+              {!listing.contact.phone && !listing.contact.whatsapp && !listing.contact.email ? (
+                <LeadActions
+                  listingId={listing.id}
+                  hasPhone={Boolean(listing.contact.has_phone)}
+                  hasWhatsapp={Boolean(listing.contact.has_whatsapp)}
+                  hasEmail={Boolean(listing.contact.has_email)}
+                  hasBrochure={Boolean(listing.contact.has_brochure)}
+                  questions={leadQuestions(data.settings.lead_questions)}
+                  brandName={data.settings.brand_name}
+                />
+              ) : null}
             </View>
           ) : null}
           {listing.contact_via_form ? (

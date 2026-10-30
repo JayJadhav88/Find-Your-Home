@@ -5,6 +5,7 @@ import { Suspense } from "react";
 import { setAvailability } from "@/app/actions/listings";
 import { WorkflowButtons } from "@/components/account-forms";
 import { ActionForm } from "@/components/action-form";
+import { BrochureUpload } from "@/components/brochure-upload";
 import { ListingForm, type ListingFormInitial } from "@/components/listing-form";
 import { Loading } from "@/components/loading";
 import { PhotoManager } from "@/components/photo-manager";
@@ -166,6 +167,12 @@ async function EditListing({ id, created }: { id: string; created: boolean }) {
           </ActionForm>
         ) : null}
       </Card>
+
+      {editable ? (
+        <Card>
+          <BrochureUpload listingId={listing.id} current={listing.brochure_key} />
+        </Card>
+      ) : null}
 
       <PhotoManager
         listingId={listing.id}

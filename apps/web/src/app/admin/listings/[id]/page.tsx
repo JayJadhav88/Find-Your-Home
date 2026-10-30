@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Suspense } from "react";
 import { assignAgent, deleteListingAsAdmin, moderateListing, setListingFeatured } from "@/app/actions/admin";
 import { ActionForm } from "@/components/action-form";
+import { BrochureUpload } from "@/components/brochure-upload";
 import { VideoGallery } from "@/components/video-gallery";
 import { Loading } from "@/components/loading";
 import { setListingProject } from "@/app/actions/admin-builders";
@@ -250,6 +251,12 @@ async function Review({ id }: { id: string }) {
         <h3 className="mt-4 font-semibold">Amenities</h3>
         <p className="mt-1 text-sm">{listing.amenities.map((row) => row.amenity?.name).filter(Boolean).join(", ") || "—"}</p>
       </Card>
+
+      {isAdmin(viewer) ? (
+        <Card>
+          <BrochureUpload listingId={listing.id} current={listing.brochure_key} />
+        </Card>
+      ) : null}
 
       <Card>
         <h2 className="text-lg font-semibold">History</h2>

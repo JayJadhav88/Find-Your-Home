@@ -5,6 +5,7 @@ import { notFound, permanentRedirect } from "next/navigation";
 import { Suspense } from "react";
 import { toggleFavorite } from "@/app/actions/favorites";
 import { EnquiryForm } from "@/components/enquiry-form";
+import { LeadActions, type LeadQuestion } from "@/components/lead-actions";
 import { ReportListing } from "@/components/report-listing";
 import { ViewBeacon } from "@/components/view-beacon";
 import { VideoGallery } from "@/components/video-gallery";
@@ -249,6 +250,20 @@ async function ListingDetail({ reference, slug }: { reference: string; slug?: st
               <div className="mt-2 text-sm">
                 <p className="font-medium">{listing.contact.display_name}</p>
                 {listing.contact.agency_name ? <p className="text-text-muted">{listing.contact.agency_name}</p> : null}
+                {/* The lister and the team see the details directly; visitors use the pop-up. */}
+                {!listing.contact.phone && !listing.contact.whatsapp && !listing.contact.email ? (
+                  <div className="mt-3">
+                    <LeadActions
+                      listingId={listing.id}
+                      hasPhone={Boolean(listing.contact.has_phone)}
+                      hasWhatsapp={Boolean(listing.contact.has_whatsapp)}
+                      hasEmail={Boolean(listing.contact.has_email)}
+                      hasBrochure={Boolean(listing.contact.has_brochure)}
+                      questions={leadQuestions(settings.lead_questions)}
+                      brandName={settings.brand_name}
+                    />
+                  </div>
+                ) : null}
                 <ul className="mt-2 flex flex-col gap-1">
                   {listing.contact.phone ? (
                     <li><a className="text-brand underline" href={`tel:${listing.contact.phone}`}>{listing.contact.phone}</a></li>
@@ -282,6 +297,17 @@ async function ListingDetail({ reference, slug }: { reference: string; slug?: st
       </div>
     </article>
   );
+}
+
+/** The pop-up questions from Admin → Settings, ignoring anything malformed. */
+function leadQuestions(value: unknown): LeadQuestion[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .filter((item): item is LeadQuestion =>
+      typeof item === "object" && item !== null && typeof item.id === "string" && typeof item.label === "string" && Array.isArray(item.options),
+    )
+    .slice(0, 3)
+    .map((item) => ({ id: item.id, label: item.label, options: item.options.filter((option): option is string => typeof option === "string").slice(0, 6) }));
 }
 
 function ProjectDetails({

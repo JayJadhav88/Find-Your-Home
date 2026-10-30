@@ -38,6 +38,14 @@ export default function AdminEnquiryPage({ params }: PageProps<"/admin/enquiries
 const digits = (phone: string) => phone.replace(/[^\d]/g, "");
 const button = "rounded-lg border border-border px-3 py-2 text-sm hover:bg-surface-muted";
 
+const KIND_LABEL: Record<string, string> = {
+  visit_request: "Visit request",
+  enquiry: "Enquiry",
+  brochure: "Brochure download",
+  callback: "Callback request",
+  contact_reveal: "Contact details viewed",
+};
+
 type HistoryItem = { at: string; who: string | null; text: string };
 
 async function AdminEnquiry({ id }: { id: string }) {
@@ -100,7 +108,8 @@ async function AdminEnquiry({ id }: { id: string }) {
   const title =
     enquiry.lead_type === "owner"
       ? `Owner lead from ${enquiry.name}`
-      : `${enquiry.kind === "visit_request" ? "Visit request" : "Enquiry"} from ${enquiry.name}`;
+      : `${KIND_LABEL[enquiry.kind] ?? "Enquiry"} from ${enquiry.name}`;
+  const answers = Object.entries((enquiry.answers ?? {}) as Record<string, string>);
 
   return (
     <div className="flex flex-col gap-6">
@@ -138,6 +147,22 @@ async function AdminEnquiry({ id }: { id: string }) {
               {enquiry.kind === "visit_request" ? <Badge>{`visit ${enquiry.visit_status}`}</Badge> : null}
             </div>
             <p className="whitespace-pre-wrap">{enquiry.message}</p>
+            {enquiry.kind === "callback" ? (
+              <p className="text-sm">
+                Call back:{" "}
+                <strong>{enquiry.callback_at ? formatDateTime(enquiry.callback_at, fmt) : "as soon as possible"}</strong>
+              </p>
+            ) : null}
+            {answers.length ? (
+              <dl className="grid gap-x-4 gap-y-1 rounded-lg bg-surface-muted p-3 text-sm sm:grid-cols-[minmax(0,16rem)_1fr]">
+                {answers.map(([question, answer]) => (
+                  <div key={question} className="contents">
+                    <dt className="text-text-muted">{question}</dt>
+                    <dd className="font-medium">{answer}</dd>
+                  </div>
+                ))}
+              </dl>
+            ) : null}
             {enquiry.requested_visit_at ? (
               <p className="text-sm">
                 Wants to visit:{" "}
