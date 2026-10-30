@@ -443,14 +443,14 @@ isOneToOne: false
                   ]
                 },"integration_settings": {
                   Row: {
-                    "email_from": string | null,"email_reply_to": string | null,"id": boolean,"push_enabled": boolean,"sheets_enabled": boolean,"sheets_webhook_url": string | null,"updated_at": string,"updated_by": string | null,"whatsapp_enabled": boolean,"whatsapp_phone_number_id": string | null,"whatsapp_templates": NonNullable<Json>
+                    "calendar_token_hash": string | null,"email_from": string | null,"email_reply_to": string | null,"google_maps_key": string | null,"id": boolean,"maps_provider": string,"otp_leads_enabled": boolean,"otp_sign_in_enabled": boolean,"payments_enabled": boolean,"push_enabled": boolean,"razorpay_key_id": string | null,"sheets_enabled": boolean,"sheets_webhook_url": string | null,"sms_provider": string | null,"sms_sender_id": string | null,"sms_template_id": string | null,"updated_at": string,"updated_by": string | null,"whatsapp_enabled": boolean,"whatsapp_phone_number_id": string | null,"whatsapp_templates": NonNullable<Json>
                   }
                   ComputedFields: never
                   Insert: {
-                    "email_from"?: string | null,"email_reply_to"?: string | null,"id"?: boolean,"push_enabled"?: boolean,"sheets_enabled"?: boolean,"sheets_webhook_url"?: string | null,"updated_at"?: string,"updated_by"?: string | null,"whatsapp_enabled"?: boolean,"whatsapp_phone_number_id"?: string | null,"whatsapp_templates"?: NonNullable<Json>
+                    "calendar_token_hash"?: string | null,"email_from"?: string | null,"email_reply_to"?: string | null,"google_maps_key"?: string | null,"id"?: boolean,"maps_provider"?: string,"otp_leads_enabled"?: boolean,"otp_sign_in_enabled"?: boolean,"payments_enabled"?: boolean,"push_enabled"?: boolean,"razorpay_key_id"?: string | null,"sheets_enabled"?: boolean,"sheets_webhook_url"?: string | null,"sms_provider"?: string | null,"sms_sender_id"?: string | null,"sms_template_id"?: string | null,"updated_at"?: string,"updated_by"?: string | null,"whatsapp_enabled"?: boolean,"whatsapp_phone_number_id"?: string | null,"whatsapp_templates"?: NonNullable<Json>
                   }
                   Update: {
-                    "email_from"?: string | null,"email_reply_to"?: string | null,"id"?: boolean,"push_enabled"?: boolean,"sheets_enabled"?: boolean,"sheets_webhook_url"?: string | null,"updated_at"?: string,"updated_by"?: string | null,"whatsapp_enabled"?: boolean,"whatsapp_phone_number_id"?: string | null,"whatsapp_templates"?: NonNullable<Json>
+                    "calendar_token_hash"?: string | null,"email_from"?: string | null,"email_reply_to"?: string | null,"google_maps_key"?: string | null,"id"?: boolean,"maps_provider"?: string,"otp_leads_enabled"?: boolean,"otp_sign_in_enabled"?: boolean,"payments_enabled"?: boolean,"push_enabled"?: boolean,"razorpay_key_id"?: string | null,"sheets_enabled"?: boolean,"sheets_webhook_url"?: string | null,"sms_provider"?: string | null,"sms_sender_id"?: string | null,"sms_template_id"?: string | null,"updated_at"?: string,"updated_by"?: string | null,"whatsapp_enabled"?: boolean,"whatsapp_phone_number_id"?: string | null,"whatsapp_templates"?: NonNullable<Json>
                   }
                   Relationships: [
                     {
@@ -909,6 +909,34 @@ isOneToOne: false
       referencedColumns: ["id"]
     }
                   ]
+                },"phone_otps": {
+                  Row: {
+                    "attempts": number,"code_hash": string,"created_at": string,"expires_at": string,"id": string,"phone_digits": string,"verified_at": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "attempts"?: number,"code_hash": string,"created_at"?: string,"expires_at"?: string,"id"?: string,"phone_digits": string,"verified_at"?: string | null
+                  }
+                  Update: {
+                    "attempts"?: number,"code_hash"?: string,"created_at"?: string,"expires_at"?: string,"id"?: string,"phone_digits"?: string,"verified_at"?: string | null
+                  }
+                  Relationships: [
+                    
+                  ]
+                },"phone_verifications": {
+                  Row: {
+                    "created_at": string,"expires_at": string,"phone_digits": string,"token_hash": string
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"expires_at"?: string,"phone_digits": string,"token_hash": string
+                  }
+                  Update: {
+                    "created_at"?: string,"expires_at"?: string,"phone_digits"?: string,"token_hash"?: string
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"profiles": {
                   Row: {
                     "avatar_key": string | null,"created_at": string,"display_name": string,"id": string,"marketing_opt_in": boolean,"phone": string | null,"preferred_locale": string | null,"status": Database["public"]['Enums']["account_status"],"updated_at": string
@@ -1138,6 +1166,9 @@ isOneToOne: false
 "admin_merge_builders":
 { Args: { "p_from": string,"p_into": string }; Returns: number
                            },
+"admin_new_calendar_link":
+{ Args: Record<PropertyKey, never>; Returns: string
+                           },
 "admin_new_sheets_secret":
 { Args: Record<PropertyKey, never>; Returns: string
                            },
@@ -1185,6 +1216,11 @@ isOneToOne: false
                            },
 "bootstrap_admin":
 { Args: { "p_email": string }; Returns: string
+                           },
+"calendar_feed":
+{ Args: { "p_token": string }; Returns: {
+              "details": string,"ends_at": string,"kind": string,"link_id": string,"listing_id": string,"starts_at": string,"title": string,"uid": string
+            }[]
                            },
 "cancel_visit_request":
 { Args: { "p_enquiry_id": string }; Returns: undefined
@@ -1237,6 +1273,12 @@ isOneToOne: false
 { Args: Record<PropertyKey, never>; Returns: {
               "enquiries_30d": number,"enquiries_total": number,"expires_at": string,"listing_id": string,"saves": number,"views_30d": number
             }[]
+                           },
+"otp_create":
+{ Args: { "p_phone": string }; Returns: string
+                           },
+"public_integration_flags":
+{ Args: Record<PropertyKey, never>; Returns: Json
                            },
 "record_listing_view":
 { Args: { "p_listing_id": string,"p_visitor"?: string }; Returns: undefined
@@ -1295,10 +1337,15 @@ isOneToOne: false
 { Args: { "p_consent_text_version"?: string,"p_email": string,"p_kind"?: Database["public"]['Enums']["enquiry_kind"],"p_listing_id": string,"p_message": string,"p_name": string,"p_phone"?: string,"p_requested_timezone"?: string,"p_requested_visit_at"?: string,"p_source"?: string,"p_utm"?: Json }; Returns: string
                            },
 "submit_gated_lead":
-{ Args: { "p_answers"?: Json,"p_callback_at"?: string,"p_consent_text_version"?: string,"p_email"?: string,"p_kind": string,"p_listing_id": string,"p_name": string,"p_phone": string,"p_source"?: string,"p_utm"?: Json }; Returns: Json
+{ Args: { "p_answers"?: Json,"p_callback_at"?: string,"p_consent_text_version"?: string,"p_email"?: string,"p_kind": string,"p_listing_id": string,"p_name": string,"p_otp"?: string,"p_phone": string,"p_source"?: string,"p_utm"?: Json }; Returns: Json
                            },
 "submit_listing":
 { Args: { "p_listing_id": string }; Returns: Database["public"]['Enums']["listing_status"]
+                           },
+"team_calendar":
+{ Args: { "p_from": string,"p_to": string }; Returns: {
+              "details": string,"ends_at": string,"kind": string,"link_id": string,"listing_id": string,"starts_at": string,"title": string,"uid": string
+            }[]
                            },
 "unregister_push_token":
 { Args: { "p_token": string }; Returns: undefined
